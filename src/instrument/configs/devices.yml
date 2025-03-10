@@ -1,6 +1,6 @@
 # Guarneri-style device YAML configuration
 
-instrument.devices.factories.predefined_device:
+instrument.utils.sim_creator.predefined_device:
 - {creator: ophyd.sim.motor, name: sim_motor}
 - {creator: ophyd.sim.noisy_det, name: sim_det}
 

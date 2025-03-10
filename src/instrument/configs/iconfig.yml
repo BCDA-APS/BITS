@@ -27,19 +27,19 @@ RUN_ENGINE:
 
     ### The progress bar is nice to see,
     ### except when it clutters the output in Jupyter notebooks.
-    ### Default: True
+    ### Default: False
     USE_PROGRESS_BAR: false
 
 # Command-line tools, such as %wa, %ct, ...
-USE_BLUESKY_MAGICS: True
+USE_BLUESKY_MAGICS: true
 
 ### Best Effort Callback Configurations
 ### Defaults: all true (except no plots in queueserver)
-# BEC:
-#     BASELINE: false
-#     HEADING: false
-#     PLOTS: false
-#     TABLE: false
+BEC:
+    BASELINE: true
+    HEADING: true
+    PLOTS: true
+    TABLE: true
 
 ### Support for known output file formats.
 ### Uncomment to use.  If undefined, will not write that type of file.
@@ -47,6 +47,7 @@ USE_BLUESKY_MAGICS: True
 # NEXUS_DATA_FILES:
 #     FILE_EXTENSION: hdf
 #     WARN_MISSING_CONTENT: true
+
 SPEC_DATA_FILES:
     FILE_EXTENSION: dat
 

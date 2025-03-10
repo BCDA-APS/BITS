@@ -16,7 +16,6 @@ from .core.best_effort_init import peaks  # noqa: F401
 from .core.catalog_init import cat  # noqa: F401
 from .core.run_engine_init import RE  # noqa: F401
 from .core.run_engine_init import sd  # noqa: F401
-from .devices import *  # noqa: F403
 from .plans import *  # noqa: F403
 
 # Bluesky data acquisition setup
