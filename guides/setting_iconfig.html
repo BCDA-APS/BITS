@@ -1,0 +1,704 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Setting up your instrument &#8212; APSBITS</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="../_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="../_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <link rel="stylesheet" type="text/css" href="../_static/sphinx-design.min.css?v=95c83b7e" />
+  
+  <!-- So that users can add custom icons -->
+  <script src="../_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
+
+    <script src="../_static/documentation_options.js?v=1ed6394b"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/design-tabs.js?v=f930bc37"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'guides/setting_iconfig';</script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Adding Devices to an Instrument" href="creating_devices.html" />
+    <link rel="prev" title="Creating An Instrument" href="creating_instrument.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="1.0.2" />
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="../search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="../index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">APSBITS</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../install.html">
+    User Installation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Guides & How-Tos
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API: The Source Code
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../bits_overview.html">
+    APS Bluesky Software Ecosystem Overview
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../install.html">
+    User Installation
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="index.html">
+    Guides & How-Tos
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../api/index.html">
+    API: The Source Code
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="../bits_overview.html">
+    APS Bluesky Software Ecosystem Overview
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="template_creation.html">Creating a Repository from BITS Starter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating_instrument.html">Creating An Instrument</a></li>
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Setting up your instrument</a></li>
+<li class="toctree-l1"><a class="reference internal" href="creating_devices.html">Adding Devices to an Instrument</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sessions.html">Starting Data Acquisition Sessions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qserver.html">Queue Server</a></li>
+<li class="toctree-l1"><a class="reference internal" href="dm.html">Guide: APS Data Management Plans</a></li>
+</ul>
+<ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="developing_bits.html">Developing BITS</a></li>
+<li class="toctree-l1"><a class="reference internal" href="qserver_service.html">Queue Server Systemd Service</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="../index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="index.html" class="nav-link">Guides &amp; How-Tos</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Setting up your instrument</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="setting-up-your-instrument">
+<h1>Setting up your instrument<a class="headerlink" href="#setting-up-your-instrument" title="Link to this heading">#</a></h1>
+<p>The iconfig file is a YAML file that contains the configuration for your instrument.
+It is used to set up the instrument preferences and settings. The iconfig file is
+located in the <code class="docutils literal notranslate"><span class="pre">configs</span></code> directory of your instrument package. Below we go through the settings available in the iconfig file.</p>
+<section id="run-engine">
+<h2>RUN_ENGINE<a class="headerlink" href="#run-engine" title="Link to this heading">#</a></h2>
+<p>The <code class="docutils literal notranslate"><span class="pre">RUN_ENGINE</span></code> section contains the configuration for the run engine. The run engine is responsible for executing the data acquisition plans.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">RUN_ENGINE</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">DEFAULT_METADATA</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">beamline_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demo_instrument</span>
+<span class="w">        </span><span class="nt">instrument_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Most Glorious Scientific Instrument</span>
+<span class="w">        </span><span class="nt">proposal_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">commissioning</span>
+<span class="w">        </span><span class="nt">databroker_catalog</span><span class="p">:</span><span class="w"> </span><span class="nv">*databroker_catalog</span>
+
+<span class="w">    </span><span class="c1">### EPICS PV to use for the `scan_id`.</span>
+<span class="w">    </span><span class="c1">### Default: `RE.md[&quot;scan_id&quot;]` (not using an EPICS PV)</span>
+<span class="w">    </span><span class="c1"># SCAN_ID_PV: &quot;IOC:bluesky_scan_id&quot;</span>
+
+<span class="w">    </span><span class="c1">### Where to &quot;autosave&quot; the RE.md dictionary.</span>
+<span class="w">    </span><span class="c1">### Defaults:</span>
+<span class="w">    </span><span class="nt">MD_PATH</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.re_md_dict.yml</span>
+
+<span class="w">    </span><span class="c1">### The progress bar is nice to see,</span>
+<span class="w">    </span><span class="c1">### except when it clutters the output in Jupyter notebooks.</span>
+<span class="w">    </span><span class="c1">### Default: False</span>
+<span class="w">    </span><span class="nt">USE_PROGRESS_BAR</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</pre></div>
+</div>
+<ul class="simple" id="iconfig">
+<li><p><code class="docutils literal notranslate"><span class="pre">beamline_id</span></code> the metadata id you want saved for the beamline associated with the data aquosition runs you are about to conduct</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">instrument_name</span></code> the metadata name you want saved for your instrument associated with the data aquosition runs you are about to conduct</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">proposal_id</span></code> the metadata id you want saved for the proposal associated with the data aquosition runs you are about to conduct</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MD_PATH</span></code> the path to the file where the metadata dictionary will be saved</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">USE_PROGRESS_BAR</span></code> whether to use a progress bar or not to showcase the progress the run engine is making with the data aquisition</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">SCAN_ID_PV</span></code> can be uncommented if you need a PV to be used for the scan id.</p></li>
+</ul>
+</section>
+<section id="bec">
+<h2>BEC<a class="headerlink" href="#bec" title="Link to this heading">#</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">BEC</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">BASELINE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">HEADING</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">PLOTS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">TABLE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">BASELINE</span></code> Print hinted fields from the ‘baseline’ stream.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">HEADING</span></code> Print timestamp and IDs at the top of a run.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PLOTS</span></code> Outputs a matplotlib plot of your data aquisition at the end of stream</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TABLE</span></code> If your data gets tabulated or not</p></li>
+</ul>
+</section>
+<section id="callbacks">
+<h2>Callbacks<a class="headerlink" href="#callbacks" title="Link to this heading">#</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">NEXUS_DATA_FILES</span><span class="p">:</span>
+<span class="nt">ENABLE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="nt">FILE_EXTENSION</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hdf</span>
+
+<span class="nt">SPEC_DATA_FILES</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ENABLE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">FILE_EXTENSION</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dat</span>
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">enable</span></code> fields allow for data to be outputted within a NEXUS or SPEC file format. The file extension is the file type you want to save your data as.
+If the callback is enabled, the data will be stored from where you initialized the ipython session or notebook.</p>
+</section>
+<section id="dm-setup-file-path">
+<h2>DM_SETUP_FILE Path<a class="headerlink" href="#dm-setup-file-path" title="Link to this heading">#</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1">### APS Data Management</span>
+<span class="c1">### Use bash shell, deactivate all conda environments, source this file:</span>
+<span class="nt">DM_SETUP_FILE</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/home/dm/etc/dm.setup.sh&quot;</span>
+</pre></div>
+</div>
+<p>The above file is a bash script that sets up the environment for the APS Data Management system. It is used to set up the environment variables to access the APS Data Management system.
+The path should reference where this bash script lives.</p>
+</section>
+<section id="devices">
+<h2>Devices<a class="headerlink" href="#devices" title="Link to this heading">#</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1">### Local OPHYD Device Control Yaml</span>
+<span class="nt">DEVICES_FILES</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">devices.yml</span>
+<span class="nt">APS_DEVICES_FILES</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">devices_aps_only.yml</span>
+
+<span class="c1"># Log when devices are added to console (__main__ namespace)</span>
+<span class="nt">MAKE_DEVICES</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">LOG_LEVEL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">info</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">DEVICES_FILES</span></code> the name to the yaml file that contains the devices you want to use in your data aquisition. This file has to be stored in the configs folder of your instrument</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">APS_DEVICES_FILES</span></code> the name to the yaml file that contains the devices you want to use in your data aquisition. This file is for devices that work exclusively on the APS network.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">LOG_LEVEL</span></code> the log level for the devices you want to use in your data aquisition. The default is info.</p></li>
+</ul>
+</section>
+<section id="ophyd-settings">
+<h2>OPHYD SETTINGS<a class="headerlink" href="#ophyd-settings" title="Link to this heading">#</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">OPHYD</span><span class="p">:</span>
+<span class="w">    </span><span class="c1">### Control layer for ophyd to communicate with EPICS.</span>
+<span class="w">    </span><span class="c1">### Default: PyEpics</span>
+<span class="w">    </span><span class="c1">### Choices: &quot;PyEpics&quot; or &quot;caproto&quot; # caproto is not yet supported</span>
+<span class="w">    </span><span class="nt">CONTROL_LAYER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PyEpics</span>
+
+<span class="w">    </span><span class="c1">### default timeouts (seconds)</span>
+<span class="w">    </span><span class="nt">TIMEOUTS</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">PV_READ</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;TIMEOUT</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">        </span><span class="nt">PV_WRITE</span><span class="p">:</span><span class="w"> </span><span class="nv">*TIMEOUT</span>
+<span class="w">        </span><span class="nt">PV_CONNECTION</span><span class="p">:</span><span class="w"> </span><span class="nv">*TIMEOUT</span>
+</pre></div>
+</div>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">CONTROL_LAYER</span></code> the control layer you want to use to communicate with EPICS. The default is PyEpics, the other option would be caproto</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">TIMEOUTS</span></code> the timeouts for the different types of communication with EPICS. The default is 5 seconds for all types of communication.</p></li>
+</ul>
+</section>
+<section id="logging-levels">
+<h2>Logging levels<a class="headerlink" href="#logging-levels" title="Link to this heading">#</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">XMODE_DEBUG_LEVEL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Plain</span>
+</pre></div>
+</div>
+<p>The options for the debugging levels in your iconfig file are:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Plain</span></code>: Displays basic traceback information with error type and message. No additional context or special formatting is included.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Context</span></code>: Shows code surrounding the error line for better understanding. Includes several lines before and after the problematic code.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Verbose</span></code>: Provides comprehensive debugging information including variable values and system details. Best for complex debugging scenarios where maximum information is needed.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Minimal</span></code>: Shows only the exception type and error message without traceback. Cleanest output for quick error identification or production environments.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Docs</span></code>: Enhances error messages with relevant documentation for the exception type. Helpful in learning environments or when working with unfamiliar code.</p></li>
+</ul>
+</section>
+<section id="full-iconfig-file">
+<h2>Full Iconfig file<a class="headerlink" href="#full-iconfig-file" title="Link to this heading">#</a></h2>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Configuration for the Bluesky instrument package.</span>
+
+<span class="c1"># identify the version of this iconfig.yml file</span>
+<span class="nt">ICONFIG_VERSION</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0.0</span>
+
+<span class="c1"># Add additional configuration for use with your instrument.</span>
+
+<span class="c1">### The short name for the databroker catalog.</span>
+<span class="nt">DATABROKER_CATALOG</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;databroker_catalog</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">temp</span>
+
+<span class="c1">### RunEngine configuration</span>
+<span class="nt">RUN_ENGINE</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">DEFAULT_METADATA</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">beamline_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">demo_instrument</span>
+<span class="w">        </span><span class="nt">instrument_name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Most Glorious Scientific Instrument</span>
+<span class="w">        </span><span class="nt">proposal_id</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">commissioning</span>
+<span class="w">        </span><span class="nt">databroker_catalog</span><span class="p">:</span><span class="w"> </span><span class="nv">*databroker_catalog</span>
+
+<span class="w">    </span><span class="c1">### EPICS PV to use for the `scan_id`.</span>
+<span class="w">    </span><span class="c1">### Default: `RE.md[&quot;scan_id&quot;]` (not using an EPICS PV)</span>
+<span class="w">    </span><span class="c1"># SCAN_ID_PV: &quot;IOC:bluesky_scan_id&quot;</span>
+
+<span class="w">    </span><span class="c1">### Where to &quot;autosave&quot; the RE.md dictionary.</span>
+<span class="w">    </span><span class="c1">### Defaults:</span>
+<span class="w">    </span><span class="nt">MD_PATH</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">.re_md_dict.yml</span>
+
+<span class="w">    </span><span class="c1">### The progress bar is nice to see,</span>
+<span class="w">    </span><span class="c1">### except when it clutters the output in Jupyter notebooks.</span>
+<span class="w">    </span><span class="c1">### Default: False</span>
+<span class="w">    </span><span class="nt">USE_PROGRESS_BAR</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+
+<span class="c1"># Command-line tools, such as %wa, %ct, ...</span>
+<span class="nt">USE_BLUESKY_MAGICS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="c1">### Best Effort Callback Configurations</span>
+<span class="c1">### Defaults: all true</span>
+<span class="c1">### except no plots in queueserver</span>
+<span class="nt">BEC</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">BASELINE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">HEADING</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">PLOTS</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">TABLE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="c1">### Support for known output file formats.</span>
+<span class="c1">### Uncomment to use.  If undefined, will not write that type of file.</span>
+<span class="c1">### Each callback should apply its configuration from here.</span>
+<span class="nt">NEXUS_DATA_FILES</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ENABLE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+<span class="w">    </span><span class="nt">FILE_EXTENSION</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">hdf</span>
+
+<span class="nt">SPEC_DATA_FILES</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">ENABLE</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">FILE_EXTENSION</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">dat</span>
+
+<span class="c1">### APS Data Management</span>
+<span class="c1">### Use bash shell, deactivate all conda environments, source this file:</span>
+<span class="nt">DM_SETUP_FILE</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;/home/dm/etc/dm.setup.sh&quot;</span>
+
+<span class="c1">### Local OPHYD Device Control Yaml</span>
+<span class="nt">DEVICES_FILES</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">devices.yml</span>
+<span class="nt">APS_DEVICES_FILES</span><span class="p">:</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">devices_aps_only.yml</span>
+
+<span class="c1"># Log when devices are added to console (__main__ namespace)</span>
+<span class="nt">MAKE_DEVICES</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">LOG_LEVEL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">info</span>
+
+<span class="c1"># ----------------------------------</span>
+
+<span class="nt">OPHYD</span><span class="p">:</span>
+<span class="w">    </span><span class="c1">### Control layer for ophyd to communicate with EPICS.</span>
+<span class="w">    </span><span class="c1">### Default: PyEpics</span>
+<span class="w">    </span><span class="c1">### Choices: &quot;PyEpics&quot; or &quot;caproto&quot;</span>
+<span class="w">    </span><span class="nt">CONTROL_LAYER</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">PyEpics</span>
+
+<span class="w">    </span><span class="c1">### default timeouts (seconds)</span>
+<span class="w">    </span><span class="nt">TIMEOUTS</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">PV_READ</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;TIMEOUT</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+<span class="w">        </span><span class="nt">PV_WRITE</span><span class="p">:</span><span class="w"> </span><span class="nv">*TIMEOUT</span>
+<span class="w">        </span><span class="nt">PV_CONNECTION</span><span class="p">:</span><span class="w"> </span><span class="nv">*TIMEOUT</span>
+
+<span class="c1"># Control detail of exception traces in IPython (console and notebook).</span>
+<span class="c1"># Options are: &#39;Plain&#39;, &#39;Context&#39;, &#39;Verbose&#39;, &#39;Minimal&#39;, &#39;Docs&#39;</span>
+<span class="nt">XMODE_DEBUG_LEVEL</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">Plain</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="creating_instrument.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Creating An Instrument</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="creating_devices.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Adding Devices to an Instrument</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#run-engine">RUN_ENGINE</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#bec">BEC</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#callbacks">Callbacks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dm-setup-file-path">DM_SETUP_FILE Path</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#devices">Devices</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#ophyd-settings">OPHYD SETTINGS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#logging-levels">Logging levels</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#full-iconfig-file">Full Iconfig file</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/guides/setting_iconfig.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="../_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="../_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2023-2025, APS BCDA.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
