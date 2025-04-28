@@ -70,7 +70,8 @@ def make_devices(
         If None (default), uses the standard iconfig.yml configuration.
 
     path: str | pathlib.Path | None
-    """  # noqa: E501
+    """
+
     logger.debug("(Re)Loading local control objects.")
 
     if clear:
