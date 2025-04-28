@@ -42,8 +42,11 @@ def _get_make_devices_log_level() -> int:
 
 
 def make_devices(
-    *, pause: float = 1, clear: bool = True, path: str | pathlib.Path | None = None,
-    file: str | pathlib.Path | None = None
+    *,
+    pause: float = 1,
+    clear: bool = True,
+    path: str | pathlib.Path | None = None,
+    file: str | None = None,
 ):
     """
     (plan stub) Create the ophyd-style controls for this instrument.
@@ -52,7 +55,8 @@ def make_devices(
 
         RE(make_devices())  # Use default iconfig.yml
         RE(make_devices(file="custom_devices.yml"))  # Use custom devices file
-        RE(make_devices(path="custom_device_path", file="custom_devices.yml"))  # Use custom path to find config file
+        RE(make_devices(path="custom_device_path", file="custom_devices.yml"))
+        # Use custom path to find config file
 
     PARAMETERS
 
@@ -66,7 +70,7 @@ def make_devices(
         If None (default), uses the standard iconfig.yml configuration.
 
     path: str | pathlib.Path | None
-    """
+    """  # noqa: E501
     logger.debug("(Re)Loading local control objects.")
 
     if clear:
@@ -81,8 +85,15 @@ def make_devices(
 
         oregistry.clear()
 
+    if path is not None and file is None:
+        raise ValueError(
+            "When a custom path is provided, a specific device file must"
+            " also be provided"
+        )
+
     if path is not None:
-        pass
+        configs_path = pathlib.Path(path)
+        print(f"\n\nConfigs path: {configs_path}\n\n")
 
     else:
         iconfig = get_config()
@@ -90,18 +101,6 @@ def make_devices(
         configs_path = instrument_path / "configs"
 
     if file is not None:
-        # Use the provided file directly
-        # device_path = pathlib.Path(file)
-        # if not device_path.exists():
-        #     logger.error("Device file not found: %s", device_path)
-        #     return
-        # logger.info("Loading device file: %s", device_path)
-        # try:
-        #     yield from run_blocking_function(_loader, device_path, main=True)
-        # except Exception as e:
-        #     logger.error("Error loading device file %s: %s", device_path, str(e))
-        #     return
-
         device_file = file
 
         logger.debug("Loading device files: %r", device_file)
@@ -119,12 +118,6 @@ def make_devices(
                 logger.error("Error loading device file %s: %s", device_path, str(e))
 
     else:
-        # Use standard iconfig.yml configuration
-        # iconfig = get_config()
-
-        # instrument_path = pathlib.Path(iconfig.get("INSTRUMENT_PATH")).parent
-        # configs_path = instrument_path / "configs"
-
         # Get device files and ensure it's a list
         device_files = iconfig.get("DEVICES_FILES", [])
         if isinstance(device_files, str):
