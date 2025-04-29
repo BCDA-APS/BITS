@@ -21,7 +21,7 @@ import logging
 
 from apstools.utils import dynamic_import
 
-from apsbits.utils.controls_setup import oregistry
+from apsbits.core.instrument_init import oregistry
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)

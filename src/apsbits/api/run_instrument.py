@@ -16,7 +16,7 @@ from typing import Dict
 from typing import Optional
 from typing import Tuple
 
-from apsbits.utils.controls_setup import oregistry as Registry
+from apsbits.core.instrument_init import oregistry as Registry
 
 
 def run_instrument_startup(package_name: str) -> Tuple[bool, Optional[Dict[str, Any]]]:

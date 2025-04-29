@@ -13,14 +13,14 @@ import logging
 
 from apsbits.core.best_effort_init import init_bec_peaks
 from apsbits.core.catalog_init import init_catalog
+from apsbits.core.instrument_init import make_devices
+from apsbits.core.instrument_init import oregistry
 from apsbits.core.run_engine_init import init_RE
 from apsbits.utils.aps_functions import aps_dm_setup
 from apsbits.utils.aps_functions import host_on_aps_subnet
 from apsbits.utils.config_loaders import get_config
-from apsbits.utils.controls_setup import oregistry
 from apsbits.utils.helper_functions import register_bluesky_magics
 from apsbits.utils.helper_functions import running_in_queueserver
-from apsbits.utils.make_devices import make_devices
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)

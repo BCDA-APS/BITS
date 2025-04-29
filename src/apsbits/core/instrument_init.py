@@ -20,10 +20,10 @@ import guarneri
 from apstools.plans import run_blocking_function
 from apstools.utils import dynamic_import
 from bluesky import plan_stubs as bps
+from ophydregistry import Registry
 
 from apsbits.utils.config_loaders import get_config
 from apsbits.utils.config_loaders import load_config_yaml
-from apsbits.utils.controls_setup import oregistry  # noqa: F401
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
@@ -184,5 +184,9 @@ class Instrument(guarneri.Instrument):
             ]
         return devices
 
+oregistry = Registry(auto_register=True)
+"""Registry of all ophyd-style Devices and Signals."""
+oregistry.warn_duplicates = False
 
 _instr = Instrument({}, registry=oregistry)  # singleton
+
