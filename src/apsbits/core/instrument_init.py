@@ -122,8 +122,6 @@ def make_devices(
         )
         yield from bps.sleep(pause)
 
-    # Configure any of the controls here, or in plan stubs
-
 
 def _namespace_loader(yaml_device_file, main=True):
     """
