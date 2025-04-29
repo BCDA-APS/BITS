@@ -184,9 +184,9 @@ class Instrument(guarneri.Instrument):
             ]
         return devices
 
+
 oregistry = Registry(auto_register=True)
 """Registry of all ophyd-style Devices and Signals."""
 oregistry.warn_duplicates = False
 
 _instr = Instrument({}, registry=oregistry)  # singleton
-
