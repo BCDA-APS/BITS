@@ -26,4 +26,3 @@ def test_make_devices_file_name(caplog):
     for device in expected_devices:
         expected_message = f"Adding ophyd device '{device}' to main namespace"
         assert any(expected_message in record.message for record in caplog.records)
-
