@@ -21,7 +21,6 @@ from apstools.plans import run_blocking_function
 from apstools.utils import dynamic_import
 from bluesky import plan_stubs as bps
 
-from apsbits.utils.aps_functions import host_on_aps_subnet
 from apsbits.utils.config_loaders import get_config
 from apsbits.utils.config_loaders import load_config_yaml
 from apsbits.utils.controls_setup import oregistry  # noqa: F401
@@ -45,18 +44,17 @@ def make_devices(
     *,
     pause: float = 1,
     clear: bool = True,
+    file: str,
     path: str | pathlib.Path | None = None,
-    file: str | None = None,
 ):
     """
     (plan stub) Create the ophyd-style controls for this instrument.
 
     EXAMPLE::
 
-        RE(make_devices())  # Use default iconfig.yml
-        RE(make_devices(file="custom_devices.yml"))  # Use custom devices file
-        RE(make_devices(path="custom_device_path", file="custom_devices.yml"))
-        # Use custom path to find config file
+        RE(make_devices(file="custom_devices.yml"))  #Use custom devices file
+        RE(make_devices(path="custom_device_path",
+                        file="custom_devices.yml")) #Use custom path to find device file
 
     PARAMETERS
 
@@ -101,62 +99,21 @@ def make_devices(
         instrument_path = pathlib.Path(iconfig.get("INSTRUMENT_PATH")).parent
         configs_path = instrument_path / "configs"
 
-    if file is not None:
-        device_file = file
+    device_file = file
 
-        logger.debug("Loading device files: %r", device_file)
+    logger.debug("Loading device files: %r", device_file)
 
-        # Load each device file
-        device_path = configs_path / device_file
-        if not device_path.exists():
-            logger.error("Device file not found: %s", device_path)
-
-        else:
-            logger.info("Loading device file: %s", device_path)
-            try:
-                yield from run_blocking_function(_loader, device_path, main=True)
-            except Exception as e:
-                logger.error("Error loading device file %s: %s", device_path, str(e))
+    # Load each device file
+    device_path = configs_path / device_file
+    if not device_path.exists():
+        logger.error("Device file not found: %s", device_path)
 
     else:
-        # Get device files and ensure it's a list
-        device_files = iconfig.get("DEVICES_FILES", [])
-        if isinstance(device_files, str):
-            device_files = [device_files]
-        logger.debug("Loading device files: %r", device_files)
-
-        # Load each device file
-        for device_file in device_files:
-            device_path = configs_path / device_file
-            if not device_path.exists():
-                logger.error("Device file not found: %s", device_path)
-                continue
-            logger.info("Loading device file: %s", device_path)
-            try:
-                yield from run_blocking_function(_loader, device_path, main=True)
-            except Exception as e:
-                logger.error("Error loading device file %s: %s", device_path, str(e))
-                continue
-
-        # Handle APS-specific device files if on APS subnet
-        aps_control_devices_files = iconfig.get("APS_DEVICES_FILES", [])
-        if isinstance(aps_control_devices_files, str):
-            aps_control_devices_files = [aps_control_devices_files]
-
-        if aps_control_devices_files and host_on_aps_subnet():
-            for device_file in aps_control_devices_files:
-                device_path = configs_path / device_file
-                if not device_path.exists():
-                    logger.error("APS device file not found: %s", device_path)
-                    continue
-                logger.info("Loading APS device file: %s", device_path)
-                try:
-                    yield from run_blocking_function(_loader, device_path, main=True)
-                except Exception as e:
-                    logger.error(
-                        "Error loading APS device file %s: %s", device_path, str(e)
-                    )
-                    continue
+        logger.info("Loading device file: %s", device_path)
+        try:
+            yield from run_blocking_function(_namespace_loader, device_path, main=True)
+        except Exception as e:
+            logger.error("Error loading device file %s: %s", device_path, str(e))
 
     if pause > 0:
         logger.debug(
@@ -168,9 +125,9 @@ def make_devices(
     # Configure any of the controls here, or in plan stubs
 
 
-def _loader(yaml_device_file, main=True):
+def _namespace_loader(yaml_device_file, main=True):
     """
-    Load our ophyd-style controls as described in a YAML file.
+    Load our ophyd-style controls as described in a YAML file into the main namespace.
 
     PARAMETERS
 
