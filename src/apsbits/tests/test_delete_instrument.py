@@ -152,12 +152,12 @@ def test_delete_instrument(temp_instrument_dirs: tuple[Path, Path]) -> None:
         d.name.startswith(qserver_name) for d in deleted_dir.iterdir() if d.is_dir()
     )
 
-    assert instrument_in_deleted, (
-        f"No directory starting with '{instrument_name}' found in .deleted"
-    )
-    assert qserver_in_deleted, (
-        f"No directory starting with '{qserver_name}' found in .deleted"
-    )
+    assert (
+        instrument_in_deleted
+    ), f"No directory starting with '{instrument_name}' found in .deleted"
+    assert (
+        qserver_in_deleted
+    ), f"No directory starting with '{qserver_name}' found in .deleted"
 
 
 def test_delete_instrument_nonexistent(tmp_path: Path) -> None:
@@ -277,12 +277,12 @@ def test_delete_main_successful_deletion(
         d.name.startswith(qserver_name) for d in deleted_dir.iterdir() if d.is_dir()
     )
 
-    assert instrument_in_deleted, (
-        f"No directory starting with '{instrument_name}' found in .deleted"
-    )
-    assert qserver_in_deleted, (
-        f"No directory starting with '{qserver_name}' found in .deleted"
-    )
+    assert (
+        instrument_in_deleted
+    ), f"No directory starting with '{instrument_name}' found in .deleted"
+    assert (
+        qserver_in_deleted
+    ), f"No directory starting with '{qserver_name}' found in .deleted"
 
 
 def test_delete_main_cancelled_deletion(
