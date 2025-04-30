@@ -152,12 +152,12 @@ def test_delete_instrument(temp_instrument_dirs: tuple[Path, Path]) -> None:
         d.name.startswith(qserver_name) for d in deleted_dir.iterdir() if d.is_dir()
     )
 
-    assert (
-        instrument_in_deleted
-    ), f"No directory starting with '{instrument_name}' found in .deleted"
-    assert (
-        qserver_in_deleted
-    ), f"No directory starting with '{qserver_name}' found in .deleted"
+    assert instrument_in_deleted, (
+        f"No directory starting with '{instrument_name}' found in .deleted"
+    )
+    assert qserver_in_deleted, (
+        f"No directory starting with '{qserver_name}' found in .deleted"
+    )
 
 
 def test_delete_instrument_nonexistent(tmp_path: Path) -> None:
@@ -277,12 +277,12 @@ def test_delete_main_successful_deletion(
         d.name.startswith(qserver_name) for d in deleted_dir.iterdir() if d.is_dir()
     )
 
-    assert (
-        instrument_in_deleted
-    ), f"No directory starting with '{instrument_name}' found in .deleted"
-    assert (
-        qserver_in_deleted
-    ), f"No directory starting with '{qserver_name}' found in .deleted"
+    assert instrument_in_deleted, (
+        f"No directory starting with '{instrument_name}' found in .deleted"
+    )
+    assert qserver_in_deleted, (
+        f"No directory starting with '{qserver_name}' found in .deleted"
+    )
 
 
 def test_delete_main_cancelled_deletion(
@@ -351,7 +351,7 @@ def test_copy_instrument(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> N
     content = startup_file.read_text()
     assert "Start Bluesky Data Acquisition sessions of all kinds." in content
     assert "from apsbits.core.best_effort_init import init_bec_peaks" in content
-    assert "RE(make_devices(clear=False, file=devices.yml))" in content
+    assert 'RE(make_devices(clear=False, file="devices.yml"))' in content
 
 
 def test_create_qserver(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> None:
