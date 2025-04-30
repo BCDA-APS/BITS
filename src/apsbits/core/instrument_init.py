@@ -96,7 +96,6 @@ def make_devices(
     else:
         iconfig = get_config()
         instrument_path = pathlib.Path(iconfig.get("INSTRUMENT_PATH")).parent
-        print(f"\n\nInstrument path: {instrument_path}\n\n")
         configs_path = instrument_path / "configs"
 
     device_file = file
@@ -138,7 +137,7 @@ def namespace_loader(yaml_device_file, main=True):
     logger.debug("Devices file %r.", str(yaml_device_file))
     t0 = time.time()
 
-    _instr.load(yaml_device_file)
+    instrument.load(yaml_device_file)
 
     logger.info("Devices loaded in %.3f s.", time.time() - t0)
     if main:
@@ -184,6 +183,6 @@ class Instrument(guarneri.Instrument):
         return devices
 
 
-_instr = Instrument({})  # singleton
-oregistry = _instr.devices
+instrument = Instrument({})  # singleton
+oregistry = instrument.devices
 """Registry of all ophyd-style Devices and Signals."""
