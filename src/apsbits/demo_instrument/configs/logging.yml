@@ -1,9 +1,10 @@
-modules:
-  instrument: bsdev
-
 # Control detail of exception traces in IPython (console and notebook).
 # Options are: 'Plain', 'Context', 'Verbose', 'Minimal', 'Docs'
 XMODE_DEBUG_LEVEL: Plain
 # Log when devices are added to console (__main__ namespace)
 MAKE_DEVICES:
     LOG_LEVEL: info
+# Control detail of exception traces provided by the package
+# Options are: 'Plain', 'Context', 'Verbose', 'Minimal', 'Docs'
+console_logs:
+  level: info
