@@ -11,11 +11,11 @@ Includes:
 
 import logging
 
-from apsbits.core.best_effort_init import init_bec_peaks
-from apsbits.core.catalog_init import init_catalog
+from apsbits.core.bluesky_init import init_bec_peaks
+from apsbits.core.bluesky_init import init_catalog
+from apsbits.core.bluesky_init import init_RE
 from apsbits.core.instrument_init import make_devices
 from apsbits.core.instrument_init import oregistry
-from apsbits.core.run_engine_init import init_RE
 from apsbits.utils.aps_functions import aps_dm_setup
 from apsbits.utils.aps_functions import host_on_aps_subnet
 from apsbits.utils.config_loaders import get_config
@@ -33,10 +33,10 @@ iconfig = get_config()
 # Configure the session with callbacks, devices, and plans.
 aps_dm_setup(iconfig.get("DM_SETUP_FILE"))
 
-if iconfig.get("USE_BLUESKY_MAGICS", False):
-    register_bluesky_magics()
+# Command-line tools, such as %wa, %ct, ...
+register_bluesky_magics()
 
-# Initialize core components
+# Initialize core bluesky components
 bec, peaks = init_bec_peaks(iconfig)
 cat = init_catalog(iconfig)
 RE, sd = init_RE(iconfig, bec_instance=bec, cat_instance=cat)
@@ -54,9 +54,6 @@ if iconfig.get("SPEC_DATA_FILES", {}).get("ENABLE", False):
     from .callbacks.spec_data_file_writer import specwriter  # noqa: F401
 
     init_specwriter_with_RE(RE)
-
-# Import all plans
-from .plans import *  # noqa
 
 # These imports must come after the above setup.
 if running_in_queueserver():
