@@ -351,7 +351,7 @@ def test_copy_instrument(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> N
     content = startup_file.read_text()
     assert "Start Bluesky Data Acquisition sessions of all kinds." in content
     assert "from apsbits.core.best_effort_init import init_bec_peaks" in content
-    assert "RE(make_devices(clear=False))" in content
+    assert 'RE(make_devices(clear=False, file="devices.yml"))' in content
 
 
 def test_create_qserver(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> None:

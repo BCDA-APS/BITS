@@ -56,12 +56,6 @@ SPEC_DATA_FILES:
 ### Use bash shell, deactivate all conda environments, source this file:
 DM_SETUP_FILE: "/home/dm/etc/dm.setup.sh"
 
-### Local OPHYD Device Control Yaml
-DEVICES_FILES:
-- devices.yml
-APS_DEVICES_FILES:
-- devices_aps_only.yml
-
 # Log when devices are added to console (__main__ namespace)
 MAKE_DEVICES:
     LOG_LEVEL: info

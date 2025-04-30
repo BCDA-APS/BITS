@@ -15,7 +15,8 @@ from typing import Optional
 
 import ophyd
 from ophyd.signal import EpicsSignalBase
-from ophydregistry import Registry
+
+from apsbits.core.instrument_init import oregistry
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
@@ -101,8 +102,3 @@ def set_timeouts(timeouts):
             write_timeout=timeouts.get("PV_WRITE", DEFAULT_TIMEOUT),
             connection_timeout=timeouts.get("PV_CONNECTION", DEFAULT_TIMEOUT),
         )
-
-
-oregistry = Registry(auto_register=True)
-"""Registry of all ophyd-style Devices and Signals."""
-oregistry.warn_duplicates = False
