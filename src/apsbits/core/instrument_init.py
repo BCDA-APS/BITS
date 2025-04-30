@@ -20,7 +20,6 @@ import guarneri
 from apstools.plans import run_blocking_function
 from apstools.utils import dynamic_import
 from bluesky import plan_stubs as bps
-from ophydregistry import Registry
 
 from apsbits.utils.config_loaders import get_config
 from apsbits.utils.config_loaders import load_config_yaml
@@ -111,7 +110,7 @@ def make_devices(
     else:
         logger.info("Loading device file: %s", device_path)
         try:
-            yield from run_blocking_function(_namespace_loader, device_path, main=True)
+            yield from run_blocking_function(namespace_loader, device_path, main=True)
         except Exception as e:
             logger.error("Error loading device file %s: %s", device_path, str(e))
 
@@ -123,7 +122,7 @@ def make_devices(
         yield from bps.sleep(pause)
 
 
-def _namespace_loader(yaml_device_file, main=True):
+def namespace_loader(yaml_device_file, main=True):
     """
     Load our ophyd-style controls as described in a YAML file into the main namespace.
 
@@ -137,9 +136,10 @@ def _namespace_loader(yaml_device_file, main=True):
     """
     logger.debug("Devices file %r.", str(yaml_device_file))
     t0 = time.time()
-    _instr.load(yaml_device_file)
-    logger.info("Devices loaded in %.3f s.", time.time() - t0)
 
+    instrument.load(yaml_device_file)
+
+    logger.info("Devices loaded in %.3f s.", time.time() - t0)
     if main:
         log_level = _get_make_devices_log_level()
 
@@ -183,8 +183,6 @@ class Instrument(guarneri.Instrument):
         return devices
 
 
-oregistry = Registry(auto_register=True)
+instrument = Instrument({})  # singleton
+oregistry = instrument.devices
 """Registry of all ophyd-style Devices and Signals."""
-oregistry.warn_duplicates = False
-
-_instr = Instrument({}, registry=oregistry)  # singleton
