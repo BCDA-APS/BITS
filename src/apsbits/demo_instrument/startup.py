@@ -10,6 +10,7 @@ Includes:
 """
 
 import logging
+from pathlib import Path
 
 from apsbits.core.bluesky_init import init_bec_peaks
 from apsbits.core.bluesky_init import init_catalog
@@ -19,16 +20,27 @@ from apsbits.core.instrument_init import oregistry
 from apsbits.utils.aps_functions import aps_dm_setup
 from apsbits.utils.aps_functions import host_on_aps_subnet
 from apsbits.utils.config_loaders import get_config
+from apsbits.utils.config_loaders import load_config
 from apsbits.utils.helper_functions import register_bluesky_magics
 from apsbits.utils.helper_functions import running_in_queueserver
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
 
-oregistry.clear()  # Discard oregistry items loaded above.
+# Get the path to the instrument package
+instrument_path = Path(__file__).parent
+
+# Load configuration to be used by the instrument.
+iconfig_path = instrument_path / "configs" / "iconfig.yml"
+load_config(iconfig_path)
 
 # Get the configuration
 iconfig = get_config()
+
+logger.info("Starting Instrument with iconfig: %s", iconfig_path)
+
+# Discard oregistry items loaded above.
+oregistry.clear()
 
 # Configure the session with callbacks, devices, and plans.
 aps_dm_setup(iconfig.get("DM_SETUP_FILE"))
