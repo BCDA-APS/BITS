@@ -96,6 +96,7 @@ def make_devices(
     else:
         iconfig = get_config()
         instrument_path = pathlib.Path(iconfig.get("INSTRUMENT_PATH")).parent
+        print(f"\n\nInstrument path: {instrument_path}\n\n")
         configs_path = instrument_path / "configs"
 
     device_file = file
