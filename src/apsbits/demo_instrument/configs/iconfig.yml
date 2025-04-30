@@ -71,6 +71,6 @@ OPHYD:
         PV_WRITE: *TIMEOUT
         PV_CONNECTION: *TIMEOUT
 
-# Control detail of exception traces in IPython (console and notebook).
-# Options are: 'Plain', 'Context', 'Verbose', 'Minimal', 'Docs'
-XMODE_DEBUG_LEVEL: Plain
+# # Control detail of exception traces in IPython (console and notebook).
+# # Options are: 'Plain', 'Context', 'Verbose', 'Minimal', 'Docs'
+# XMODE_DEBUG_LEVEL: Plain

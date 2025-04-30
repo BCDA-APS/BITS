@@ -27,7 +27,7 @@ MB = 1024 * kB
 BRIEF_DATE = "%a-%H:%M:%S"
 BRIEF_FORMAT = "%(levelname)-.1s %(asctime)s.%(msecs)03d: %(message)s"
 DEFAULT_CONFIG_FILE = (
-    pathlib.Path(__file__).parent.parent / "demo_instrument" / "configs" / "logging.yml"
+    pathlib.Path(__file__).parent.parent / "configs" / "bits_logging.yml"
 )
 
 
@@ -94,11 +94,7 @@ def configure_logging():
     logger = logging.getLogger(__name__).root
     logger.debug("logger=%r", logger)
 
-    config_file = os.environ.get("BLUESKY_INSTRUMENT_CONFIG_FILE")
-    if config_file is None:
-        config_file = DEFAULT_CONFIG_FILE
-    else:
-        config_file = pathlib.Path(config_file)
+    config_file = DEFAULT_CONFIG_FILE
 
     logging_configuration = load_config_yaml(config_file)
     for part, cfg in logging_configuration.items():
