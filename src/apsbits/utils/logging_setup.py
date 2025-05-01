@@ -26,9 +26,7 @@ MB = 1024 * kB
 
 BRIEF_DATE = "%a-%H:%M:%S"
 BRIEF_FORMAT = "%(levelname)-.1s %(asctime)s.%(msecs)03d: %(message)s"
-DEFAULT_CONFIG_FILE = (
-    pathlib.Path(__file__).parent.parent / "demo_instrument" / "configs" / "logging.yml"
-)
+DEFAULT_CONFIG_FILE = pathlib.Path(__file__).parent.parent / "configs" / "logging.yml"
 
 
 # Add your custom logging level at the top-level, before configure_logging()
@@ -86,7 +84,7 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
 addLoggingLevel("BSDEV", logging.INFO - 5)
 
 
-def configure_logging():
+def configure_logging(extra_logging_configs_path=None):
     """Configure logging as described in file."""
     from apsbits.utils.config_loaders import load_config_yaml
 
@@ -94,13 +92,10 @@ def configure_logging():
     logger = logging.getLogger(__name__).root
     logger.debug("logger=%r", logger)
 
-    config_file = os.environ.get("BLUESKY_INSTRUMENT_CONFIG_FILE")
-    if config_file is None:
-        config_file = DEFAULT_CONFIG_FILE
-    else:
-        config_file = pathlib.Path(config_file)
+    config_file = DEFAULT_CONFIG_FILE
 
     logging_configuration = load_config_yaml(config_file)
+
     for part, cfg in logging_configuration.items():
         logging.debug("%r - %s", part, cfg)
 
@@ -115,6 +110,24 @@ def configure_logging():
 
         elif part == "modules":
             _setup_module_logging(cfg)
+
+    if extra_logging_configs_path is not None:
+        logging_configuration = load_config_yaml(extra_logging_configs_path)
+
+        for part, cfg in logging_configuration.items():
+            logging.debug("%r - %s", part, cfg)
+
+            if part == "console_logs":
+                _setup_console_logger(logger, cfg)
+
+            elif part == "file_logs":
+                _setup_file_logger(logger, cfg)
+
+            elif part == "ipython_logs":
+                _setup_ipython_logger(logger, cfg)
+
+            elif part == "modules":
+                _setup_module_logging(cfg)
 
 
 def _setup_console_logger(logger, cfg):

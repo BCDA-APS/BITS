@@ -30,15 +30,6 @@ logger.bsdev(__file__)
 MAIN_NAMESPACE = "__main__"
 
 
-def _get_make_devices_log_level() -> int:
-    """(internal) User choice for log level used in 'make_devices()'."""
-    level = get_config().get("MAKE_DEVICES", {}).get("LOG_LEVEL", "info")
-    if isinstance(level, str):
-        # Allow log level as str or int in iconfig.yml.
-        level = logging._nameToLevel[level.upper()]
-    return level
-
-
 def make_devices(
     *,
     pause: float = 1,
@@ -72,13 +63,14 @@ def make_devices(
     logger.debug("(Re)Loading local control objects.")
 
     if clear:
-        log_level = _get_make_devices_log_level()
-
         main_namespace = sys.modules[MAIN_NAMESPACE]
+
+        # Clear the oregistry and remove any devices registered previously.
         for dev_name in oregistry.device_names:
             # Remove from __main__ namespace any devices registered previously.
             if hasattr(main_namespace, dev_name):
-                logger.log(log_level, "Removing %r from %r", dev_name, MAIN_NAMESPACE)
+                logger.info("Removing %r from %r", dev_name, MAIN_NAMESPACE)
+
                 delattr(main_namespace, dev_name)
 
         oregistry.clear()
@@ -141,11 +133,10 @@ def namespace_loader(yaml_device_file, main=True):
 
     logger.info("Devices loaded in %.3f s.", time.time() - t0)
     if main:
-        log_level = _get_make_devices_log_level()
-
         main_namespace = sys.modules[MAIN_NAMESPACE]
         for label in oregistry.device_names:
-            logger.log(log_level, "Adding ophyd device %r to main namespace", label)
+            logger.info("Adding ophyd device %r to main namespace", label)
+
             setattr(main_namespace, label, oregistry[label])
 
 
