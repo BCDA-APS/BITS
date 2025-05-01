@@ -34,6 +34,7 @@ def init_RE(
     iconfig: Dict[str, Any],
     bec_instance: Optional[Any] = None,
     cat_instance: Optional[Any] = None,
+    **kwargs: Any,
 ) -> Tuple[bluesky.RunEngine, bluesky.SupplementalData]:
     """
     Initialize and configure a Bluesky RunEngine instance.
@@ -55,6 +56,8 @@ def init_RE(
             to the RunEngine. Defaults to None.
         cat_instance (Optional[Any]): Instance of a databroker catalog for subscribing
             to the RunEngine. Defaults to None.
+        **kwargs: Additional keyword arguments passed to the RunEngine constructor.
+            For example, run_returns_result=True.
 
     Returns:
         Tuple[bluesky.RunEngine, bluesky.SupplementalData]: A tuple containing the
@@ -75,7 +78,7 @@ def init_RE(
     set_control_layer(control_layer=control_layer)
     set_timeouts(timeouts=iconfig.get("OPHYD", {}).get("TIMEOUTS", {}))
 
-    RE = bluesky.RunEngine()
+    RE = bluesky.RunEngine(**kwargs)
     """The Bluesky RunEngine object."""
 
     sd = bluesky.SupplementalData()
