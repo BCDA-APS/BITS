@@ -26,9 +26,7 @@ MB = 1024 * kB
 
 BRIEF_DATE = "%a-%H:%M:%S"
 BRIEF_FORMAT = "%(levelname)-.1s %(asctime)s.%(msecs)03d: %(message)s"
-DEFAULT_CONFIG_FILE = (
-    pathlib.Path(__file__).parent.parent / "configs" / "bits_logging.yml"
-)
+DEFAULT_CONFIG_FILE = pathlib.Path(__file__).parent.parent / "configs" / "logging.yml"
 
 
 # Add your custom logging level at the top-level, before configure_logging()
