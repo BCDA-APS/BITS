@@ -70,6 +70,7 @@ def make_devices(
             # Remove from __main__ namespace any devices registered previously.
             if hasattr(main_namespace, dev_name):
                 logger.info("Removing %r from %r", dev_name, MAIN_NAMESPACE)
+
                 delattr(main_namespace, dev_name)
 
         oregistry.clear()
@@ -135,6 +136,7 @@ def namespace_loader(yaml_device_file, main=True):
         main_namespace = sys.modules[MAIN_NAMESPACE]
         for label in oregistry.device_names:
             logger.info("Adding ophyd device %r to main namespace", label)
+
             setattr(main_namespace, label, oregistry[label])
 
 
