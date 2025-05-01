@@ -235,6 +235,7 @@ write_to = "src/apsbits/_version.py"
 create-bits = "apsbits.api.create_new_instrument:main" ## keeping this one for back compatibility
 #new section of entrypoints for the api.
 bits-create = "apsbits.api.create_new_instrument:main"
+bits-new-startup = "apsbits.api.create_new_startup:main"
 bits-delete = "apsbits.api.delete_instrument:main"
 bits-run = "apsbits.api.run_instrument:main"
 # bits-device-create
