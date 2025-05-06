@@ -41,7 +41,7 @@ iconfig = load_config(iconfig_path)
 # Additional logging configuration
 # only needed if using different logging setup
 # from the one in the apsbits package
-extra_logging_configs_path = instrument_path / "configs" / "logging.yml"
+extra_logging_configs_path = instrument_path / "configs" / "extra_logging.yml"
 configure_logging(extra_logging_configs_path=extra_logging_configs_path)
 
 
