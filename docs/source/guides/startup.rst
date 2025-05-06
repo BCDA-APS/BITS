@@ -141,7 +141,7 @@ Configuration Tips
    ~~~~~~~~~~~~~~~~~~~~
 
    Essential sections:
-   
+
    .. code-block:: yaml
 
        DM_SETUP_FILE: "path/to/dm_setup.yml"
@@ -154,7 +154,7 @@ Configuration Tips
    ~~~~~~~~~~~~~~~~~~~~
 
    Create extra_logging.yml for custom logging:
-   
+
    .. code-block:: yaml
 
        version: 1
