@@ -30,10 +30,43 @@ describe future plans.
 .. Coming release content can be gathered here.
     Some people object to publishing unreleased changes.
 
-    1.0.2
+    1.0.4
     #####
 
-    release expected 2025-Q2
+    release expected ?
+
+1.0.3
+#####
+
+released 2025-05-01
+
+Enhancements
+---------------
+
+* arguments for run engine
+
+Fixes
+-----
+
+* 'make_devices()' from yaml file
+
+Maintenance
+---------------
+
+* Clean backend
+
+1.0.2
+#####
+
+released 2025-04-18
+
+Maintenance
+---------------
+
+* Add a release history file
+* Documentation overhaul1
+* adding install docs given new workflow
+* Feature/API_functionalities and Makedevices
 
 1.0.1
 #####
