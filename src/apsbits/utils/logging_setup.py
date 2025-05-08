@@ -19,6 +19,7 @@ import logging
 import logging.handlers
 import os
 import pathlib
+import sys
 
 BYTE = 1
 kB = 1024 * BYTE
@@ -27,6 +28,21 @@ MB = 1024 * kB
 BRIEF_DATE = "%a-%H:%M:%S"
 BRIEF_FORMAT = "%(levelname)-.1s %(asctime)s.%(msecs)03d: %(message)s"
 DEFAULT_CONFIG_FILE = pathlib.Path(__file__).parent.parent / "configs" / "logging.yml"
+
+
+def _get_package_root() -> pathlib.Path:
+    """
+    Get the root directory of the package that is running the code.
+
+    Returns:
+        pathlib.Path: The root directory of the running package.
+    """
+    # Get the main module's file path
+    main_module = sys.modules.get("__main__")
+    if main_module and hasattr(main_module, "__file__"):
+        return pathlib.Path(main_module.__file__).parent
+    # Fallback to current working directory if main module not found
+    return pathlib.Path.cwd()
 
 
 # Add your custom logging level at the top-level, before configure_logging()
@@ -163,7 +179,14 @@ def _setup_file_logger(logger, cfg):
 
     backupCount = cfg.get("backupCount", 9)
     maxBytes = cfg.get("maxBytes", 1 * MB)
-    log_path = pathlib.Path(cfg.get("log_directory", ".logs")).resolve()
+
+    # Use user-provided log directory if specified, otherwise use package root
+    if "log_directory" in cfg:
+        log_path = pathlib.Path(cfg["log_directory"]).resolve()
+    else:
+        package_root = _get_package_root()
+        log_path = package_root / ".logs"
+
     if not log_path.exists():
         os.makedirs(str(log_path))
 
@@ -193,7 +216,16 @@ def _setup_ipython_logger(logger, cfg):
 
     See ``logrotate?`` int he IPython console for more information.
     """
-    log_path = pathlib.Path(cfg.get("log_directory", ".logs")).resolve()
+    # Use user-provided log directory if specified, otherwise use package root
+    if "log_directory" in cfg:
+        log_path = pathlib.Path(cfg["log_directory"]).resolve()
+    else:
+        package_root = _get_package_root()
+        log_path = package_root / ".logs"
+
+    if not log_path.exists():
+        os.makedirs(str(log_path))
+
     try:
         from IPython import get_ipython
 
