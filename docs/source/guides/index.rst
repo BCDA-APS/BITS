@@ -13,6 +13,7 @@ User Documentation
 
    template_creation
    creating_instrument
+   startup
    setting_iconfig
    creating_devices
    sessions

@@ -19,7 +19,6 @@ import tomli  # type: ignore
 import yaml
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
 
 # Global configuration instance
 _iconfig: Dict[str, Any] = {}

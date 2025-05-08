@@ -28,7 +28,6 @@ from typing import Union
 import yaml
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
 
 
 class StoredDict(collections.abc.MutableMapping):

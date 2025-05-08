@@ -21,7 +21,6 @@ from IPython import get_ipython
 from apsbits.utils.config_loaders import get_config
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
 
 
 def register_bluesky_magics() -> None:
