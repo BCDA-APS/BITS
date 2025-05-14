@@ -40,7 +40,7 @@ def aps_dm_setup(dm_setup_file_path: str | None) -> None:
             # parse environment variables from bash script
             environment: dict[str, str] = {}
             for line in open(bash_script).readlines():
-                match = re.match(r'^export\s+(\w+)=(.*)$', line.strip())
+                match = re.match(r'^export\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$', line.strip())
                 if not match:
                     continue
                 k, v = match.groups()
