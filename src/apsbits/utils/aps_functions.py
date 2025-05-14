@@ -38,7 +38,7 @@ def aps_dm_setup(dm_setup_file_path):
                 match = re.match(r'^export\s+([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$', line.strip())
                 if not match:
                     continue
-                k, v = match.groups()
+                k, v = line.strip().split()[-1].split("=")
                 environment[k] = v
             os.environ.update(environment)
 
