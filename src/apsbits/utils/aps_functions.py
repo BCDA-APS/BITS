@@ -47,7 +47,7 @@ def aps_dm_setup(dm_setup_file_path):
                     v = v.strip()  # Default to empty string
                 else:
                     k = export_part.strip()
-                    v = None  # No '=' means no value assigned
+                    v = ""  # This is what bash does
                 environment[k] = v
             os.environ.update(environment)
 
