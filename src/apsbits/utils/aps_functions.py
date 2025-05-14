@@ -11,38 +11,47 @@ import logging
 import os
 import pathlib
 import socket
+import re
 
 logger = logging.getLogger(__name__)
 
 
-def aps_dm_setup(dm_setup_file_path):
+def aps_dm_setup(dm_setup_file_path: str | None) -> None:
     """
-    APS Data Management setup
+    APS Data Management setup.
     =========================
 
     Read the bash shell script file used by DM to setup the environment. Parse any
-    ``export`` lines and add their environment variables to this session.  This is
+    ``export`` lines and add their environment variables to this session. This is
     done by brute force here since the APS DM environment setup requires different
     Python code than bluesky and the two often clash.
 
     This setup must be done before any of the DM package libraries are called.
 
+    Parameters
+    ----------
+    dm_setup_file_path : str | None
+        Path to the bash shell script file to parse for environment variables.
     """
     if dm_setup_file_path is not None:
         bash_script = pathlib.Path(dm_setup_file_path)
         if bash_script.exists():
             logger.info("APS DM environment file: %s", str(bash_script))
             # parse environment variables from bash script
-            environment = {}
+            environment: dict[str, str] = {}
             for line in open(bash_script).readlines():
-                if not line.startswith("export "):
+                match = re.match(r'^export\s+(\w+)=(.*)$', line.strip())
+                if not match:
                     continue
-                k, v = line.strip().split()[-1].split("=")
+                k, v = match.groups()
                 environment[k] = v
             os.environ.update(environment)
 
-            workflow_owner = os.environ["DM_STATION_NAME"].lower()
-            logger.info("APS DM workflow owner: %s", workflow_owner)
+            workflow_owner = os.environ.get("DM_STATION_NAME", "").lower()
+            if workflow_owner:
+                logger.info("APS DM workflow owner: %s", workflow_owner)
+            else:
+                logger.warning("DM_STATION_NAME not set in environment.")
         else:
             logger.warning("APS DM setup file does not exist: '%s'", bash_script)
 
