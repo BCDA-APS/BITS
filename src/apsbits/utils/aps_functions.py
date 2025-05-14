@@ -44,7 +44,7 @@ def aps_dm_setup(dm_setup_file_path):
                 if "=" in export_part:
                     k, v = export_part.split("=", 1)
                     k = k.strip()
-                    v = v.strip() or None  # Set to None if empty string
+                    v = v.strip()  # Default to empty string
                 else:
                     k = export_part.strip()
                     v = None  # No '=' means no value assigned
