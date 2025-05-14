@@ -1,0 +1,40 @@
+# # Bluesky Session Logging Configuration
+
+# console_logs:
+#   date_format: "%a-%H:%M:%S"
+#   log_format: "%(levelname)-.1s %(asctime)s.%(msecs)03d: %(message)s"
+#   level: info
+#   root_level: bsdev
+
+# file_logs:
+#   date_format: "%Y-%m-%d %H:%M:%S"
+#   log_directory: .logs
+#   log_filename_base: logging.log
+#   log_format: "|\
+#     %(asctime)s.%(msecs)03d|\
+#     %(levelname)s|\
+#     %(process)d|\
+#     %(name)s|\
+#     %(module)s|\
+#     %(lineno)d|\
+#     %(threadName)s| - \
+#     %(message)s"
+#   maxBytes: 1_000_000
+#   backupCount: 9
+#   level: info
+#   rotate_on_startup: true
+
+# ipython_logs:
+#   log_directory: .logs
+#   log_filename_base: ipython_log.py
+#   log_mode: rotate
+#   options: -o -t
+
+# modules:
+#   apstools: warning
+#   bluesky-queueserver: warning
+#   bluesky: warning
+#   bluesky.RE: warning
+#   caproto: warning
+#   databroker: warning
+#   ophyd: warning
