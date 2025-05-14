@@ -39,11 +39,15 @@ def aps_dm_setup(dm_setup_file_path):
                 if not line.startswith("export "):
                     continue
                 export_part = line.strip().split("export ", 1)[-1]
-                if "=" not in export_part:
+                if not export_part:
                     continue
-                k, v = export_part.split("=", 1)
-                k = k.strip()
-                v = v.strip()
+                if "=" in export_part:
+                    k, v = export_part.split("=", 1)
+                    k = k.strip()
+                    v = v.strip() or None  # Set to None if empty string
+                else:
+                    k = export_part.strip()
+                    v = None  # No '=' means no value assigned
                 environment[k] = v
             os.environ.update(environment)
 
