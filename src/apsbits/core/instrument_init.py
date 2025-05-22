@@ -81,14 +81,14 @@ def make_devices(
             " also be provided"
         )
 
-    if path is not None:
-        configs_path = pathlib.Path(path)
-        print(f"\n\nConfigs path: {configs_path}\n\n")
-
-    else:
+    if path is None:
         iconfig = get_config()
         instrument_path = pathlib.Path(iconfig.get("INSTRUMENT_PATH")).parent
         configs_path = instrument_path / "configs"
+
+    else:
+        configs_path = pathlib.Path(path)
+        print(f"\n\nConfigs path: {configs_path}\n\n")
 
     device_file = file
 
