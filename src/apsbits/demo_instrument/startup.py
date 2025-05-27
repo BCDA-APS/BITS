@@ -99,8 +99,11 @@ else:
     from bluesky import plans as bp  # noqa: F401
 
 
-# Experiment specific logic, device and plan loading
-RE(make_devices(clear=False, file="devices.yml"))  # Create the devices.
+def _startup_plan():
+    """Experiment specific logic, device and plan loading."""
+    yield from make_devices(clear=False, file="devices.yml")
 
-if host_on_aps_subnet():
-    RE(make_devices(clear=False, file="devices_aps_only.yml"))
+    if host_on_aps_subnet():
+        yield from make_devices(clear=False, file="devices_aps_only.yml")
+
+RE(_startup_plan())
