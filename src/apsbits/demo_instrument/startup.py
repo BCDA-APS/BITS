@@ -106,4 +106,5 @@ def _startup_plan():
     if host_on_aps_subnet():
         yield from make_devices(clear=False, file="devices_aps_only.yml")
 
+
 RE(_startup_plan())
