@@ -35,6 +35,11 @@ describe future plans.
 
     release expected ?
 
+    New Features
+    ---------------
+
+    * Hoist support to setup baseline stream using labels kwarg from USAXS.
+
 1.0.4
 #####
 
