@@ -17,6 +17,7 @@ if TYPE_CHECKING:
 
 ICONFIG_VERSION_NOW: str = "2.0.1"
 
+
 @pytest.fixture
 def yml_config_file():
     """Create a temporary YAML configuration file."""
