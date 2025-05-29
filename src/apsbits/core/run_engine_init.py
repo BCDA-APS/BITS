@@ -8,6 +8,7 @@ settings based on a configuration dictionary.
 
 .. autosummary::
     init_RE
+    setup_baseline_stream
 """
 
 import logging
@@ -17,6 +18,8 @@ from typing import Optional
 from typing import Tuple
 
 import bluesky
+import guarneri
+import ophyd
 from bluesky.utils import ProgressBarManager
 
 from apsbits.utils.controls_setup import connect_scan_id_pv
@@ -124,3 +127,39 @@ def init_RE(
         RE.waiting_hook = pbar_manager
 
     return RE, sd
+
+
+def setup_baseline_stream(
+    sd: bluesky.SupplementalData,
+    iconfig: dict[str, ophyd.OphydObject],
+    oregistry: guarneri.Instrument,
+) -> None:
+    """
+    Add ophyd objects with 'baseline' label to baseline stream.
+
+    Call 'setup_baseline_stream(sd, iconfig, oregistry)' after all ophyd objects
+    have been created.
+
+    To include any ophyd object created after startup has completed, append it
+    to the supplementary data, such as: ``sd.append(new_ophyd_object)``
+    """
+    baseline_config = iconfig.get("BASELINE_LABEL")
+    if baseline_config is None:
+        return  # No baseline configuration found in iconfig.yml file.
+
+    if not baseline_config.get("ENABLE", False):
+        return  # baseline stream is not enabled in iconfig.yml file.
+
+    label = baseline_config.get("LABEL", "baseline")
+    logger.info(
+        "Adding objects with %r label to 'baseline' stream.",
+        label,
+    )
+
+    try:
+        sd.baseline.extend(oregistry.findall(label, allow_none=True) or [])
+    except Exception:
+        logger.warning(
+            "Could not add objects with %r label to 'baseline' stream",
+            label,
+        )

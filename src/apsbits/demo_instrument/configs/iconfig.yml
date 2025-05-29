@@ -29,6 +29,13 @@ RUN_ENGINE:
     ### Default: False
     USE_PROGRESS_BAR: false
 
+### Baseline stream
+### When ENABLE=true, all ophyd objects with a "baseline" label
+### will be added to the baseline stream.
+BASELINE_LABEL:
+    LABEL: baseline
+    ENABLE: true
+
 ### Best Effort Callback Configurations
 ### Defaults: all true
 ### except no plots in queueserver
