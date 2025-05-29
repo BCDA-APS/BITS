@@ -40,6 +40,11 @@ describe future plans.
 
     * Hoist support to setup baseline stream using labels kwarg from USAXS.
 
+    Maintenance
+    ---------------
+
+    * Bump iconfig version to 2.0.1 for the baseline addition.
+
 1.0.4
 #####
 
