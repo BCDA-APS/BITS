@@ -30,10 +30,15 @@ describe future plans.
 .. Coming release content can be gathered here.
     Some people object to publishing unreleased changes.
 
-    1.0.4
+    1.1.0
     #####
 
     release expected ?
+
+1.0.4
+#####
+
+released 2025-05-14
 
 1.0.3
 #####
