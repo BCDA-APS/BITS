@@ -116,7 +116,6 @@ def init_RE(
         RE.subscribe(cat_instance.v1.insert)
     if bec_instance is not None:
         RE.subscribe(bec_instance)
-    RE.preprocessors.append(sd)
 
     scan_id_pv = iconfig.get("RUN_ENGINE", {}).get("SCAN_ID_PV")
     connect_scan_id_pv(RE, pv=scan_id_pv)
