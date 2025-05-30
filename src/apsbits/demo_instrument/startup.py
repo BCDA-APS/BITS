@@ -20,6 +20,7 @@ from apsbits.core.instrument_init import oregistry
 
 # Core Functions
 from apsbits.core.run_engine_init import init_RE
+from apsbits.core.run_engine_init import setup_baseline_stream
 
 # Utility functions
 from apsbits.utils.aps_functions import aps_dm_setup
@@ -104,3 +105,5 @@ RE(make_devices(clear=False, file="devices.yml"))  # Create the devices.
 
 if host_on_aps_subnet():
     RE(make_devices(clear=False, file="devices_aps_only.yml"))
+
+setup_baseline_stream(sd, iconfig, oregistry)

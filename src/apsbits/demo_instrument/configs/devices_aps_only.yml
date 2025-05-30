@@ -3,4 +3,6 @@
 # Objects only available at APS
 
 apstools.devices.ApsMachineParametersDevice:
-  - name: aps
+- name: aps
+  labels:
+  - baseline

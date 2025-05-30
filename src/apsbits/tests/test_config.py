@@ -15,12 +15,14 @@ from apsbits.utils.config_loaders import load_config
 if TYPE_CHECKING:
     pass
 
+ICONFIG_VERSION_NOW: str = "2.0.1"
+
 
 @pytest.fixture
 def yml_config_file():
     """Create a temporary YAML configuration file."""
     config = {
-        "ICONFIG_VERSION": "2.0.0",
+        "ICONFIG_VERSION": ICONFIG_VERSION_NOW,
         "DATABROKER_CATALOG": "temp",
         "test_key": "test_value",
     }
@@ -37,7 +39,7 @@ def yml_config_file():
 def toml_config_file():
     """Create a temporary TOML configuration file."""
     config = {
-        "ICONFIG_VERSION": "2.0.0",
+        "ICONFIG_VERSION": ICONFIG_VERSION_NOW,
         "DATABROKER_CATALOG": "temp",
         "test_key": "test_value",
     }
@@ -58,7 +60,7 @@ def test_load_yaml_config(yml_config_file: pathlib.Path) -> None:
         yml_config_file: Path to the temporary YAML configuration file.
     """
     config = load_config(yml_config_file)
-    assert config["ICONFIG_VERSION"] == "2.0.0"
+    assert config["ICONFIG_VERSION"] == ICONFIG_VERSION_NOW
     assert config["DATABROKER_CATALOG"] == "temp"
     assert config["test_key"] == "test_value"
 
@@ -71,7 +73,7 @@ def test_load_toml_config(toml_config_file: pathlib.Path) -> None:
         toml_config_file: Path to the temporary TOML configuration file.
     """
     config = load_config(toml_config_file)
-    assert config["ICONFIG_VERSION"] == "2.0.0"
+    assert config["ICONFIG_VERSION"] == ICONFIG_VERSION_NOW
     assert config["DATABROKER_CATALOG"] == "temp"
     assert config["test_key"] == "test_value"
 
