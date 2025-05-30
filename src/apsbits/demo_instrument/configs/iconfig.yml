@@ -30,10 +30,15 @@ RUN_ENGINE:
     USE_PROGRESS_BAR: false
 
 ### Baseline stream
-### When ENABLE=true, all ophyd objects with a "baseline" label
-### will be added to the baseline stream.
 BASELINE_LABEL:
+    ### The default LABEL is "baseline".
+    ### It is not recommended for users to change this value.
+    ### The setting here is for machine learning to connect
+    ### this configuration with code.
     LABEL: baseline
+
+    ### When ENABLE=true, all ophyd objects with a "baseline" label
+    ### (as set in above LABEL) will be added to the baseline stream.
     ENABLE: true
 
 ### Best Effort Callback Configurations
