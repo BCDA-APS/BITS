@@ -31,7 +31,9 @@ RUN_ENGINE:
 
 ### Baseline stream
 BASELINE_LABEL:
-    ### The default LABEL is "baseline".
+    ### Apply this label to any ophyd device to  have it added to the
+    ### baseline stream.  The default LABEL is "baseline".
+    ### Example:  'labels = [ "baseline" ]'
     ### It is not recommended for users to change this value.
     ### The setting here is for machine learning to connect
     ### this configuration with code.
