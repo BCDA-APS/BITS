@@ -7,8 +7,7 @@ Bluesky RunEngine with metadata storage, subscriptions, and various
 settings based on a configuration dictionary.
 
 .. autosummary::
-    init_RE
-    setup_baseline_stream
+    ~init_RE
 """
 
 import logging
@@ -18,8 +17,6 @@ from typing import Optional
 from typing import Tuple
 
 import bluesky
-import guarneri
-import ophyd
 from bluesky.utils import ProgressBarManager
 
 from apsbits.utils.controls_setup import connect_scan_id_pv
@@ -126,72 +123,3 @@ def init_RE(
         RE.waiting_hook = pbar_manager
 
     return RE, sd
-
-
-def setup_baseline_stream(
-    sd: bluesky.SupplementalData,
-    iconfig: dict[str, ophyd.OphydObject],
-    oregistry: guarneri.Instrument,
-) -> None:
-    """
-    Add ophyd objects with 'baseline' label to baseline stream.
-
-    Call :func:`~apsbits.core.run_engine_init.setup_baseline_stream(sd, iconfig,
-    oregistry)` in the startup code after all ophyd objects have been created.
-    It is safe to call this function even when no objects are labeled; there are
-    checks that return early if not configured.  This function should part of
-    every startup.
-
-    To include any ophyd object created after startup has completed, append it
-    to the 'sd.baseline' list, such as: ``sd.baseline.append(new_ophyd_object)``
-
-    Parameters:
-
-    sd bluesky.SupplementalData :
-        Object which contains the list of baseline objects to be published.
-    iconfig (Dict[str, Any]) :
-        Configuration dictionary with keys.  See
-        :func:`~apsbits.core.run_engine_init.init_RE()` for more details.
-    oregistry guarneri.Instrument :
-        Registry of ophyd objects.
-
-    .. rubric:: Background
-
-    The baseline stream records the values of ophyd objects:
-
-    * at the start and end of a run
-    * that are not intended as detectors (or other readables) for the primary stream
-    * that may not be suitable to record in the run's metadata
-    * for use by post-acquisition processing
-
-    To enable the assignment of an ophyd object to the baseline stream, add
-    "baseline" to its labels kwarg list. On startup, after all the objects have
-    been created, use the oregistry to find all the objects with the "baseline"
-    label and append each to the sd.baseline list.
-
-    To learn more about baseline readings and the baseline stream in bluesky, see:
-
-    * https://blueskyproject.io/bluesky/main/plans.html#supplemental-data
-    * https://blueskyproject.io/bluesky/main/metadata.html#recording-metadata
-    * https://nsls-ii.github.io/bluesky/tutorial.html#baseline-readings-and-other-supplemental-data
-    """
-    baseline_config = iconfig.get("BASELINE_LABEL")
-    if baseline_config is None:
-        return  # No baseline configuration found in iconfig.yml file.
-
-    if not baseline_config.get("ENABLE", False):
-        return  # baseline stream is not enabled in iconfig.yml file.
-
-    label = baseline_config.get("LABEL", "baseline")
-    logger.info(
-        "Adding objects with %r label to 'baseline' stream.",
-        label,
-    )
-
-    try:
-        sd.baseline.extend(oregistry.findall(label, allow_none=True) or [])
-    except Exception:
-        logger.warning(
-            "Could not add objects with %r label to 'baseline' stream",
-            label,
-        )
