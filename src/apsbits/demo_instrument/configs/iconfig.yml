@@ -56,7 +56,7 @@ SPEC_DATA_FILES:
     FILE_EXTENSION: dat
 
 ### APS Data Management
-### Use bash shell, deactivate all conda environments, source this file:
+### Learn environment variables for Data Management from this file:
 DM_SETUP_FILE: "/home/dm/etc/dm.setup.sh"
 
 # ----------------------------------
