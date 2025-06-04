@@ -52,7 +52,6 @@ Tips:
 * Create an extra_logging.yml file if you need custom logging configuration
 * The default logging setup from apsbits will be used if no extra configuration is provided
 
-
 Data Management Setup
 ~~~~~~~~~~~~~~~~~~~
 
@@ -129,10 +128,51 @@ Device Loading
     if host_on_aps_subnet():
         RE(make_devices(clear=False, file="device_aps_only.yml"))
 
+This block:
+* Loads the main device configuration from devices.yml
+* Optionally loads APS-specific devices from devices_aps_only.yml if running on APS subnet
+* Uses clear=False to preserve existing devices
+
 Tips:
 * Create a devices.yml file with your instrument's device configurations
 * Optionally create device_aps_only.yml for APS-specific devices
-* Set clear=False to preserve existing devices
+* The make_devices function will automatically register devices with the ophyd registry
+
+Baseline Device Setup
+~~~~~~~~~~~~~~~~~~~
+
+The baseline device setup allows you to track and record the state of specific devices during each scan. This is particularly useful for monitoring environmental conditions or instrument parameters that might affect your measurements.
+
+To configure baseline devices:
+
+1. In your devices.yml file, add a `label: baseline` to any device you want to track:
+
+   .. code-block:: yaml
+
+       apstools.devices.ApsMachineParametersDevice:
+       - name: aps
+         labels:
+         - baseline
+
+       ophyd.EpicsSignalRO:
+       - name: temperature_monitor
+         prefix: "IOC:TEMP"
+         labels:
+         - baseline
+
+2. The baseline devices will be automatically included in the metadata of each scan through the setup_baseline_stream function:
+
+   .. code-block:: python
+
+       setup_baseline_stream(sd, oregistry, connect=False)
+
+3. You can access baseline device values in your analysis using the scan metadata.
+
+Tips:
+* Use baseline devices for monitoring critical environmental parameters
+* Consider including timestamps, temperature, pressure, or other relevant measurements
+* Baseline devices should be read-only to avoid accidental modifications
+* Keep the number of baseline devices reasonable to avoid excessive data collection
 
 Configuration Tips
 ----------------

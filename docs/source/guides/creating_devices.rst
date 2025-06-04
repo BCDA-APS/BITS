@@ -46,32 +46,24 @@ You can also add a device from an external package to the ``devices.yml`` file.
        prefix: ioc:Slit1
        labels: ["slits"]
 
-2. Make sure all your device files are loaded on the ``iconfig.yml`` file.
-
-.. code-block:: yaml
-
-      DEVICES_FILES:
-        - devices.yml
-      APS_DEVICES_FILES:
-        - devices_aps_only.yml
-
-Note that the ``devices.yml`` file is loaded by default and the ``devices_aps_only.yml`` file is only loaded if the device is on the APS network.
-
-.. tip::
-    All kwargs of your device can be specified in the yaml file making it easy to resuse classes.
-
-.. tip::
-   You can add any number of device files inside the iconfig file used by your instrument ``startup.py`` file. Just add another entry to the list.
-
-   .. code-block:: yaml
-
-      ### Local OPHYD Device Control Yaml
-      DEVICES_FILES:
-        - devices.yml ## standard device file
-        - devices_2.yml ## another device file
-      APS_DEVICES_FILES:
-        - devices_aps_only.yml ## APS only device file
-        - devices_aps_only_2.yml ## another APS only device file
 
 .. tip::
     `APSTOOLS <https://github.com/BCDA-APS/apstools/tree/main/apstools>`_ has a lot of devices commonly used at the APS. Consider first checking the package and overwriting the device class to fit your needs before creating a new device.
+
+.. tip::
+    You can add the `label: baseline` to any device in your configuration to automatically track its state during scans. This is particularly useful for monitoring environmental conditions or instrument parameters. For example:
+
+    .. code-block:: yaml
+
+        apstools.devices.ApsMachineParametersDevice:
+        - name: aps
+          labels:
+          - baseline
+
+        ophyd.EpicsSignalRO:
+        - name: temperature_monitor
+          prefix: "IOC:TEMP"
+          labels:
+          - baseline
+
+    Baseline devices will be automatically included in the metadata of each scan, making it easy to track changes in environmental conditions or instrument parameters over time.
