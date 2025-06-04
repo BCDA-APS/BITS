@@ -29,9 +29,6 @@ RUN_ENGINE:
     ### Default: False
     USE_PROGRESS_BAR: false
 
-# Command-line tools, such as %wa, %ct, ...
-USE_BLUESKY_MAGICS: true
-
 ### Best Effort Callback Configurations
 ### Defaults: all true
 ### except no plots in queueserver
@@ -56,10 +53,6 @@ SPEC_DATA_FILES:
 ### Use bash shell, deactivate all conda environments, source this file:
 DM_SETUP_FILE: "/home/dm/etc/dm.setup.sh"
 
-# Log when devices are added to console (__main__ namespace)
-MAKE_DEVICES:
-    LOG_LEVEL: info
-
 # ----------------------------------
 
 OPHYD:
@@ -74,6 +67,4 @@ OPHYD:
         PV_WRITE: *TIMEOUT
         PV_CONNECTION: *TIMEOUT
 
-# Control detail of exception traces in IPython (console and notebook).
-# Options are: 'Plain', 'Context', 'Verbose', 'Minimal', 'Docs'
 XMODE_DEBUG_LEVEL: Plain

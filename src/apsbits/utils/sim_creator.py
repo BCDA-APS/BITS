@@ -22,7 +22,6 @@ import logging
 from apstools.utils import dynamic_import
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
 
 
 def predefined_device(*, name="", creator=""):

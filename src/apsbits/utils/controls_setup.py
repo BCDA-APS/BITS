@@ -19,8 +19,6 @@ from ophyd.signal import EpicsSignalBase
 from apsbits.core.instrument_init import oregistry
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
-
 
 DEFAULT_CONTROL_LAYER = "PyEpics"
 DEFAULT_TIMEOUT = 60  # default used next...

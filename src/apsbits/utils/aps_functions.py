@@ -13,7 +13,6 @@ import pathlib
 import socket
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
 
 
 def aps_dm_setup(dm_setup_file_path):
@@ -38,7 +37,16 @@ def aps_dm_setup(dm_setup_file_path):
             for line in open(bash_script).readlines():
                 if not line.startswith("export "):
                     continue
-                k, v = line.strip().split()[-1].split("=")
+                export_part = line.strip().split("export ", 1)[-1]
+                if not export_part:
+                    continue
+                if "=" in export_part:
+                    k, v = export_part.split("=", 1)
+                    k = k.strip()
+                    v = v.strip()  # Default to empty string
+                else:
+                    k = export_part.strip()
+                    v = ""  # This is what bash does
                 environment[k] = v
             os.environ.update(environment)
 
