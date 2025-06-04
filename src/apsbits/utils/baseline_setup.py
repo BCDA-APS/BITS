@@ -9,7 +9,8 @@ import logging
 
 import bluesky
 import guarneri
-import ophyd
+
+from apsbits.utils.config_loaders import get_config
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
@@ -17,7 +18,6 @@ logger.bsdev(__file__)
 
 def setup_baseline_stream(
     sd: bluesky.SupplementalData,
-    iconfig: dict[str, ophyd.OphydObject],
     oregistry: guarneri.Instrument,
     connect: bool = False,
 ) -> None:
@@ -67,6 +67,8 @@ def setup_baseline_stream(
     * https://blueskyproject.io/bluesky/main/metadata.html#recording-metadata
     * https://nsls-ii.github.io/bluesky/tutorial.html#baseline-readings-and-other-supplemental-data
     """
+
+    iconfig = get_config()
     baseline_config = iconfig.get("BASELINE_LABEL")
     if baseline_config is None:
         return  # No baseline configuration found in iconfig.yml file.
