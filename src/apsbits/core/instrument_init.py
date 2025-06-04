@@ -62,6 +62,22 @@ def make_devices(
 
     logger.debug("(Re)Loading local control objects.")
 
+    if file is None:
+        logger.error("No custom device file provided.")
+        return
+
+    if path is None:
+        iconfig = get_config()
+        instrument_path = pathlib.Path(iconfig.get("INSTRUMENT_PATH")).parent
+        configs_path = instrument_path / "configs"
+        logger.info(
+            f"No custom path provided.\n\nUsing default configs path: {configs_path}"
+        )
+
+    else:
+        logger.info(f"Using custom path for device files: {path}")
+        configs_path = pathlib.Path(path)
+
     if clear:
         main_namespace = sys.modules[MAIN_NAMESPACE]
 
@@ -75,27 +91,10 @@ def make_devices(
 
         oregistry.clear()
 
-    if path is not None and file is None:
-        raise ValueError(
-            "When a custom path is provided, a specific device file must"
-            " also be provided"
-        )
-
-    if path is None:
-        iconfig = get_config()
-        instrument_path = pathlib.Path(iconfig.get("INSTRUMENT_PATH")).parent
-        configs_path = instrument_path / "configs"
-
-    else:
-        configs_path = pathlib.Path(path)
-        print(f"\n\nConfigs path: {configs_path}\n\n")
-
-    device_file = file
-
-    logger.debug("Loading device files: %r", device_file)
+    logger.debug("Loading device files: %r", file)
 
     # Load each device file
-    device_path = configs_path / device_file
+    device_path = configs_path / file
     if not device_path.exists():
         logger.error("Device file not found: %s", device_path)
 
@@ -129,14 +128,17 @@ def namespace_loader(yaml_device_file, main=True):
     logger.debug("Devices file %r.", str(yaml_device_file))
     t0 = time.time()
 
+    current_devices = oregistry.device_names
+
     instrument.load(yaml_device_file)
 
     logger.info("Devices loaded in %.3f s.", time.time() - t0)
     if main:
         main_namespace = sys.modules[MAIN_NAMESPACE]
-        for label in oregistry.device_names:
+        for label in sorted(oregistry.device_names):
+            if label in current_devices:
+                continue
             logger.info("Adding ophyd device %r to main namespace", label)
-
             setattr(main_namespace, label, oregistry[label])
 
 
