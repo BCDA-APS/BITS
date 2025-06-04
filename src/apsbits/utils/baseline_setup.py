@@ -37,9 +37,6 @@ def setup_baseline_stream(
 
     sd bluesky.SupplementalData :
         Object which contains the list of baseline objects to be published.
-    iconfig (Dict[str, Any]) :
-        Configuration dictionary with keys.  See
-        :func:`~apsbits.core.run_engine_init.init_RE()` for more details.
     oregistry guarneri.Instrument :
         Registry of ophyd objects.
     connect bool :
@@ -71,13 +68,16 @@ def setup_baseline_stream(
     iconfig = get_config()
     baseline_config = iconfig.get("BASELINE_LABEL")
     if baseline_config is None:
-        return  # No baseline configuration found in iconfig.yml file.
+        logger.info("No baseline configuration found in iconfig.yml file.")
+        return
 
     if not baseline_config.get("ENABLE", False):
-        return  # baseline stream is not enabled in iconfig.yml file.
+        logger.info("Baseline stream is disabled in iconfig.yml file.")
+        return
 
     candidates = oregistry.findall("baseline", allow_none=True)
     if candidates is None:
+        logger.info("No baseline objects found in oregistry.")
         return
 
     if connect:
