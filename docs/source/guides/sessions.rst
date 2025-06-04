@@ -35,4 +35,26 @@ When ready to load the bluesky data acquisition for use, type this command. For 
 
 .. code-block:: bash
 
+    from demo_instrument.startup import *
+
+.. note::
+Change the demo_instrument to your instrument installed package name.
+
+Adding BITS to ipython profile
+----------------------------------
+
+To add BITS to your ipython profile, first create a new profile:
+
+.. code-block:: bash
+
+    ipython profile create bits-xx
+
+Then, add the following to your startup file:
+
+.. code-block:: bash
+
+    cat > ~/.ipython/profile_bits-xx/startup/00-start-bits.py  << EOF
     from new_instrument.startup import *
+    EOF
+
+For more detailed guidance on creating and configuring an ipython profile, see the `bluesky training documentation <https://github.com/BCDA-APS/bluesky_training/blob/304b8d02503044932afa5657cb43afd1f6be2f40/docs/source/instrument/_create_bluesky_ipython_profile.rst#L2>`_.
