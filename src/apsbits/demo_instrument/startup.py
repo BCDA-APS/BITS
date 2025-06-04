@@ -24,6 +24,7 @@ from apsbits.core.run_engine_init import init_RE
 # Utility functions
 from apsbits.utils.aps_functions import aps_dm_setup
 from apsbits.utils.aps_functions import host_on_aps_subnet
+from apsbits.utils.baseline_setup import setup_baseline_stream
 
 # Configuration functions
 from apsbits.utils.config_loaders import load_config
@@ -104,3 +105,7 @@ RE(make_devices(clear=False, file="devices.yml"))  # Create the devices.
 
 if host_on_aps_subnet():
     RE(make_devices(clear=False, file="devices_aps_only.yml"))
+
+# Setup baseline stream with connect=False is default
+# Devices with the label 'baseline' will be added to the baseline stream.
+setup_baseline_stream(sd, oregistry, connect=False)

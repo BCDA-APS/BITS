@@ -1,7 +1,7 @@
 # Configuration for the Bluesky instrument package.
 
 # identify the version of this iconfig.yml file
-ICONFIG_VERSION: 2.0.0
+ICONFIG_VERSION: 2.0.1
 
 # Add additional configuration for use with your instrument.
 
@@ -28,6 +28,12 @@ RUN_ENGINE:
     ### except when it clutters the output in Jupyter notebooks.
     ### Default: False
     USE_PROGRESS_BAR: false
+
+### Baseline stream
+### When ENABLE=true, all ophyd objects with a "baseline" label
+### will be added to the baseline stream.
+BASELINE_LABEL:
+    ENABLE: true
 
 ### Best Effort Callback Configurations
 ### Defaults: all true
