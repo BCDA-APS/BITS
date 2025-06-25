@@ -35,7 +35,7 @@ classifiers = [
 dependencies = [
     "apstools >= 1.7.2",
     "bluesky-queueserver-api",
-    "bluesky-queueserver",
+    "bluesky-queueserver >=0.0.22",
     "bluesky-widgets",
     "bluesky",
     "caproto",

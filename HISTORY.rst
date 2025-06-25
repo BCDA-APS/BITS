@@ -44,6 +44,7 @@ describe future plans.
     ---------------
 
     * Bump iconfig version to 2.0.1 for the baseline addition.
+    * Remove run_engine section from QS config.yml file and pin QS to 0.0.22+.
 
 1.0.4
 #####
