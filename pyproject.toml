@@ -33,13 +33,14 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
-    "apstools >= 1.7.2",
+    "apstools",
     "bluesky-queueserver-api",
     "bluesky-queueserver >=0.0.22",
     "bluesky-widgets",
     "bluesky",
     "caproto",
-    "databroker ==1.2.5",
+    "databroker",
+    "tiled[server]",
     "guarneri",
     "ipython",
     "jupyterlab",

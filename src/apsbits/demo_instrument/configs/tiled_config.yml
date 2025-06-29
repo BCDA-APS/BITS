@@ -1,0 +1,15 @@
+# config.yml
+
+# tiled serve config --public --host 0.0.0.0 config.yml
+
+# For security when using tiled server to write bluesky runs,
+# set the API key by setting env var
+# TILED_API_KEY rather than putting it in code.
+
+trees:
+
+  - path: demo_instrument
+    tree: databroker.mongo_normalized:Tree.from_uri
+    args:
+      # for unsecured access
+      uri: mongodb://localhost:27017/demo_instrument
