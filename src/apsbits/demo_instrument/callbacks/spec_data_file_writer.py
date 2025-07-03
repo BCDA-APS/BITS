@@ -82,7 +82,7 @@ def init_specwriter_with_RE(RE):
 
         RE.preprocessors.append(motor_start_preprocessor)
     except Exception:
-        logger.warning("Could load support to log motors positions.")
+        logger.warning("Could not load support to log motors positions.")
 
 
 # write scans to SPEC data file
