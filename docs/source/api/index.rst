@@ -12,6 +12,7 @@ The APSBITS package provides tools and utilities to build Bluesky instruments. T
     pyproject.toml      project configuration
     src/               Python source code tree
         apsbits/       root of the 'apsbits' package
+            api/       command-line interfaces for instrument management
             core/      core components for Bluesky data acquisition
             utils/     utilities for setup and configuration
             demo_instrument/  example instrument implementation
@@ -20,6 +21,8 @@ The APSBITS package provides tools and utilities to build Bluesky instruments. T
                 configs/   configuration files
                 devices/   demo instrument's controls
                 plans/    demo instrument's measurement procedures
+                suspenders/  suspender implementations
+                utils/      utility functions and classes
             demo_qserver/   example queueserver implementation
 
 A Bluesky data acquisition session using the demo instrument begins with:
@@ -42,9 +45,13 @@ This section contains detailed API documentation for the APSBITS package.
    utils
    demo_instrument
    demo_qserver
+   api
+
+
+
 
 Core Components
---------------
+---------------
 
 The core components provide the fundamental building blocks for Bluesky data acquisition:
 
@@ -73,7 +80,7 @@ The utilities module provides helper functions and tools:
    apsbits.utils.stored_dict
 
 Demo Components
---------------
+---------------
 
 Example implementations and templates:
 
@@ -83,3 +90,16 @@ Example implementations and templates:
 
    apsbits.demo_instrument
    apsbits.demo_qserver
+
+Command-Line Interfaces
+----------------------
+
+The API module provides command-line interfaces for instrument management:
+
+.. autosummary::
+   :toctree: generated
+   :recursive:
+
+   apsbits.api.create_new_instrument
+   apsbits.api.delete_instrument
+   apsbits.api.run_instrument

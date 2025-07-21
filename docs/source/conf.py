@@ -32,13 +32,19 @@ extensions = """
     sphinx.ext.mathjax
     sphinx.ext.todo
     sphinx.ext.viewcode
+    sphinx.ext.graphviz
     sphinx_design
+    sphinx.ext.intersphinx
+    sphinx.ext.napoleon
+    sphinx.ext.todo
+    sphinx.ext.ifconfig
+    sphinx.ext.extlinks
 """.split()
 myst_enable_extensions = ["colon_fence"]
 
 templates_path = ['_templates']
 source_suffix = ".rst .md".split()
-exclude_patterns = ["**.ipynb_checkpoints"]
+exclude_patterns = ["**.ipynb_checkpoints", "deprecated/**"]
 
 today_fmt = "%Y-%m-%d %H:%M"
 

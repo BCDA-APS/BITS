@@ -15,14 +15,9 @@ repos:
       - id: end-of-file-fixer
       - id: trailing-whitespace
       - id: check-case-conflict
-      # - id: check-json
-      # - id: check-symlinks
+      - id: check-json
+      - id: check-symlinks
       - id: check-executables-have-shebangs
-  # Don't strip output from jupyter notebooks ATM.
-  # - repo: https://github.com/kynan/nbstripout
-  #   rev: 0.7.1
-  #   hooks:
-  #     - id: nbstripout
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.4.8
     hooks:
@@ -30,3 +25,9 @@ repos:
         args:
           - --fix
       - id: ruff-format # replaces Black
+  - repo: https://github.com/sphinx-contrib/sphinx-lint
+    rev: v1.0.0
+    hooks:
+      - id: sphinx-lint
+        args:
+          - docs

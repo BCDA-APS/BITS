@@ -24,7 +24,7 @@ function.
 Here's an example:
 
 ```py
-from instrument.utils.aps_functions import aps_dm_setup
+from apsbits.utils.aps_functions import aps_dm_setup
 
 aps_dm_setup("/home/dm/etc/dm.setup.sh")
 ```
@@ -36,7 +36,7 @@ the source code for additional options (such as how often to report progress and
 how to wait for the workflow to finish before the bluesky plan proceeds).
 
 ```py
-from instrument.plans.dm_plans import dm_kickoff_workflow
+from new_instrument.plans.dm_plans import dm_kickoff_workflow
 
 # Use the run with `uid` from the catalog `cat`.
 run = cat[uid]

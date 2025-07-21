@@ -37,5 +37,4 @@ modules:
   bluesky.RE: warning
   caproto: warning
   databroker: warning
-  instrument: bsdev
   ophyd: warning

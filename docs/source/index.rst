@@ -1,19 +1,7 @@
-APSBITS (|release|)
+APSBITS
 ======================
 
 A Python package providing tools and utilities to build Bluesky Data Acquisition Instruments that can run in console, notebook, & queueserver environments.
-
-Start your data collection session using the demo instrument as an example:
-
-.. code-block:: py
-      :linenos:
-
-      from apsbits.demo_instrument.startup import *
-      from apsbits.demo_instrument.plans import *
-
-      RE(sim_print_plan())
-      RE(sim_count_plan())
-      RE(sim_rel_scan_plan())
 
 
 .. for icon suggestions, see:
@@ -25,51 +13,43 @@ Start your data collection session using the demo instrument as an example:
 
       How to install the *apsbits* package.
 
-    .. grid-item-card:: :material-regular:`preview;3em` :doc:`demo`
+    .. grid-item-card:: :material-regular:`preview;3em` :doc:`guides/template_creation`
 
-      Demo: Using the demo instrument.
+      Creating A Plug & Play Repository for BITS
 
-    .. grid-item-card:: :material-regular:`school;3em` :ref:`guides`
+    .. grid-item-card:: :material-regular:`description;3em` :doc:`guides/developing_bits`
 
       Guides, How-Tos, and examples for creating your own instrument.
 
-    .. grid-item-card:: :material-regular:`play_arrow;3em` :doc:`sessions`
+    .. grid-item-card:: :material-regular:`school;3em` :doc:`guides/index`
 
-      Run instruments in IPython, Jupyter notebook, Python scripts, and
-      Bluesky Queueserver sessions.
+      Configure the session logging capabilities.
 
     .. grid-item-card:: :material-regular:`subscriptions;3em` :ref:`api`
 
       Explore the Python code and core functionality.
 
-    .. grid-item-card:: :material-regular:`description;3em` :doc:`logging_config`
+    .. grid-item-card:: :material-regular:`play_arrow;3em` :doc:`guides/sessions`
 
-      Configure the session logging capabilities.
+      Run instruments in IPython, Jupyter notebook, & Python scripts
 
 .. toctree::
    :maxdepth: 1
    :hidden:
 
    install
-   demo
-   guides/template_creation
-   sessions
    guides/index
-   guides/qserver_service
-   logging_config
    api/index
-   license
-   history
+   bits_overview
 
 
 About ...
 ---------
 
-:home: https://BCDA-APS.github.io/BITS/
 :bug tracker: https://github.com/BCDA-APS/BITS/issues
 :source: https://github.com/BCDA-APS/BITS
 :license: :ref:`license`
 :full version: |version|
 :published: |today|
-:reference: :ref:`genindex`, :ref:`modindex`, :ref:`search`
+:reference: :ref:`genindex`, :ref:`modindex`
 :release notes: :doc:`History of Changes with each Release <history>`

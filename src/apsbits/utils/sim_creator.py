@@ -21,10 +21,7 @@ import logging
 
 from apstools.utils import dynamic_import
 
-from apsbits.utils.controls_setup import oregistry
-
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
 
 
 def predefined_device(*, name="", creator=""):
@@ -53,7 +50,6 @@ def predefined_device(*, name="", creator=""):
     if name != "":
         device.name = name
     logger.debug(device)
-    oregistry.register(device)
     yield device
 
 

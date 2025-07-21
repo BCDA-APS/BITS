@@ -3,7 +3,6 @@ RunEngine Metadata
 ==================
 
 .. autosummary::
-    ~MD_PATH
     ~get_md_path
     ~re_metadata
 """
@@ -34,7 +33,6 @@ import spec2nexus
 import apsbits
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
 
 
 DEFAULT_MD_PATH = pathlib.Path.home() / ".config" / "Bluesky_RunEngine_md"

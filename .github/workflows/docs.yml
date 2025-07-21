@@ -43,6 +43,9 @@ jobs:
         sudo apt-get update
         sudo apt-get -y install pandoc
 
+    - name: Install graphviz
+      run: sudo apt install graphviz
+
     - name: Set time zone
       run: echo "TZ=America/Chicago" >> "$GITHUB_ENV"
 

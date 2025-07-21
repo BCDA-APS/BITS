@@ -30,10 +30,59 @@ describe future plans.
 .. Coming release content can be gathered here.
     Some people object to publishing unreleased changes.
 
-    1.0.2
+    1.1.0
     #####
 
-    release expected 2025-Q2
+    release expected ?
+
+    New Features
+    ---------------
+
+    * Hoist support to setup baseline stream using labels kwarg from USAXS.
+
+    Maintenance
+    ---------------
+
+    * Bump iconfig version to 2.0.1 for the baseline addition.
+    * Remove run_engine section from QS config.yml file and pin QS to 0.0.22+.
+
+1.0.4
+#####
+
+released 2025-05-14
+
+1.0.3
+#####
+
+released 2025-05-01
+
+Enhancements
+---------------
+
+* arguments for run engine
+
+Fixes
+-----
+
+* 'make_devices()' from yaml file
+
+Maintenance
+---------------
+
+* Clean backend
+
+1.0.2
+#####
+
+released 2025-04-18
+
+Maintenance
+---------------
+
+* Add a release history file
+* Documentation overhaul1
+* adding install docs given new workflow
+* Feature/API_functionalities and Makedevices
 
     Breaking Changes
     ----------------

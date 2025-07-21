@@ -5,7 +5,7 @@ Queue Server Systemd Service
 This document describes how to set up and manage the Bluesky Queue Server as a systemd service, allowing for automatic startup and management of the Queue Server on Linux systems.
 
 Service Configuration
-=====================
+=========================
 
 Create a systemd service unit file at ``/etc/systemd/system/queueserver.service``. The configuration should be based on the settings in ``src/apsbits/demo_qserver/qs-config.yml`` and ``src/apsbits/demo_qserver/qs_host.sh``:
 

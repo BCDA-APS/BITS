@@ -35,7 +35,7 @@ classifiers = [
 dependencies = [
     "apstools >= 1.7.2",
     "bluesky-queueserver-api",
-    "bluesky-queueserver",
+    "bluesky-queueserver >=0.0.22",
     "bluesky-widgets",
     "bluesky",
     "caproto",
@@ -55,7 +55,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["build", "isort", "mypy", "pre-commit", "pytest", "ruff"]
+dev = ["build", "isort", "mypy", "pre-commit", "pytest", "pytest-mock", "ruff"]
 
 # doc: conda install conda-forge::pandoc
 doc = [
@@ -71,6 +71,8 @@ doc = [
     "sphinx-design",
     "sphinx-tabs",
     "sphinx",
+    "graphviz",
+    "dot",
 ]
 
 all = ["apsbits[dev,doc]"]
@@ -230,4 +232,15 @@ package-dir = {"apsbits" = "src/apsbits"}
 write_to = "src/apsbits/_version.py"
 
 [project.scripts]
-create-bits = "apsbits.utils.create_new_instrument:main"
+create-bits = "apsbits.api.create_new_instrument:main" ## keeping this one for back compatibility
+#new section of entrypoints for the api.
+bits-create = "apsbits.api.create_new_instrument:main"
+bits-delete = "apsbits.api.delete_instrument:main"
+bits-run = "apsbits.api.run_instrument:main"
+# bits-device-create
+# bits-device-remove
+# bits-device-check
+# bits-plan-create
+# bits-plan-remove
+# bits-plan-check
+#

@@ -53,7 +53,7 @@ Note that ``In [1]:`` and ``In [2]:`` are numbered command prompts from IPython.
     In [2]:
 
 Shortcut
---------
+========
 
 Here's a shortcut that combines both steps:
 

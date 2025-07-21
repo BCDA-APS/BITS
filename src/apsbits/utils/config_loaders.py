@@ -11,13 +11,14 @@ import pathlib
 from pathlib import Path
 from typing import Any
 from typing import Dict
+from typing import List
 from typing import Optional
+from typing import Tuple
 
 import tomli  # type: ignore
 import yaml
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
 
 # Global configuration instance
 _iconfig: Dict[str, Any] = {}
@@ -170,3 +171,72 @@ def load_config_yaml(config_obj) -> dict:
             type(e).__name__,
         )
         raise
+
+
+def validate_instrument_path(
+    instrument_path: Optional[Path] = None,
+    expected_files: Optional[List[str]] = None,
+    expected_dirs: Optional[List[str]] = None,
+) -> Tuple[bool, str]:
+    """
+    Validate if the provided instrument path is correct by checking for expected files
+    and directories.
+
+    Args:
+        instrument_path: Path to the instrument directory. If None, uses the path from
+            the current config.
+        expected_files: List of files that should exist in the instrument directory.
+        expected_dirs: List of directories that should exist in the instrument
+            directory.
+
+    Returns:
+        A tuple containing (is_valid, message) where is_valid is a boolean indicating if
+        the path is valid, and message is a description of the validation result.
+    """
+    if instrument_path is None:
+        if "INSTRUMENT_PATH" not in _iconfig:
+            return False, "No instrument path found in configuration"
+        instrument_path = Path(_iconfig["INSTRUMENT_PATH"])
+
+    # Default expected files and directories if none provided
+    if expected_files is None:
+        expected_files = ["iconfig.yml", "iconfig.toml"]
+    if expected_dirs is None:
+        expected_dirs = ["src", "tests"]
+
+    # Check if the path exists and is a directory
+    if not instrument_path.exists():
+        return False, f"Instrument path does not exist: {instrument_path}"
+
+    if not instrument_path.is_dir():
+        return False, f"Instrument path is not a directory: {instrument_path}"
+
+    # Check for expected files
+    missing_files = []
+    for file in expected_files:
+        if not (instrument_path / file).exists():
+            missing_files.append(file)
+
+    if missing_files:
+        return (
+            False,
+            f"Missing expected files in instrument path: {', '.join(missing_files)}",
+        )
+
+    # Check for expected directories
+    missing_dirs = []
+    for directory in expected_dirs:
+        if (
+            not (instrument_path / directory).exists()
+            or not (instrument_path / directory).is_dir()
+        ):
+            missing_dirs.append(directory)
+
+    if missing_dirs:
+        return (
+            False,
+            f"Missing expected directories in instrument path: "
+            f"{', '.join(missing_dirs)}",
+        )
+
+    return True, f"Instrument path is valid: {instrument_path}"

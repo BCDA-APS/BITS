@@ -1,7 +1,7 @@
 # Configuration for the Bluesky instrument package.
 
 # identify the version of this iconfig.yml file
-ICONFIG_VERSION: 2.0.0
+ICONFIG_VERSION: 2.0.1
 
 # Add additional configuration for use with your instrument.
 
@@ -22,7 +22,6 @@ RUN_ENGINE:
 
     ### Where to "autosave" the RE.md dictionary.
     ### Defaults:
-    MD_STORAGE_HANDLER: StoredDict
     MD_PATH: .re_md_dict.yml
 
     ### The progress bar is nice to see,
@@ -30,8 +29,11 @@ RUN_ENGINE:
     ### Default: False
     USE_PROGRESS_BAR: false
 
-# Command-line tools, such as %wa, %ct, ...
-USE_BLUESKY_MAGICS: true
+### Baseline stream
+### When ENABLE=true, all ophyd objects with a "baseline" label
+### will be added to the baseline stream.
+BASELINE_LABEL:
+    ENABLE: true
 
 ### Best Effort Callback Configurations
 ### Defaults: all true
@@ -54,25 +56,15 @@ SPEC_DATA_FILES:
     FILE_EXTENSION: dat
 
 ### APS Data Management
-### Use bash shell, deactivate all conda environments, source this file:
+### Learn environment variables for Data Management from this file:
 DM_SETUP_FILE: "/home/dm/etc/dm.setup.sh"
-
-### Local OPHYD Device Control Yaml
-DEVICES_FILES:
-- devices.yml
-APS_DEVICES_FILES:
-- devices_aps_only.yml
-
-# Log when devices are added to console (__main__ namespace)
-MAKE_DEVICES:
-    LOG_LEVEL: info
 
 # ----------------------------------
 
 OPHYD:
     ### Control layer for ophyd to communicate with EPICS.
     ### Default: PyEpics
-    ### Choices: "PyEpics" or "caproto" # caproto is not yet supported
+    ### Choices: "PyEpics" or "caproto"
     CONTROL_LAYER: PyEpics
 
     ### default timeouts (seconds)
@@ -81,6 +73,4 @@ OPHYD:
         PV_WRITE: *TIMEOUT
         PV_CONNECTION: *TIMEOUT
 
-# Control detail of exception traces in IPython (console and notebook).
-# Options are: Minimal, Plain, Verbose
 XMODE_DEBUG_LEVEL: Plain

@@ -22,12 +22,10 @@ import guarneri
 import yaml
 from apstools.plans import run_blocking_function
 from apstools.utils import dynamic_import
-from apstools.utils import host_on_aps_subnet
 from bluesky import plan_stubs as bps
 
 from apsbits.utils.config_loaders import get_config
 from apsbits.utils.config_loaders import load_config_yaml
-from apsbits.utils.controls_setup import oregistry  # noqa: F401
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
@@ -45,16 +43,20 @@ def _get_make_devices_log_level() -> int:
 
 
 def make_devices(
-    *, pause: float = 1, clear: bool = True
+    *,
+    pause: float = 1,
+    clear: bool = True,
+    file: str,
+    path: str | pathlib.Path | None = None,
 ) -> Generator[None, None, None]:
     """
     (plan stub) Create the ophyd-style controls for this instrument.
 
-    Feel free to modify this plan to suit the needs of your instrument.
-
     EXAMPLE::
 
-        RE(make_devices())
+        RE(make_devices(file="custom_devices.yml"))  #Use custom devices file
+        RE(make_devices(path="custom_device_path",
+                        file="custom_devices.yml")) #Use custom path to find device file
 
     PARAMETERS
 
@@ -62,56 +64,66 @@ def make_devices(
         Wait 'pause' seconds (default: 1) for slow objects to connect.
     clear : bool
         Clear 'oregistry' first if True (the default).
+    file : str | pathlib.Path | None
+        Optional path to a custom YAML/TOML file containing device configurations.
+        If provided, this file will be used instead of the default iconfig.yml.
+        If None (default), uses the standard iconfig.yml configuration.
 
+    path: str | pathlib.Path | None
     """
 
     logger.debug("(Re)Loading local control objects.")
 
-    if clear:
-        log_level = _get_make_devices_log_level()
+    if file is None:
+        logger.error("No custom device file provided.")
+        return
 
+    if path is None:
+        iconfig = get_config()
+        instrument_path = pathlib.Path(iconfig.get("INSTRUMENT_PATH")).parent
+        configs_path = instrument_path / "configs"
+        logger.info(
+            f"No custom path provided.\n\nUsing default configs path: {configs_path}"
+        )
+
+    else:
+        logger.info(f"Using custom path for device files: {path}")
+        configs_path = pathlib.Path(path)
+
+    if clear:
         main_namespace = sys.modules[MAIN_NAMESPACE]
+
+        # Clear the oregistry and remove any devices registered previously.
         for dev_name in oregistry.device_names:
             # Remove from __main__ namespace any devices registered previously.
             if hasattr(main_namespace, dev_name):
-                logger.log(log_level, "Removing %r from %r", dev_name, MAIN_NAMESPACE)
+                logger.info("Removing %r from %r", dev_name, MAIN_NAMESPACE)
+
                 delattr(main_namespace, dev_name)
 
         oregistry.clear()
 
-    iconfig = get_config()
-
-    instrument_path = pathlib.Path(iconfig.get("INSTRUMENT_PATH")).parent
-    configs_path = instrument_path / "configs"
-
-    # Get device files and ensure it's a list
-    device_files = iconfig.get("DEVICES_FILES", [])
-    if isinstance(device_files, str):
-        device_files = [device_files]
-    logger.debug("Loading device files: %r", device_files)
+    logger.debug("Loading device files: %r", file)
 
     # Load each device file
-    for device_file in device_files:
-        device_path = configs_path / device_file
-        if not device_path.exists():
-            logger.error("Device file not found: %s", device_path)
-            continue
+    device_path = configs_path / file
+    if not device_path.exists():
+        logger.error("Device file not found: %s", device_path)
+
+    else:
         logger.info("Loading device file: %s", device_path)
         try:
-            yield from run_blocking_function(_loader, device_path, main=True)
+            yield from run_blocking_function(namespace_loader, device_path, main=True)
         except FileNotFoundError:
             logger.error("Device file not found during loading: %s", device_path)
-            continue
         except yaml.YAMLError as e:
             logger.error(
                 "YAML parsing error in device file %s: %s", device_path, str(e)
             )
-            continue
         except ImportError as e:
             logger.error(
                 "Failed to import device class from %s: %s", device_path, str(e)
             )
-            continue
         except Exception as e:
             logger.error(
                 "Unexpected error loading device file %s: %s (type: %s)",
@@ -119,47 +131,6 @@ def make_devices(
                 str(e),
                 type(e).__name__,
             )
-            continue
-
-    # Handle APS-specific device files if on APS subnet
-    aps_control_devices_files = iconfig.get("APS_DEVICES_FILES", [])
-    if isinstance(aps_control_devices_files, str):
-        aps_control_devices_files = [aps_control_devices_files]
-
-    if aps_control_devices_files and host_on_aps_subnet():
-        for device_file in aps_control_devices_files:
-            device_path = configs_path / device_file
-            if not device_path.exists():
-                logger.error("APS device file not found: %s", device_path)
-                continue
-            logger.info("Loading APS device file: %s", device_path)
-            try:
-                yield from run_blocking_function(_loader, device_path, main=True)
-            except FileNotFoundError:
-                logger.error(
-                    "APS device file not found during loading: %s", device_path
-                )
-                continue
-            except yaml.YAMLError as e:
-                logger.error(
-                    "YAML parsing error in APS device file %s: %s", device_path, str(e)
-                )
-                continue
-            except ImportError as e:
-                logger.error(
-                    "Failed to import device class from APS device file %s: %s",
-                    device_path,
-                    str(e),
-                )
-                continue
-            except Exception as e:
-                logger.error(
-                    "Unexpected error loading APS device file %s: %s (type: %s)",
-                    device_path,
-                    str(e),
-                    type(e).__name__,
-                )
-                continue
 
     if pause > 0:
         logger.debug(
@@ -168,12 +139,12 @@ def make_devices(
         )
         yield from bps.sleep(pause)
 
-    # Configure any of the controls here, or in plan stubs
 
-
-def _loader(yaml_device_file: Union[str, pathlib.Path], main: bool = True) -> None:
+def namespace_loader(
+    yaml_device_file: Union[str, pathlib.Path], main: bool = True
+) -> None:
     """
-    Load our ophyd-style controls as described in a YAML file.
+    Load our ophyd-style controls as described in a YAML file into the main namespace.
 
     PARAMETERS
 
@@ -185,15 +156,18 @@ def _loader(yaml_device_file: Union[str, pathlib.Path], main: bool = True) -> No
     """
     logger.debug("Devices file %r.", str(yaml_device_file))
     t0 = time.time()
-    _instr.load(yaml_device_file)
+
+    current_devices = oregistry.device_names
+
+    instrument.load(yaml_device_file)
+
     logger.info("Devices loaded in %.3f s.", time.time() - t0)
-
     if main:
-        log_level = _get_make_devices_log_level()
-
         main_namespace = sys.modules[MAIN_NAMESPACE]
-        for label in oregistry.device_names:
-            logger.log(log_level, "Adding ophyd device %r to main namespace", label)
+        for label in sorted(oregistry.device_names):
+            if label in current_devices:
+                continue
+            logger.info("Adding ophyd device %r to main namespace", label)
             setattr(main_namespace, label, oregistry[label])
 
 
@@ -268,4 +242,6 @@ class Instrument(guarneri.Instrument):
         return devices
 
 
-_instr = Instrument({}, registry=oregistry)  # singleton
+instrument = Instrument({})  # singleton
+oregistry = instrument.devices
+"""Registry of all ophyd-style Devices and Signals."""

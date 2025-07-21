@@ -1,14 +1,30 @@
 .. _guides:
 
-Guides, how-tos, ...
-====================
+Guides & How-Tos
+==========================================
 
 Guides show how to use certain features of this instrument.
 
-.. toctree::
-    :maxdepth: 2
-    :glob:
+User Documentation
+------------------------------
 
-    dm
-    template_creation
-    qserver_service
+.. toctree::
+   :maxdepth: 1
+
+   template_creation
+   creating_instrument
+   startup
+   setting_iconfig
+   creating_devices
+   sessions
+   qserver
+   dm
+
+Developer Documentation
+----------------------------
+
+.. toctree::
+   :maxdepth: 1
+
+   developing_bits
+   qserver_service

@@ -1,9 +1,9 @@
 """
-Databroker catalog, provides ``cat``
-====================================
+Databroker catalog
+==================
 
 .. autosummary::
-    ~cat
+    ~init_catalog
 """
 
 import logging
