@@ -11,7 +11,8 @@ settings based on a configuration dictionary.
 """
 
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
+from typing import Optional
 
 import bluesky
 from bluesky.utils import ProgressBarManager
@@ -28,11 +29,11 @@ logger.bsdev(__file__)
 
 
 def init_RE(
-    iconfig: Dict[str, Any],
+    iconfig: dict[str, Any],
     bec_instance: Optional[Any] = None,
     cat_instance: Optional[Any] = None,
     **kwargs: Any,
-) -> Tuple[bluesky.RunEngine, bluesky.SupplementalData]:
+) -> tuple[bluesky.RunEngine, bluesky.SupplementalData]:
     """
     Initialize and configure a Bluesky RunEngine instance.
 

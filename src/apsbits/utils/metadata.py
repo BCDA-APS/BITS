@@ -14,7 +14,6 @@ import pathlib
 import socket
 import sys
 from typing import Any
-from typing import Dict
 from typing import Optional
 
 import apstools
@@ -56,7 +55,7 @@ VERSIONS = dict(
 )
 
 
-def get_md_path(iconfig: Optional[Dict[str, Any]] = None) -> Optional[str]:
+def get_md_path(iconfig: Optional[dict[str, Any]] = None) -> Optional[str]:
     """
     Get path for RE metadata.
 
@@ -81,8 +80,8 @@ def get_md_path(iconfig: Optional[Dict[str, Any]] = None) -> Optional[str]:
 
 
 def re_metadata(
-    iconfig: Optional[Dict[str, Any]] = None, cat: Optional[Any] = None
-) -> Dict[str, Any]:
+    iconfig: Optional[dict[str, Any]] = None, cat: Optional[Any] = None
+) -> dict[str, Any]:
     """Programmatic metadata for the RunEngine."""
     md = {
         "login_id": f"{USERNAME}@{HOSTNAME}",

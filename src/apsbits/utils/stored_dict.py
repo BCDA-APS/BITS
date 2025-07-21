@@ -21,7 +21,6 @@ import pathlib
 import threading
 import time
 from typing import Any
-from typing import Dict
 from typing import Optional
 from typing import Union
 
@@ -73,7 +72,7 @@ class StoredDict(collections.abc.MutableMapping):
         self._sync_key: str = f"sync_agent_{id(self):x}"
         self._sync_loop_period: float = 0.005
 
-        self._cache: Dict[Any, Any] = {}
+        self._cache: dict[Any, Any] = {}
         self.reload()
 
     def __delitem__(self, key: Any) -> None:
@@ -191,7 +190,7 @@ class StoredDict(collections.abc.MutableMapping):
 
         file = pathlib.Path(file)
         logger.debug("_load('%s')", file)
-        md: Optional[Dict[Any, Any]] = None
+        md: Optional[dict[Any, Any]] = None
         if file.exists():
             md = load_config_yaml(file)
         return md or {}

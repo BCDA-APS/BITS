@@ -15,8 +15,6 @@ import logging
 import pathlib
 import sys
 import time
-from typing import Generator
-from typing import Union
 
 import guarneri
 import yaml
@@ -48,7 +46,7 @@ def make_devices(
     clear: bool = True,
     file: str,
     path: str | pathlib.Path | None = None,
-) -> Generator[None, None, None]:
+):
     """
     (plan stub) Create the ophyd-style controls for this instrument.
 
@@ -114,23 +112,8 @@ def make_devices(
         logger.info("Loading device file: %s", device_path)
         try:
             yield from run_blocking_function(namespace_loader, device_path, main=True)
-        except FileNotFoundError:
-            logger.error("Device file not found during loading: %s", device_path)
-        except yaml.YAMLError as e:
-            logger.error(
-                "YAML parsing error in device file %s: %s", device_path, str(e)
-            )
-        except ImportError as e:
-            logger.error(
-                "Failed to import device class from %s: %s", device_path, str(e)
-            )
         except Exception as e:
-            logger.error(
-                "Unexpected error loading device file %s: %s (type: %s)",
-                device_path,
-                str(e),
-                type(e).__name__,
-            )
+            logger.error("Error loading device file %s: %s", device_path, str(e))
 
     if pause > 0:
         logger.debug(
@@ -140,9 +123,7 @@ def make_devices(
         yield from bps.sleep(pause)
 
 
-def namespace_loader(
-    yaml_device_file: Union[str, pathlib.Path], main: bool = True
-) -> None:
+def namespace_loader(yaml_device_file, main=True):
     """
     Load our ophyd-style controls as described in a YAML file into the main namespace.
 

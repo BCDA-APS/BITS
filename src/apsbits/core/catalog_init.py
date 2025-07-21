@@ -8,7 +8,6 @@ Databroker catalog
 
 import logging
 from typing import Any
-from typing import Dict
 
 import databroker
 
@@ -18,7 +17,7 @@ logger.bsdev(__file__)
 TEMPORARY_CATALOG_NAME = "temporalcat"
 
 
-def init_catalog(iconfig: Dict[str, Any]) -> Any:
+def init_catalog(iconfig: dict[str, Any]) -> Any:
     """
     Initialize the Databroker catalog using the provided iconfig.
 
