@@ -35,6 +35,31 @@ describe future plans.
 
     release expected 2025-Q2
 
+    Breaking Changes
+    ----------------
+
+    * **Callback file renaming**: Demo callback files renamed to follow `_demo` naming convention:
+
+      * ``nexus_data_file_writer.py`` → ``demo_nexus_callback.py``
+      * ``spec_data_file_writer.py`` → ``demo_spec_callback.py``
+
+      Import paths updated in startup.py. Direct imports of these modules will need updating.
+
+    * **DM plans removed**: The ``dm_plans.py`` file has been removed to reduce apstools dependency.
+      DM configuration infrastructure remains in iconfig.yml and startup.py.
+
+    * **StoredDict implementation**: Now uses local implementation instead of ``apstools.utils.StoredDict``.
+      This reduces external dependencies while maintaining full compatibility.
+
+    Enhancements
+    ------------
+
+    * **Improved error handling**: Enhanced error messages with specific exception types and detailed context across core modules (device loading, configuration parsing, RunEngine initialization, databroker catalog setup).
+
+    * **Complete type annotations**: Added comprehensive type annotations to all public APIs for better IDE support and code maintainability.
+
+    * **Code quality improvements**: Added ``py.typed`` marker for mypy support and improved code formatting compliance.
+
 1.0.1
 #####
 

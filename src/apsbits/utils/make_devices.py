@@ -15,8 +15,11 @@ import logging
 import pathlib
 import sys
 import time
+from typing import Generator
+from typing import Union
 
 import guarneri
+import yaml
 from apstools.plans import run_blocking_function
 from apstools.utils import dynamic_import
 from apstools.utils import host_on_aps_subnet
@@ -41,7 +44,9 @@ def _get_make_devices_log_level() -> int:
     return level
 
 
-def make_devices(*, pause: float = 1, clear: bool = True):
+def make_devices(
+    *, pause: float = 1, clear: bool = True
+) -> Generator[None, None, None]:
     """
     (plan stub) Create the ophyd-style controls for this instrument.
 
@@ -94,8 +99,26 @@ def make_devices(*, pause: float = 1, clear: bool = True):
         logger.info("Loading device file: %s", device_path)
         try:
             yield from run_blocking_function(_loader, device_path, main=True)
+        except FileNotFoundError:
+            logger.error("Device file not found during loading: %s", device_path)
+            continue
+        except yaml.YAMLError as e:
+            logger.error(
+                "YAML parsing error in device file %s: %s", device_path, str(e)
+            )
+            continue
+        except ImportError as e:
+            logger.error(
+                "Failed to import device class from %s: %s", device_path, str(e)
+            )
+            continue
         except Exception as e:
-            logger.error("Error loading device file %s: %s", device_path, str(e))
+            logger.error(
+                "Unexpected error loading device file %s: %s (type: %s)",
+                device_path,
+                str(e),
+                type(e).__name__,
+            )
             continue
 
     # Handle APS-specific device files if on APS subnet
@@ -112,9 +135,29 @@ def make_devices(*, pause: float = 1, clear: bool = True):
             logger.info("Loading APS device file: %s", device_path)
             try:
                 yield from run_blocking_function(_loader, device_path, main=True)
+            except FileNotFoundError:
+                logger.error(
+                    "APS device file not found during loading: %s", device_path
+                )
+                continue
+            except yaml.YAMLError as e:
+                logger.error(
+                    "YAML parsing error in APS device file %s: %s", device_path, str(e)
+                )
+                continue
+            except ImportError as e:
+                logger.error(
+                    "Failed to import device class from APS device file %s: %s",
+                    device_path,
+                    str(e),
+                )
+                continue
             except Exception as e:
                 logger.error(
-                    "Error loading APS device file %s: %s", device_path, str(e)
+                    "Unexpected error loading APS device file %s: %s (type: %s)",
+                    device_path,
+                    str(e),
+                    type(e).__name__,
                 )
                 continue
 
@@ -128,7 +171,7 @@ def make_devices(*, pause: float = 1, clear: bool = True):
     # Configure any of the controls here, or in plan stubs
 
 
-def _loader(yaml_device_file, main=True):
+def _loader(yaml_device_file: Union[str, pathlib.Path], main: bool = True) -> None:
     """
     Load our ophyd-style controls as described in a YAML file.
 
@@ -164,7 +207,18 @@ class Instrument(guarneri.Instrument):
 
         def parser(creator, specs):
             if creator not in self.device_classes:
-                self.device_classes[creator] = dynamic_import(creator)
+                try:
+                    self.device_classes[creator] = dynamic_import(creator)
+                except ImportError as e:
+                    logger.error(
+                        "Failed to import device creator '%s': %s", creator, str(e)
+                    )
+                    raise
+                except AttributeError as e:
+                    logger.error(
+                        "Device creator '%s' not found in module: %s", creator, str(e)
+                    )
+                    raise
             entries = [
                 {
                     "device_class": creator,
@@ -175,9 +229,30 @@ class Instrument(guarneri.Instrument):
             ]
             return entries
 
-        with open(config_file, "r") as f:
-            config_data = load_config_yaml(f)
+        try:
+            with open(config_file, "r") as f:
+                config_data = load_config_yaml(f)
+        except FileNotFoundError:
+            logger.error("Device configuration file not found: %s", config_file)
+            raise
+        except PermissionError:
+            logger.error("Permission denied reading device file: %s", config_file)
+            raise
+        except yaml.YAMLError as e:
+            logger.error(
+                "YAML parsing error in device file %s: %s", config_file, str(e)
+            )
+            raise
 
+        if not isinstance(config_data, dict):
+            logger.error(
+                "Invalid device file format in %s: expected dictionary, got %s",
+                config_file,
+                type(config_data).__name__,
+            )
+            raise ValueError(f"Invalid device file format in {config_file}")
+
+        try:
             devices = [
                 device
                 # parse the file using already loaded config data
@@ -185,6 +260,11 @@ class Instrument(guarneri.Instrument):
                 # each support type (class, factory, function, ...)
                 for device in parser(k, v)
             ]
+        except Exception as e:
+            logger.error(
+                "Error parsing device specifications in %s: %s", config_file, str(e)
+            )
+            raise
         return devices
 
 

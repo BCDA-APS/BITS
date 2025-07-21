@@ -10,5 +10,5 @@ apsbits.demo\_instrument.callbacks
    :toctree:
    :recursive:
 
-   nexus_data_file_writer
-   spec_data_file_writer
+   demo_nexus_callback
+   demo_spec_callback

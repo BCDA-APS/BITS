@@ -71,10 +71,10 @@ def debug_python(xmode_level: str = "Plain") -> None:
     """
     ipython = get_ipython()
     if ipython is not None:
-        xmode_level: str = get_xmode_level()
-        ipython.run_line_magic("xmode", xmode_level)
+        current_xmode_level: str = get_xmode_level()
+        ipython.run_line_magic("xmode", current_xmode_level)
         print("\nEnd of IPython settings\n")
-        logger.bsdev("xmode exception level: '%s'", xmode_level)
+        logger.bsdev("xmode exception level: '%s'", current_xmode_level)
 
 
 def is_notebook() -> bool:

@@ -7,6 +7,9 @@ BestEffortCallback: simple real-time visualizations, provides ``bec``.
 """
 
 import logging
+from typing import Any
+from typing import Dict
+from typing import Tuple
 
 from bluesky.callbacks.best_effort import BestEffortCallback
 
@@ -16,16 +19,18 @@ logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
 
 
-def init_bec_peaks(iconfig):
+def init_bec_peaks(
+    iconfig: Dict[str, Any],
+) -> Tuple[BestEffortCallback, Dict[str, Any]]:
     """
     Create and configure a BestEffortCallback object based on the provided iconfig.
 
     Parameters:
-        iconfig (dict): Configuration dictionary.
+        iconfig: Configuration dictionary.
 
     Returns:
-        tuple: A tuple containing the configured BestEffortCallback object (bec)
-               and its peaks dictionary.
+        A tuple containing the configured BestEffortCallback object (bec)
+        and its peaks dictionary.
     """
 
     bec = BestEffortCallback()
