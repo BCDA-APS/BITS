@@ -1,0 +1,101 @@
+# Diffractometer Device Configuration
+# 4-circle diffractometer with area and point detectors
+
+# Diffractometer motors
+diffractometer:
+  theta:
+    device_class: EpicsMotor
+    PV: "gp:m1"
+    labels: ["motors", "diffractometer"]
+    metadata:
+      description: "Sample rotation (theta)"
+      units: "degrees"
+      typical_range: [-180, 180]
+      
+  chi:
+    device_class: EpicsMotor
+    PV: "gp:m2"
+    labels: ["motors", "diffractometer"]
+    metadata:
+      description: "Sample tilt (chi)"
+      units: "degrees"
+      typical_range: [-180, 180]
+      
+  phi:
+    device_class: EpicsMotor
+    PV: "gp:m3"
+    labels: ["motors", "diffractometer"]
+    metadata:
+      description: "Sample azimuth (phi)"
+      units: "degrees"
+      typical_range: [-180, 180]
+      
+  two_theta:
+    device_class: EpicsMotor
+    PV: "gp:m4"
+    labels: ["motors", "diffractometer"]
+    metadata:
+      description: "Detector angle (2-theta)"
+      units: "degrees"
+      typical_range: [-90, 90]
+
+# Sample positioning
+sample_stage:
+  x:
+    device_class: EpicsMotor
+    PV: "gp:m5"
+    labels: ["motors", "sample_stage"]
+    metadata:
+      description: "Sample X position"
+      units: "mm"
+      
+  y:
+    device_class: EpicsMotor
+    PV: "gp:m6"
+    labels: ["motors", "sample_stage"]
+    metadata:
+      description: "Sample Y position"
+      units: "mm"
+      
+  z:
+    device_class: EpicsMotor
+    PV: "gp:m7"
+    labels: ["motors", "sample_stage"]
+    metadata:
+      description: "Sample Z position"
+      units: "mm"
+
+# Detectors
+detectors:
+  point_detector:
+    device_class: ScalerCH
+    PV: "gp:scaler1"
+    labels: ["detectors", "point_detectors"]
+    metadata:
+      description: "Point detector for powder diffraction"
+      
+  area_detector:
+    device_class: ADBSoftDetector
+    PV: "adsim:"
+    labels: ["detectors", "area_detectors"]
+    metadata:
+      description: "2D detector for single crystal diffraction"
+      
+  monitor:
+    device_class: ScalerCH
+    PV: "gp:scaler2"
+    labels: ["baseline", "monitors"]
+    metadata:
+      description: "Beam intensity monitor"
+
+# Support devices
+support:
+  ioc_cpu:
+    device_class: EpicsSignalRO
+    PV: "gp:IOC_CPU_LOAD"
+    labels: ["baseline"]
+    
+  ioc_memory:
+    device_class: EpicsSignalRO
+    PV: "gp:IOC_MEM_USED"
+    labels: ["baseline"]

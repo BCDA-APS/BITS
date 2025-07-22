@@ -1,0 +1,27 @@
+# Simple Scanning Device Configuration
+# Minimal setup for basic motor scanning with detector
+
+motors:
+  scan_motor:
+    device_class: EpicsMotor
+    PV: "gp:m1"
+    labels: ["motors"]
+    metadata:
+      description: "Primary scanning motor"
+      typical_range: [-10, 10]
+
+detectors:
+  counter:
+    device_class: ScalerCH
+    PV: "gp:scaler1"
+    labels: ["detectors"]
+    metadata:
+      description: "Main counting detector"
+      channels: 32
+
+# Minimal baseline monitoring
+support:
+  ioc_status:
+    device_class: EpicsSignalRO
+    PV: "gp:IOC_CPU_LOAD"
+    labels: ["baseline"]
