@@ -117,13 +117,12 @@ Based on the 9-ID deployment with multiple experimental techniques:
 
 .. code-block:: yaml
 
-    # src/common_9id/configs/devices.yml
-    # YAML configuration with mb_creator (Recommended for bAIt/BITS)
+    # src/common_9id/configs/devices.yml - YAML configuration (Recommended for bAIt/BITS)
     apstools.devices.motor_factory.mb_creator:
     - name: sample_stage
       prefix: "9ID:SampleStage:"
       class_name: "SampleStage"
-      labels: [ "baseline", "sample" ]
+      labels: ["baseline", "sample", "motors"]
       motors:
         x: "X"
         y: "Y"
