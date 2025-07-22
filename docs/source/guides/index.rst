@@ -25,6 +25,7 @@ Build robust instruments with devices, plans, and configurations.
 .. toctree::
    :maxdepth: 2
 
+   Converting External Device Support <converting_external_devices>
    Creating and Managing Devices <creating_devices>
    Area Detector Configuration <area_detectors>
    Creating Scan Plans <creating_plans>
@@ -91,10 +92,11 @@ Quick Reference
 
 1. **Install BITS**: :doc:`3 commands to get started <../install>`
 2. **Create Instrument**: :doc:`Basic to multi-beamline setups <creating_instrument>`
-3. **Add Devices**: :doc:`Using apstools and custom patterns <creating_devices>`
-4. **Configure Management**: :doc:`Declarative configuration with Guarneri <configuration_management>`
-5. **Create Plans**: :doc:`From simple scans to complex workflows <creating_plans>`
-6. **Deploy Production**: :doc:`Queue server and data management <qserver>`
+3. **Convert Devices**: :doc:`From external repositories to BITS <converting_external_devices>`
+4. **Add Devices**: :doc:`Using apstools and custom patterns <creating_devices>`
+5. **Configure Management**: :doc:`Declarative configuration with Guarneri <configuration_management>`
+6. **Create Plans**: :doc:`From simple scans to complex workflows <creating_plans>`
+7. **Deploy Production**: :doc:`Queue server and data management <qserver>`
 
 **Architecture Patterns:**
 
@@ -106,11 +108,12 @@ Quick Reference
 **Development Workflow:**
 
 1. :doc:`Create instrument structure <creating_instrument>`
-2. :doc:`Configure devices and hardware <creating_devices>`
-3. :doc:`Develop scan plans and procedures <creating_plans>`
-4. :doc:`Set up data management <dm>`
-5. :doc:`Deploy with queue server <qserver>`
-6. :doc:`Monitor and maintain <troubleshooting>`
+2. :doc:`Convert existing device implementations <converting_external_devices>`
+3. :doc:`Configure devices and hardware <creating_devices>`
+4. :doc:`Develop scan plans and procedures <creating_plans>`
+5. :doc:`Set up data management <dm>`
+6. :doc:`Deploy with queue server <qserver>`
+7. :doc:`Monitor and maintain <troubleshooting>`
 
 **Best Practices:**
 

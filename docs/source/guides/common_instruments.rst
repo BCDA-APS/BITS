@@ -375,6 +375,34 @@ Best Practices Summary
 - Create common packages for single-use components
 - Forget to handle version compatibility in shared devices
 
+**Converting Existing Device Implementations**
+
+When working with existing device code from other repositories, follow the proven conversion process:
+
+**POLAR Team Success Story:**
+
+The POLAR team successfully converted SRS810 Lock-in Amplifier support:
+
+- **Source**: `APS-4ID-POLAR/polar_instrument <https://github.com/APS-4ID-POLAR/polar_instrument/blob/80c0c3abbd676a00a489ff2a995f1befb7e4856c/src/instrument/devices/4idd/srs810.py#L43>`_
+- **Target**: `BCDA-APS/polar-bits <https://github.com/BCDA-APS/polar-bits/commit/c47940e>`_
+- **Process**: Source analysis → Device class → YAML config → Integration
+
+**Conversion Pattern:**
+
+.. code-block:: yaml
+
+    # Step 1: Create common package device
+    # src/beamline_common/devices/lockin_amp.py
+    
+    # Step 2: Add YAML configuration
+    beamline_common.devices.lockin_amp.LockinDevice:
+    - name: lock_in_amplifier
+      prefix: "BEAMLINE:LOCKIN:"
+      labels: ["detectors", "baseline"]
+      # Source: https://github.com/original/repo/path/to/device.py
+
+See: :doc:`converting_external_devices` for complete step-by-step conversion guide.
+
 **Real Deployment Validation:**
 
 All examples in this guide are validated against production deployments:
@@ -383,10 +411,12 @@ All examples in this guide are validated against production deployments:
 - **CamMixin_V34 Usage**: Real implementation in `8id-bits/src/id8_common/devices/area_detector.py`
 - **YAML Device Configuration**: Production patterns in `8id-bits/src/id8_i/configs/devices.yml`
 - **Motor Bundle Patterns**: Custom XY_Motors implementation in `8id-bits/src/id8_i/devices/xy_motors.py`
+- **Device Conversion**: POLAR team SRS810 integration in `polar-bits/src/polar_common/devices/`
 
 **Next Steps:**
 
-1. :doc:`Create custom devices in common packages <creating_devices>`
-2. :doc:`Develop standardized scan plans <creating_plans>`
-3. :doc:`Configure data management workflows <dm>`
-4. :doc:`Deploy multi-instrument systems <deployment_patterns>`
+1. :doc:`Convert existing device implementations <converting_external_devices>`
+2. :doc:`Create custom devices in common packages <creating_devices>`
+3. :doc:`Develop standardized scan plans <creating_plans>`
+4. :doc:`Configure data management workflows <dm>`
+5. :doc:`Deploy multi-instrument systems <deployment_patterns>`

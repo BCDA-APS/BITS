@@ -36,6 +36,44 @@ Quick Start: Add a Device in 3 Steps
 Complete Device Creation Guide
 -------------------------------
 
+Starting from Existing Code (Recommended)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+When device support already exists in another repository, conversion is often the fastest path to BITS integration:
+
+**Quick Conversion Process:**
+
+.. code-block:: bash
+
+    # 1. Locate existing implementation
+    # Example: SRS810 Lock-in Amplifier from APS-4ID-POLAR
+    
+    # 2. Create common device structure
+    mkdir -p src/beamline_common/devices
+    
+    # 3. Convert and adapt device class
+    # 4. Add YAML configuration
+    # 5. Test and integrate
+
+**POLAR Team Success Example:**
+
+The POLAR team converted SRS810 support in two clean commits:
+
+- **Source**: `polar_instrument/devices/4idd/srs810.py <https://github.com/APS-4ID-POLAR/polar_instrument/blob/80c0c3abbd676a00a489ff2a995f1befb7e4856c/src/instrument/devices/4idd/srs810.py#L43>`_
+- **Conversion**: `polar-bits commits <https://github.com/BCDA-APS/polar-bits/commits/main>`_ (July 22, 2025)
+
+**When to Convert vs Create New:**
+
+.. code-block:: text
+
+    Convert Existing:                    Create New:
+    ✓ Device support exists elsewhere    ✓ Unique hardware setup
+    ✓ Team has working implementation    ✓ Simple device with few signals  
+    ✓ Complex device with many signals   ✓ Educational/learning purposes
+    ✓ Proven in production use          ✓ Custom integration requirements
+
+See: :doc:`converting_external_devices` for complete step-by-step conversion process.
+
 Understanding BITS Device Architecture
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
