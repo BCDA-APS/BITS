@@ -75,129 +75,136 @@ Using apstools Devices (Recommended)
     - name: aps_status
       labels: ["baseline", "machine"]
 
-    apstools.devices.EpicsMotorDevice:
+    ophyd.EpicsMotor:
     - name: sample_x
       prefix: "IOC:SAMPLE:X"
       labels: ["motors", "sample"]
 
 **Motor Bundle Factory (Recommended for Multi-Axis Systems):**
 
-.. code-block:: python
+.. code-block:: yaml
 
-    # devices/stages.py - Using apstools motor factory
-    from apstools.devices import mb_creator
-
-    # Create multi-axis stage using factory
-    xy_stage = mb_creator(
-        prefix="IOC:STAGE:",
-        motors={"x": "X", "y": "Y"},
-        name="xy_stage"
-    )
-
+    # configs/devices.yml - Using apstools motor factory via YAML
+    apstools.devices.motor_factory.mb_creator:
+    - name: xy_stage
+      prefix: "IOC:STAGE:"
+      labels: ["motors", "sample"]
+      motors:
+        x: "X"
+        y: "Y"
+    
     # Advanced motor bundle with mixed types
-    complex_stage = mb_creator(
-        prefix="IOC:",
-        motors={
-            "x": "SAMPLE:X",      # EpicsMotor
-            "y": "SAMPLE:Y",      # EpicsMotor
-            "z": {"class": "SoftPositioner", "init": {"initial": 0}}  # Simulated
-        },
-        name="sample_stage"
-    )
+    - name: sample_stage
+      prefix: "IOC:"
+      labels: ["motors", "sample", "advanced"]
+      motors:
+        x: "SAMPLE:X"      # Standard EpicsMotor
+        y: "SAMPLE:Y"      # Standard EpicsMotor
+        z:                 # Simulated motor
+          class: "ophyd.SoftPositioner"
+          init_pos: 0.0
 
-**Advanced Motor Factory Patterns (from apstools):**
+**Advanced Motor Factory Patterns (YAML Configuration):**
 
-.. code-block:: python
+.. code-block:: yaml
 
     # Per-axis configuration with different motor types
-    advanced_stage = mb_creator(
-        prefix="255idc:m",
-        motors={
-            # Simple motor - just PV suffix
-            "x": "21",
+    apstools.devices.motor_factory.mb_creator:
+    - name: advanced_stage
+      prefix: "255idc:m"
+      class_name: "AdvancedStage"
+      class_bases: ["ophyd.Device"]  # Use Device instead of MotorBundle
+      labels: ["motors", "advanced"]
+      motors:
+        # Simple motor - just PV suffix
+        x: "21"
+        
+        # Motor with custom parameters  
+        y:
+          prefix: "22"
+          class: "ophyd.EpicsMotor"
+          kind: "hinted"
+          labels: ["sample", "alignment"]
+          
+        # Simulated motor for development
+        z:
+          class: "ophyd.SoftPositioner"
+          init_pos: 0.0
+          labels: ["sample", "simulated"]
+          
+        # Motor with enhanced configuration
+        theta:
+          prefix: "23"
+          class: "ophyd.EpicsMotor"
+          encoder_resolution: 0.001
+          backlash: 0.05
+          labels: ["rotation", "precise"]
 
-            # Motor with custom parameters
-            "y": {
-                "prefix": "22",
-                "class": "ophyd.EpicsMotor",
-                "kind": "hinted",
-                "labels": ["sample", "alignment"]
-            },
+**Custom Base Classes and Mixins (YAML Configuration):**
 
-            # Simulated motor for development
-            "z": {
-                "class": "ophyd.SoftPositioner",
-                "init_pos": 0.0,
-                "labels": ["sample", "simulated"]
-            },
-
-            # Motor with factory function
-            "theta": {
-                "factory": {
-                    "function": "my_package.create_special_motor",
-                    "encoder_resolution": 0.001,
-                    "backlash": 0.05
-                }
-            }
-        },
-        class_bases=["ophyd.Device"],  # Use Device instead of MotorBundle
-        class_name="AdvancedStage",
-        name="sample_stage"
-    )
-
-**Custom Base Classes and Mixins:**
-
-.. code-block:: python
+.. code-block:: yaml
 
     # Using apstools motor mixins for enhanced functionality
-    from apstools.devices import mb_creator, EpicsMotorDialMixin
+    apstools.devices.motor_factory.mb_creator:
+    - name: sample_stage_with_dial
+      prefix: "IOC:STAGE:"
+      class_name: "DialStage"
+      class_bases: ["ophyd.MotorBundle", "apstools.devices.EpicsMotorDialMixin"]
+      labels: ["motors", "sample", "dial"]
+      motors:
+        x: "X"
+        y: "Y" 
+        z: "Z"
 
-    # Stage with dial coordinate access
-    dial_stage = mb_creator(
-        prefix="IOC:STAGE:",
-        motors={"x": "X", "y": "Y", "z": "Z"},
-        class_bases=["ophyd.MotorBundle", "apstools.devices.EpicsMotorDialMixin"],
-        class_name="DialStage",
-        name="sample_stage_with_dial"
-    )
+    # Access both user and dial coordinates is automatic with EpicsMotorDialMixin
+    # stage.x.position (user coordinate)
+    # stage.x.dial_position (dial coordinate)
 
-    # Access both user and dial coordinates
-    print(f"User X: {dial_stage.x.position}")
-    print(f"Dial X: {dial_stage.x.dial_position}")
+**Environment-Specific Configuration:**
 
-**Dynamic Motor Configuration:**
+Use different YAML configurations for different environments:
 
-.. code-block:: python
+.. code-block:: yaml
 
-    # Factory function for configurable motor systems
-    def create_motor_bundle_from_config(config_dict):
-        """Create motor bundle from configuration dictionary."""
+    # configs/devices_production.yml - Production hardware
+    apstools.devices.motor_factory.mb_creator:
+    - name: sample_manipulator
+      prefix: "IOC:SAMPLE:"
+      labels: ["motors", "sample", "production"]
+      motors:
+        x: 
+          prefix: "X"
+          labels: ["horizontal"]
+        y:
+          prefix: "Y" 
+          labels: ["vertical"]
+        z:
+          prefix: "Z"
+          labels: ["depth"]
+        rx:
+          prefix: "RX"
+          labels: ["rotation"]
+        ry:
+          prefix: "RY"
+          labels: ["rotation"]
 
-        return mb_creator(
-            prefix=config_dict.get("prefix", ""),
-            motors=config_dict.get("motors", {}),
-            name=config_dict.get("name", "motor_bundle"),
-            labels=config_dict.get("labels", ["motors"]),
-            class_bases=config_dict.get("base_classes", ["ophyd.MotorBundle"])
-        )
+.. code-block:: yaml
 
-    # Example: Load from instrument configuration
-    from apsbits.utils.config_loaders import get_config
-
-    iconfig = get_config()
-    stage_config = iconfig.get("SAMPLE_STAGE", {
-        "prefix": "IOC:SAMPLE:",
-        "name": "sample_manipulator",
-        "motors": {
-            "x": {"prefix": "X", "labels": ["horizontal"]},
-            "y": {"prefix": "Y", "labels": ["vertical"]},
-            "z": {"prefix": "Z", "labels": ["depth"]},
-            "rx": {"prefix": "RX", "labels": ["rotation"]},
-            "ry": {"prefix": "RY", "labels": ["rotation"]}
-        }
-    })
-
-    sample_stage = create_motor_bundle_from_config(stage_config)
+    # configs/devices_simulation.yml - Simulated hardware for development
+    apstools.devices.motor_factory.mb_creator:
+    - name: sample_manipulator
+      prefix: "SIM:"
+      labels: ["motors", "sample", "simulation"]  
+      motors:
+        x:
+          class: "ophyd.SoftPositioner"
+          init_pos: 0.0
+        y:
+          class: "ophyd.SoftPositioner"
+          init_pos: 0.0
+        z:
+          class: "ophyd.SoftPositioner"
+          init_pos: 0.0
 
 **Area Detector Factory:**
 
@@ -311,7 +318,7 @@ Device Configuration Patterns
       labels: ["environment", "baseline"]
 
     # External package devices
-    apstools.devices.EpicsMotorDevice:
+    ophyd.EpicsMotor:
     - name: theta
       prefix: "IOC:THETA"
       labels: ["motors", "sample"]
