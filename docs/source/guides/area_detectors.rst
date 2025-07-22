@@ -31,11 +31,10 @@ Quick Start: Basic Area Detector
 
     # 3. Test detector
     from my_instrument.startup import *
-    adsim.stage()
     RE(count([adsim]))
 
 .. note::
-   ADSimDetector is available in all containerized environments and provides
+   ADSimDetector is available in containerized environments and provides
    realistic detector behavior for development. For production, substitute with
    actual detector classes like PilatusDetector, PerkinElmerDetector, etc.
 
@@ -88,12 +87,7 @@ Using apstools Area Detector Factory
         "IOC:DETECTOR:",
         name="advanced_det",
         detector_class="SimDetectorCam",  # Use SimDetectorCam for development
-        plugins={
-            "image": {"port": "DET1"},
-            "stats": {"port": "DET1", "plugins": ["image"]},
-            "roi": {"port": "DET1", "rois": 4},
-            "hdf5": {"port": "DET1", "file_template": "%s%s_%06d.h5"}
-        }
+        plugins=["image", "stats", "roi", "hdf5"]
     )
 
 .. note::
@@ -130,22 +124,19 @@ Version Compatibility Patterns
     class BeamlineSimDetectorCam_V34(CamUpdates_V34, SimDetectorCam):
         """Simulation detector optimized for this beamline and AD 3.4+"""
 
+        # Use stage_sigs for staging configuration instead of overriding stage()
+        stage_sigs = {
+            "cam.acquire_time": 0.1,
+            "cam.num_images": 1,
+            "cam.image_mode": "Single"
+        }
+
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
             # Configure simulation parameters
             self.acquire_time.limits = (0.001, 60.0)  # seconds
             self.num_images.limits = (1, 10000)
-
-        def stage(self):
-            """Custom staging logic."""
-            # Set default acquisition parameters
-            self.acquire_time.put(0.1)
-            self.num_images.put(1)
-            self.image_mode.put("Single")
-
-            # Call parent staging
-            super().stage()
 
 .. note::
    For production detectors, substitute ``SimDetectorCam`` with actual detector
@@ -264,9 +255,9 @@ Common Detector Patterns
         """Detector with real-time image processing."""
 
         # Multiple ROIs for different sample regions
-        roi1 = Cpt(ROIPlugin_V34, ":ROI1:")
-        roi2 = Cpt(ROIPlugin_V34, ":ROI2:")
-        roi3 = Cpt(ROIPlugin_V34, ":ROI3:")
+        roi1 = Cpt(ROIPlugin_V34, ":ROI1:", kind="hinted")
+        roi2 = Cpt(ROIPlugin_V34, ":ROI2:", kind="hinted")
+        roi3 = Cpt(ROIPlugin_V34, ":ROI3:", kind="hinted")
 
         # Image processing
         proc1 = Cpt(ProcessPlugin_V34, ":Proc1:")
@@ -332,7 +323,7 @@ Plugin Configuration Patterns
         stats1 = Cpt(StatsPlugin_V34, ":Stats1:")
 
         # ROI-based statistics
-        roi1 = Cpt(ROIPlugin_V34, ":ROI1:")
+        roi1 = Cpt(ROIPlugin_V34, ":ROI1:", kind="hinted")
         roi_stats1 = Cpt(StatsPlugin_V34, ":Stats2:")  # Stats on ROI1
 
         # Peak finding
