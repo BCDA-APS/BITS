@@ -61,7 +61,7 @@ Most instruments start with a single package:
 
     # Create basic instrument
     python -m apsbits.api.create_new_instrument beamline_endstation
-    
+
     # Example: 8-ID Instrument
     python -m apsbits.api.create_new_instrument id8_i
 
@@ -73,7 +73,7 @@ For beamlines with multiple experimental stations:
 
     # Create common package for shared components
     mkdir -p src/id12_common/{devices,plans}
-    
+
     # Create individual endstations
     python -m apsbits.api.create_new_instrument id12_b  # Branch B
     python -m apsbits.api.create_new_instrument id12_e  # Branch E
@@ -86,10 +86,10 @@ For beamlines with many experimental techniques:
 
     # Create common infrastructure
     mkdir -p src/common_9id
-    
+
     # Create technique-specific instruments
     python -m apsbits.api.create_new_instrument gisaxs
-    python -m apsbits.api.create_new_instrument giwaxs  
+    python -m apsbits.api.create_new_instrument giwaxs
     python -m apsbits.api.create_new_instrument gixpcs
     python -m apsbits.api.create_new_instrument cssi
 
@@ -104,10 +104,10 @@ For advanced control over instrument structure:
 
     # Create directory structure manually
     mkdir -p src/my_instrument/{configs,devices,plans,callbacks,utils,suspenders}
-    
+
     # Copy template files
     cp -r $(python -c "import apsbits; print(apsbits.__path__[0])")/demo_instrument/* src/my_instrument/
-    
+
     # Customize as needed
 
 **Template Customization:**
@@ -119,7 +119,7 @@ Modify the demo_instrument template for organization-specific defaults:
     # In your custom template
     from apsbits.core.instrument_init import make_devices
     from your_organization.common_devices import StandardDetector
-    
+
     # Add organization-specific imports
     # Customize default configurations
 
@@ -137,7 +137,7 @@ Each instrument needs proper package configuration:
     version = "0.0.1"
     description = "BITS Instrument Package"
     dependencies = ["apsbits"]
-    
+
     [tool.copyright]
     copyright = "2024, Your Organization"
 
@@ -149,10 +149,10 @@ The main instrument configuration file:
 
     # Configuration for the Bluesky instrument package.
     ICONFIG_VERSION: 2.0.0
-    
+
     # Databroker catalog configuration
     DATABROKER_CATALOG: &databroker_catalog your_catalog
-    
+
     # RunEngine configuration
     RUN_ENGINE:
         DEFAULT_METADATA:
@@ -160,10 +160,10 @@ The main instrument configuration file:
             instrument_name: "Your Instrument Name"
             proposal_id: commissioning
             databroker_catalog: *databroker_catalog
-        
+
         # Optional: EPICS PV for scan_id
         # SCAN_ID_PV: "IOC:bluesky_scan_id"
-        
+
         MD_PATH: .re_md_dict.yml
         USE_PROGRESS_BAR: false
 
@@ -176,7 +176,7 @@ Installation and Testing
 
     # Development installation (editable)
     pip install -e .
-    
+
     # Or for production
     pip install .
 
@@ -186,11 +186,11 @@ Installation and Testing
 
     # Test instrument import
     from my_instrument.startup import *
-    
+
     # Verify components loaded
     print(f"RunEngine: {RE}")
     print(f"Catalog: {cat}")
-    
+
     # Test with simulation plans
     RE(sim_print_plan())
 
@@ -201,7 +201,7 @@ Installation and Testing
     # Start queue server
     cd src/my_instrument_qserver
     ./qs_host.sh
-    
+
     # In another terminal, test connection
     qserver-console-monitor
 
@@ -216,14 +216,14 @@ When multiple instruments share hardware:
 
     # In src/beamline_common/devices/shared_optics.py
     from apstools.devices import SlitDevice
-    
+
     class BeamlineSlits(SlitDevice):
         """Shared slit system for all endstations"""
         pass
-    
-    # In src/endstation_a/startup.py  
+
+    # In src/endstation_a/startup.py
     from beamline_common.devices.shared_optics import BeamlineSlits
-    
+
     slits = BeamlineSlits("SLIT_PV:", name="slits")
 
 **Environment-Specific Configuration:**
@@ -234,7 +234,7 @@ Handle development vs production deployments:
 
     # In startup.py
     from apsbits.utils.aps_functions import host_on_aps_subnet
-    
+
     if host_on_aps_subnet():
         # Load production device configurations
         load_config(instrument_path / "configs" / "devices_aps_only.yml")
@@ -252,7 +252,7 @@ For projects with multiple related instruments:
     [project]
     name = "beamline-instruments"
     dependencies = ["apsbits"]
-    
+
     [project.optional-dependencies]
     endstation_a = ["specific-detector-package"]
     endstation_b = ["different-detector-package"]
@@ -264,38 +264,38 @@ Troubleshooting Instrument Creation
 **Common Issues:**
 
 1. **Import errors after creation:**
-   
+
    .. code-block:: bash
-   
+
        # Ensure proper installation
        pip install -e .
-       
+
        # Check Python path
        python -c "import sys; print('\\n'.join(sys.path))"
 
 2. **EPICS connection failures:**
-   
+
    Check network configuration and EPICS environment variables:
-   
+
    .. code-block:: bash
-   
+
        echo $EPICS_CA_ADDR_LIST
        echo $EPICS_CA_AUTO_ADDR_LIST
 
 3. **Configuration file errors:**
-   
+
    Validate YAML syntax:
-   
+
    .. code-block:: bash
-   
+
        python -c "import yaml; yaml.safe_load(open('src/my_instrument/configs/iconfig.yml'))"
 
 4. **Queue server startup issues:**
-   
+
    Check permissions and environment:
-   
+
    .. code-block:: bash
-   
+
        chmod +x src/my_instrument_qserver/qs_host.sh
        conda list bluesky-queueserver
 
@@ -307,10 +307,10 @@ BITS instruments are compatible with bAIt (Bluesky AI Tools) for automated analy
 
     # Use bAIt to analyze instrument structure
     from bait_base.analyzers import DeploymentAnalyzer
-    
+
     analyzer = DeploymentAnalyzer()
     result = analyzer.analyze("path/to/your-project")
-    
+
     # Get recommendations for improvements
     print(result.recommendations)
 
@@ -320,7 +320,7 @@ Next Steps
 After creating your instrument:
 
 1. :doc:`Configure devices and hardware <creating_devices>`
-2. :doc:`Create custom scan plans <creating_plans>`  
+2. :doc:`Create custom scan plans <creating_plans>`
 3. :doc:`Set up data management integration <dm>`
 4. :doc:`Configure queue server for production <qserver>`
 5. :doc:`Deploy with best practices <deployment_patterns>`

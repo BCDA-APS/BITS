@@ -37,10 +37,10 @@ BITS requires a dedicated conda environment for proper dependency management:
     export INSTALL_ENVIRONMENT_NAME=bits_production
     conda create -y -n "${INSTALL_ENVIRONMENT_NAME}" python=3.11 pyepics
     conda activate "${INSTALL_ENVIRONMENT_NAME}"
-    
+
     # Install BITS framework
     pip install apsbits
-    
+
     # Optional: Install development tools
     pip install "apsbits[dev]"
 
@@ -74,10 +74,10 @@ Verification and Testing
 
     # Test BITS import and basic functionality
     from apsbits.demo_instrument.startup import *
-    
+
     # List available objects
     listobjects()
-    
+
     # Run test plans
     RE(sim_print_plan())
     RE(sim_count_plan())
@@ -89,7 +89,7 @@ Verification and Testing
 
     # Test PyEpics installation
     python -c "import epics; print('PyEpics version:', epics.__version__)"
-    
+
     # Test channel access
     caget EPICS:PV:NAME  # Replace with actual PV
 
@@ -114,7 +114,7 @@ For beamline production systems:
 
     # Install from PyPI
     pip install apsbits
-    
+
     # Or install specific version
     pip install apsbits==1.2.3
 
@@ -124,27 +124,27 @@ Troubleshooting
 **Common Issues:**
 
 1. **PyEpics import errors:**
-   
+
    .. code-block:: bash
-   
+
        conda install -c conda-forge pyepics
 
 2. **Qt/PyQt5 issues:**
-   
+
    .. code-block:: bash
-   
+
        conda install -c conda-forge pyqt
 
 3. **Permission errors on APS subnet:**
-   
+
    Ensure proper network configuration and EPICS gateway access.
 
 4. **Module not found errors:**
-   
+
    Verify conda environment activation:
-   
+
    .. code-block:: bash
-   
+
        conda activate bits_env
        which python
 

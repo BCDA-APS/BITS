@@ -11,7 +11,7 @@ Quick Start: When to Use Common Packages
 **Use common packages when you have:**
 
 - Multiple endstations sharing hardware (slits, monochromators, detectors)
-- Standardized procedures across experimental techniques  
+- Standardized procedures across experimental techniques
 - Beamline-wide calibration and alignment protocols
 
 **Create a common package in 2 commands:**
@@ -73,19 +73,19 @@ Based on the successful 12-ID deployment:
 
     # src/id12_common/devices/area_detector.py
     """EPICS area_detector definitions for 12-ID."""
-    
+
     import logging
     from apstools.devices import CamMixin_V34
     from ophyd.areadetector import CamBase
     from ophyd.areadetector.cam import PilatusDetectorCam
-    
+
     logger = logging.getLogger(__name__)
     logger.info(__file__)
-    
+
     class CamUpdates_V34(CamMixin_V34, CamBase):
         """Updates to CamBase since v22. PVs removed from AD now."""
         pool_max_buffers = None
-    
+
     class ID12_PilatusCam_V34(CamUpdates_V34, PilatusDetectorCam):
         """Pilatus Area Detector cam module for AD 3.4+"""
         pass
@@ -95,16 +95,16 @@ Based on the successful 12-ID deployment:
     # src/id12_b/startup.py - Endstation B
     from apsbits.core.instrument_init import make_devices
     from id12_common.devices.area_detector import ID12_PilatusCam_V34
-    
+
     # Use shared detector in endstation B
     pilatus_b = ID12_PilatusCam_V34("12IDB:cam1:", name="pilatus_b")
 
 .. code-block:: python
 
-    # src/id12_e/startup.py - Endstation E  
+    # src/id12_e/startup.py - Endstation E
     from apsbits.core.instrument_init import make_devices
     from id12_common.devices.area_detector import ID12_PilatusCam_V34
-    
+
     # Same detector class, different PV prefix
     pilatus_e = ID12_PilatusCam_V34("12IDE:cam1:", name="pilatus_e")
 
@@ -116,10 +116,10 @@ Based on the 9-ID deployment with multiple experimental techniques:
 
     # src/common_9id/devices/sample_environment.py
     """Shared sample environment for 9-ID techniques."""
-    
+
     from apstools.devices import EpicsMotorDevice
     from ophyd import Device, Component as Cpt
-    
+
     class SampleStage(Device):
         """Multi-technique sample positioning system."""
         x = Cpt(EpicsMotorDevice, "X}")
@@ -130,10 +130,10 @@ Based on the 9-ID deployment with multiple experimental techniques:
 
     # src/common_9id/plans/alignment.py
     """Standardized alignment procedures for all 9-ID techniques."""
-    
+
     from bluesky import plan_stubs as bps
     from bluesky.plans import rel_scan
-    
+
     def align_sample_position(detector, stage, range_mm=1.0):
         """Standard sample alignment for any 9-ID technique."""
         yield from rel_scan([detector], stage.x, -range_mm, range_mm, 21)
@@ -144,10 +144,10 @@ Based on the 9-ID deployment with multiple experimental techniques:
     # src/gisaxs/startup.py - GISAXS technique instrument
     from common_9id.devices.sample_environment import SampleStage
     from common_9id.plans.alignment import align_sample_position
-    
+
     # Technique-specific detector
     gisaxs_detector = PilatusDetector("9IDGISAXS:", name="gisaxs")
-    
+
     # Shared sample environment
     sample_stage = SampleStage("9ID:SampleStage:", name="stage")
 
@@ -162,12 +162,12 @@ For hardware used by multiple endstations:
 
     # src/beamline_common/devices/shutters.py
     """Beamline shutter systems shared across endstations."""
-    
+
     from apstools.devices import ApsPssShutterWithStatus
-    
+
     class BeamlineShutter(ApsPssShutterWithStatus):
         """Standard beamline shutter with APS-specific logic."""
-        
+
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
             # Add beamline-specific configuration
@@ -175,14 +175,14 @@ For hardware used by multiple endstations:
 
 .. code-block:: python
 
-    # src/beamline_common/devices/optics.py  
+    # src/beamline_common/devices/optics.py
     """Shared optical components."""
-    
+
     from apstools.devices import SlitDevice
-    
+
     class BeamlineSlits(SlitDevice):
         """Primary beamline slits used by all endstations."""
-        
+
         # Override with beamline-specific limits
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
@@ -197,16 +197,16 @@ Handle EPICS version differences:
 
     # src/beamline_common/devices/compatibility.py
     """Version compatibility helpers for beamline devices."""
-    
+
     from apstools.devices import CamMixin_V34
     from ophyd.areadetector import CamBase
-    
+
     class BeamlineCamBase_V34(CamMixin_V34, CamBase):
         """Updated CamBase for Area Detector 3.4+ at this beamline."""
-        
+
         # Remove deprecated PVs
         pool_max_buffers = None
-        
+
         # Add beamline-specific PVs if needed
         # custom_pv = Cpt(EpicsSignal, "CustomPV")
 
@@ -221,17 +221,17 @@ For procedures used across all instruments:
 
     # src/beamline_common/plans/alignment.py
     """Standard alignment procedures for the beamline."""
-    
+
     from bluesky import plan_stubs as bps
     from apstools.plans import lineup2
-    
+
     def beamline_alignment(detector, optics):
         """Standard beamline alignment procedure."""
-        
+
         # Align primary optics
         yield from lineup2([detector], optics.h_center, -2, 2, 21)
         yield from lineup2([detector], optics.v_center, -2, 2, 21)
-        
+
         # Record alignment metadata
         yield from bps.mv(optics.h_size, 1.0)  # Standard alignment aperture
         yield from bps.mv(optics.v_size, 1.0)
@@ -244,21 +244,21 @@ Shared data management procedures:
 
     # src/beamline_common/plans/data_management.py
     """Shared data management workflows."""
-    
+
     from apstools.devices import DM_WorkflowConnector
     from bluesky import plan_stubs as bps
-    
+
     def start_beamline_workflow(experiment_name, technique="general"):
         """Standard workflow startup for beamline data processing."""
-        
+
         dm_workflow = DM_WorkflowConnector(name="dm_workflow")
-        
+
         workflow_args = {
             "experimentName": experiment_name,
-            "beamline": "your_beamline", 
+            "beamline": "your_beamline",
             "technique": technique,
         }
-        
+
         yield from bps.mv(dm_workflow.workflows_root, "/path/to/workflows")
         yield from bps.mv(dm_workflow.workflow, "standard_processing")
         yield from bps.mv(dm_workflow.workflow_args, workflow_args)
@@ -274,16 +274,16 @@ In individual instrument startup files:
 
     # src/technique_a/startup.py
     from apsbits.core.instrument_init import make_devices
-    
+
     # Import shared components
     from beamline_common.devices.shutters import BeamlineShutter
     from beamline_common.devices.optics import BeamlineSlits
     from beamline_common.plans.alignment import beamline_alignment
-    
+
     # Instantiate shared hardware
     shutter = BeamlineShutter("SHUTTER_PV:", name="shutter")
     slits = BeamlineSlits("SLIT_PV:", name="slits")
-    
+
     # Technique-specific devices
     technique_detector = SpecialDetector("TECHNIQUE_A:", name="detector")
 
@@ -295,7 +295,7 @@ Use common configurations with technique-specific overrides:
 
     # src/technique_a/configs/iconfig.yml
     ICONFIG_VERSION: 2.0.0
-    
+
     # Import common configuration patterns
     RUN_ENGINE:
         DEFAULT_METADATA:
@@ -314,7 +314,7 @@ Each instrument package should depend on the common package:
 .. code-block:: toml
 
     [project]
-    name = "beamline-technique-a"  
+    name = "beamline-technique-a"
     dependencies = [
         "apsbits",
         "beamline-common"  # Internal dependency
@@ -328,11 +328,11 @@ Install all related packages together:
 
     # Install common package first
     pip install -e src/beamline_common/
-    
+
     # Install individual instruments
     pip install -e src/technique_a/
     pip install -e src/technique_b/
-    
+
     # Or install everything together
     pip install -e .
 
@@ -348,16 +348,16 @@ AI agents should recognize these common package patterns:
     # AI analysis patterns for common packages
     def analyze_common_package(package_path):
         """bAIt rules for analyzing common packages."""
-        
+
         rules = {
             "no_startup_py": "Common packages should not have startup.py",
-            "no_iconfig_yml": "Common packages should not have instrument configs", 
+            "no_iconfig_yml": "Common packages should not have instrument configs",
             "shared_devices": "Devices should be reusable across instruments",
             "standard_plans": "Plans should be generic, not technique-specific",
             "proper_imports": "Use relative imports within common package",
             "documentation": "Common packages need usage examples"
         }
-        
+
         return validate_against_rules(package_path, rules)
 
 **Recommended Structure Validation:**
@@ -367,7 +367,7 @@ AI agents should recognize these common package patterns:
     # AI recommendations for common package organization
     recommended_structure = {
         "devices/": "Hardware abstractions shared across instruments",
-        "plans/": "Standardized procedures and workflows", 
+        "plans/": "Standardized procedures and workflows",
         "utils/": "Helper functions and utilities",
         "configs/": "Common configuration templates (optional)",
         "__init__.py": "Package documentation and purpose"

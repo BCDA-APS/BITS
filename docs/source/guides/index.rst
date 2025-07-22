@@ -28,10 +28,11 @@ Build robust instruments with devices, plans, and configurations.
    Creating and Managing Devices <creating_devices>
    Area Detector Configuration <area_detectors>
    Creating Scan Plans <creating_plans>
+   Configuration Management <configuration_management>
    Instrument Configuration <setting_iconfig>
    Common Instrument Patterns <common_instruments>
 
-Advanced Topics  
+Advanced Topics
 ---------------
 
 Production deployment, data management, and advanced patterns.
@@ -88,10 +89,11 @@ Quick Reference
 **Most Common Tasks:**
 
 1. **Install BITS**: :doc:`3 commands to get started <../install>`
-2. **Create Instrument**: :doc:`Basic to multi-beamline setups <creating_instrument>` 
+2. **Create Instrument**: :doc:`Basic to multi-beamline setups <creating_instrument>`
 3. **Add Devices**: :doc:`Using apstools and custom patterns <creating_devices>`
-4. **Create Plans**: :doc:`From simple scans to complex workflows <creating_plans>`
-5. **Deploy Production**: :doc:`Queue server and data management <qserver>`
+4. **Configure Management**: :doc:`Declarative configuration with Guarneri <configuration_management>`
+5. **Create Plans**: :doc:`From simple scans to complex workflows <creating_plans>`
+6. **Deploy Production**: :doc:`Queue server and data management <qserver>`
 
 **Architecture Patterns:**
 

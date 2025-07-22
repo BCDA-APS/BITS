@@ -75,7 +75,7 @@ Step 3: Test Your Instrument (1 minute)
 
     RunEngine: <bluesky.run_engine.RunEngine object>
     Catalog: <intake_bluesky.jsonl.BlueskyJSONLCatalog object>
-    
+
     # Simulation plans will show scan progress and simulated data
 
 Step 4: Add a Simple Device (2 minutes)
@@ -118,12 +118,12 @@ Test your device:
 
     # Restart Python and reload
     from my_instrument.startup import *
-    
+
     # Your new device should be available
     print(sample_stage)
     print(f"X position: {sample_stage.x.position}")
 
-Step 5: Create a Simple Plan (2 minutes)  
+Step 5: Create a Simple Plan (2 minutes)
 -----------------------------------------
 
 Create a custom scan plan:
@@ -146,14 +146,14 @@ Import and test your plan:
 
 .. code-block:: python
 
-    # src/my_instrument/plans/__init__.py  
+    # src/my_instrument/plans/__init__.py
     from .my_plans import quick_count, scan_sample_x
 
 .. code-block:: python
 
     # Restart Python and test
     from my_instrument.startup import *
-    
+
     # Test your plans
     RE(quick_count(sim_detector, num=3))
     RE(scan_sample_x(sim_detector, sim_motor, range_mm=2.0))
@@ -176,7 +176,7 @@ For remote operation and multi-user access:
 
     # Using queue server API
     from bluesky_queueserver_api import REManagerAPI
-    
+
     RM = REManagerAPI(zmq_control_addr="tcp://localhost:60615")
     RM.environment_open()
     RM.queue_item_add(plan={"name": "sim_count_plan", "args": []})
@@ -188,7 +188,7 @@ What You've Accomplished
 In under 10 minutes, you've:
 
 ✅ **Installed BITS** with full Bluesky ecosystem
-✅ **Created an instrument** with proper structure  
+✅ **Created an instrument** with proper structure
 ✅ **Added custom devices** with configuration
 ✅ **Created scan plans** for data collection
 ✅ **Tested everything** with simulation
@@ -251,7 +251,7 @@ Getting Help
 ------------
 
 - **Documentation**: :doc:`Complete guides <index>` for detailed information
-- **Examples**: Look in `apsbits/demo_instrument/` for working examples  
+- **Examples**: Look in `apsbits/demo_instrument/` for working examples
 - **Issues**: Report problems at https://github.com/BCDA-APS/BITS/issues
 - **Community**: APS Bluesky user community and beamline staff
 
