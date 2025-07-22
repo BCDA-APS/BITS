@@ -75,7 +75,7 @@ Using apstools Devices (Recommended)
     - name: aps_status
       labels: ["baseline", "machine"]
 
-    apstools.devices.EpicsMotorDevice:
+    ophyd.EpicsMotor:
     - name: sample_x
       prefix: "IOC:SAMPLE:X"
       labels: ["motors", "sample"]
@@ -311,7 +311,7 @@ Device Configuration Patterns
       labels: ["environment", "baseline"]
 
     # External package devices
-    apstools.devices.EpicsMotorDevice:
+    ophyd.EpicsMotor:
     - name: theta
       prefix: "IOC:THETA"
       labels: ["motors", "sample"]

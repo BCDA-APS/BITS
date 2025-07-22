@@ -14,12 +14,14 @@ Quick Start: When to Use Common Packages
 - Standardized procedures across experimental techniques
 - Beamline-wide calibration and alignment protocols
 
-**Create a common package in 2 commands:**
+**Create a common package in 4 commands:**
 
 .. code-block:: bash
 
     mkdir -p src/beamline_common/{devices,plans}
     echo '"""Support for beamline instruments."""' > src/beamline_common/__init__.py
+    touch src/beamline_common/devices/__init__.py
+    touch src/beamline_common/plans/__init__.py
 
 **Use the common package:**
 
@@ -117,14 +119,27 @@ Based on the 9-ID deployment with multiple experimental techniques:
     # src/common_9id/devices/sample_environment.py
     """Shared sample environment for 9-ID techniques."""
 
-    from apstools.devices import EpicsMotorDevice
-    from ophyd import Device, Component as Cpt
+    from ophyd import Device, EpicsMotor, Component as Cpt
 
     class SampleStage(Device):
         """Multi-technique sample positioning system."""
-        x = Cpt(EpicsMotorDevice, "X}")
-        y = Cpt(EpicsMotorDevice, "Y}")
-        theta = Cpt(EpicsMotorDevice, "Theta}")
+        x = Cpt(EpicsMotor, "X}")
+        y = Cpt(EpicsMotor, "Y}")
+        theta = Cpt(EpicsMotor, "Theta}")
+
+**Preferred YAML Configuration Approach:**
+
+.. code-block:: yaml
+
+    # src/common_9id/configs/devices.yml - YAML-first approach (Recommended)
+    apstools.devices.motor_factory.mb_creator:
+    - name: sample_stage
+      prefix: "9ID:SampleStage:"
+      motors:
+        x: "X}"
+        y: "Y}"
+        theta: "Theta}"
+      labels: ["motors", "sample", "positioning"]
 
 .. code-block:: python
 
