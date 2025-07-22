@@ -20,8 +20,8 @@ Quick Start: When to Use Common Packages
 
     mkdir -p src/beamline_common/{devices,plans}
     echo '"""Support for beamline instruments."""' > src/beamline_common/__init__.py
-    echo '"""Shared device definitions."""' > src/beamline_common/devices/__init__.py
-    echo '"""Shared plan definitions."""' > src/beamline_common/plans/__init__.py
+    touch src/beamline_common/devices/__init__.py
+    touch src/beamline_common/plans/__init__.py
 
 **Use the common package:**
 
@@ -46,12 +46,10 @@ Common packages contain **reusable components** but are **not instruments themse
     │   ├── id12_common/              # Shared 12-ID components
     │   │   ├── __init__.py           # "Support for 12-ID instruments"
     │   │   ├── devices/              # Shared hardware definitions
-    │   │   │   ├── __init__.py       # Device module initialization
     │   │   │   ├── area_detector.py  # Common detector configurations
     │   │   │   ├── shutters.py       # Beamline shutter systems
     │   │   │   └── optics.py         # Shared optical components
     │   │   └── plans/                # Standardized procedures
-    │   │       ├── __init__.py       # Plan module initialization
     │   │       ├── alignment.py      # Common alignment protocols
     │   │       └── calibration.py    # Beamline-wide calibrations
     │   ├── id12_b/                   # Endstation B instrument
@@ -69,64 +67,79 @@ Common packages contain **reusable components** but are **not instruments themse
 Real-World Examples
 ~~~~~~~~~~~~~~~~~~~
 
-**8-ID Multi-Endstation Pattern:**
+**12-ID Multi-Endstation Pattern:**
 
-Based on the successful 8-ID deployment with common/endstation architecture:
+Based on the successful 12-ID deployment:
 
 .. code-block:: python
 
-    # src/id8_common/devices/area_detector.py
-    # Real example from 8-ID deployment (bits_deployments/8id-bits/)
-    """EPICS area_detector definitions for ID8."""
+    # src/id12_common/devices/area_detector.py
+    """EPICS area_detector definitions for 12-ID."""
 
     import logging
     from apstools.devices import CamMixin_V34
     from ophyd.areadetector import CamBase
-    from ophyd.areadetector import EigerDetectorCam
+    from ophyd.areadetector.cam import PilatusDetectorCam
 
     logger = logging.getLogger(__name__)
+    logger.info(__file__)
 
-    class ID8_EigerCam_V34(CamMixin_V34, EigerDetectorCam):
-        """Eiger Area Detector cam module for AD 3.4+"""
-        # CamMixin_V34 automatically handles deprecated PV compatibility
+    class CamUpdates_V34(CamMixin_V34, CamBase):
+        """Updates to CamBase since v22. PVs removed from AD now."""
+        pool_max_buffers = None
 
-.. code-block:: yaml
+    class ID12_PilatusCam_V34(CamUpdates_V34, PilatusDetectorCam):
+        """Pilatus Area Detector cam module for AD 3.4+"""
+        pass
 
-    # src/id8_i/configs/devices.yml 
-    # Real example from 8-ID deployment showing YAML configuration approach
-    
-    # Direct ophyd devices - simple motor configuration
-    ophyd.EpicsMotor:
-    - name: fl2
-      prefix: "8ideSoft:CR8-E2:m7"
-      labels: ["motor"]
-    - name: fl3
-      prefix: "8idiSoft:CR8-I2:m7"
-      labels: ["motor"]
+.. code-block:: python
 
-    # Custom device classes from common package
-    id8_i.devices.xy_motors.XY_Motors:
-    - name: damm
-      prefix: "8iddSoft:CR8-D1:US"
-      x_motor: m2
-      y_motor: m3
+    # src/id12_b/startup.py - Endstation B
+    from apsbits.core.instrument_init import make_devices
+    from id12_common.devices.area_detector import ID12_PilatusCam_V34
+
+    # Use shared detector in endstation B
+    pilatus_b = ID12_PilatusCam_V34("12IDB:cam1:", name="pilatus_b")
+
+.. code-block:: python
+
+    # src/id12_e/startup.py - Endstation E
+    from apsbits.core.instrument_init import make_devices
+    from id12_common.devices.area_detector import ID12_PilatusCam_V34
+
+    # Same detector class, different PV prefix
+    pilatus_e = ID12_PilatusCam_V34("12IDE:cam1:", name="pilatus_e")
 
 **9-ID Multi-Technique Pattern:**
 
 Based on the 9-ID deployment with multiple experimental techniques:
 
+.. code-block:: python
+
+    # src/common_9id/devices/sample_environment.py
+    """Shared sample environment for 9-ID techniques."""
+
+    from ophyd import Device, EpicsMotor, Component as Cpt
+
+    class SampleStage(Device):
+        """Multi-technique sample positioning system."""
+        x = Cpt(EpicsMotor, "X}")
+        y = Cpt(EpicsMotor, "Y}")
+        theta = Cpt(EpicsMotor, "Theta}")
+
+**Preferred YAML Configuration Approach:**
+
 .. code-block:: yaml
 
-    # src/common_9id/configs/devices.yml - YAML configuration (Recommended for bAIt/BITS)
+    # src/common_9id/configs/devices.yml - YAML-first approach (Recommended)
     apstools.devices.motor_factory.mb_creator:
     - name: sample_stage
       prefix: "9ID:SampleStage:"
-      class_name: "SampleStage"
-      labels: ["baseline", "sample", "motors"]
       motors:
-        x: "X"
-        y: "Y"
-        theta: "Theta"
+        x: "X}"
+        y: "Y}"
+        theta: "Theta}"
+      labels: ["motors", "sample", "positioning"]
 
 .. code-block:: python
 
@@ -144,57 +157,73 @@ Based on the 9-ID deployment with multiple experimental techniques:
 .. code-block:: python
 
     # src/gisaxs/startup.py - GISAXS technique instrument
-    from apsbits.core.instrument_init import make_devices
+    from common_9id.devices.sample_environment import SampleStage
     from common_9id.plans.alignment import align_sample_position
-
-    # Load shared devices from YAML configuration
-    make_devices(config_path="common_9id/configs/devices.yml")
 
     # Technique-specific detector
     gisaxs_detector = PilatusDetector("9IDGISAXS:", name="gisaxs")
 
-    # sample_stage is now available from YAML configuration
+    # Shared sample environment
+    sample_stage = SampleStage("9ID:SampleStage:", name="stage")
 
 Creating Common Device Patterns
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Shared Hardware Devices (YAML Configuration Approach):**
+**Shared Hardware Devices:**
 
-For hardware used by multiple endstations, prefer YAML configuration:
+For hardware used by multiple endstations:
 
-.. code-block:: yaml
+.. code-block:: python
 
-    # src/beamline_common/configs/devices.yml
-    # Shared beamline devices configured via YAML
-    
-    # Standard beamline shutter with APS-specific configuration
-    apstools.devices.ApsPssShutterWithStatus:
-    - name: beamline_shutter
-      prefix: "BEAMLINE:SHUTTER"
-      labels: ["shutters", "baseline"]
-      delay_s: 0.1  # Beamline-specific timing
+    # src/beamline_common/devices/shutters.py
+    """Beamline shutter systems shared across endstations."""
 
-    # Primary beamline slits with custom limits
-    apstools.synApps.Optics2Slit2D_HV:
-    - name: primary_slits
-      prefix: "BEAMLINE:SLIT1"
-      labels: ["slits", "optics", "baseline"]
-      # Limits configured via YAML attributes
-      h_size_limits: [0, 20]  # mm
-      v_size_limits: [0, 15]  # mm
+    from apstools.devices import ApsPssShutterWithStatus
 
-**Area Detector Configuration:**
+    class BeamlineShutter(ApsPssShutterWithStatus):
+        """Standard beamline shutter with APS-specific logic."""
 
-Handle EPICS Area Detector 3.4+ compatibility via direct apstools usage:
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            # Add beamline-specific configuration
+            self.delay_s = 0.1  # Beamline-specific timing
 
-.. code-block:: yaml
+.. code-block:: python
 
-    # Area detectors with built-in AD 3.4+ compatibility
-    apstools.devices.CamMixin_V34:
-    - name: pilatus_detector
-      prefix: "BEAMLINE:PIL1:"
-      labels: ["detectors", "area_detectors"]
-      # CamMixin_V34 automatically handles deprecated PV compatibility
+    # src/beamline_common/devices/optics.py
+    """Shared optical components."""
+
+    from apstools.devices import SlitDevice
+
+    class BeamlineSlits(SlitDevice):
+        """Primary beamline slits used by all endstations."""
+
+        # Override with beamline-specific limits
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.h_size.limits = (0, 20)  # mm
+            self.v_size.limits = (0, 15)  # mm
+
+**Version Compatibility Mixins:**
+
+Handle EPICS version differences:
+
+.. code-block:: python
+
+    # src/beamline_common/devices/compatibility.py
+    """Version compatibility helpers for beamline devices."""
+
+    from apstools.devices import CamMixin_V34
+    from ophyd.areadetector import CamBase
+
+    class BeamlineCamBase_V34(CamMixin_V34, CamBase):
+        """Updated CamBase for Area Detector 3.4+ at this beamline."""
+
+        # Remove deprecated PVs
+        pool_max_buffers = None
+
+        # Add beamline-specific PVs if needed
+        # custom_pv = Cpt(EpicsSignal, "CustomPV")
 
 Creating Common Plan Patterns
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -252,25 +281,26 @@ Shared data management procedures:
 Integration Patterns
 ~~~~~~~~~~~~~~~~~~~~
 
-**Loading Common Components via YAML:**
+**Importing Common Components:**
 
-In individual instrument startup files, use YAML configuration:
+In individual instrument startup files:
 
 .. code-block:: python
 
     # src/technique_a/startup.py
     from apsbits.core.instrument_init import make_devices
 
-    # Load shared devices from common configuration
-    make_devices(config_path="beamline_common/configs/devices.yml")
-    
-    # Import shared plans
+    # Import shared components
+    from beamline_common.devices.shutters import BeamlineShutter
+    from beamline_common.devices.optics import BeamlineSlits
     from beamline_common.plans.alignment import beamline_alignment
+
+    # Instantiate shared hardware
+    shutter = BeamlineShutter("SHUTTER_PV:", name="shutter")
+    slits = BeamlineSlits("SLIT_PV:", name="slits")
 
     # Technique-specific devices
     technique_detector = SpecialDetector("TECHNIQUE_A:", name="detector")
-    
-    # Shared devices are now available: beamline_shutter, primary_slits, etc.
 
 **Configuration Integration:**
 
@@ -374,48 +404,9 @@ Best Practices Summary
 - Create common packages for single-use components
 - Forget to handle version compatibility in shared devices
 
-**Converting Existing Device Implementations**
-
-When working with existing device code from other repositories, follow the proven conversion process:
-
-**POLAR Team Success Story:**
-
-The POLAR team successfully converted SRS810 Lock-in Amplifier support:
-
-- **Source**: `APS-4ID-POLAR/polar_instrument <https://github.com/APS-4ID-POLAR/polar_instrument/blob/80c0c3abbd676a00a489ff2a995f1befb7e4856c/src/instrument/devices/4idd/srs810.py#L43>`_
-- **Target**: `BCDA-APS/polar-bits <https://github.com/BCDA-APS/polar-bits/commit/c47940e>`_
-- **Process**: Source analysis → Device class → YAML config → Integration
-
-**Conversion Pattern:**
-
-.. code-block:: yaml
-
-    # Step 1: Create common package device
-    # src/beamline_common/devices/lockin_amp.py
-    
-    # Step 2: Add YAML configuration
-    beamline_common.devices.lockin_amp.LockinDevice:
-    - name: lock_in_amplifier
-      prefix: "BEAMLINE:LOCKIN:"
-      labels: ["detectors", "baseline"]
-      # Source: https://github.com/original/repo/path/to/device.py
-
-See: :doc:`converting_external_devices` for complete step-by-step conversion guide.
-
-**Real Deployment Validation:**
-
-All examples in this guide are validated against production deployments:
-
-- **8-ID Common Architecture**: `bits_deployments/8id-bits/src/id8_common/` and `id8_i/`
-- **CamMixin_V34 Usage**: Real implementation in `8id-bits/src/id8_common/devices/area_detector.py`
-- **YAML Device Configuration**: Production patterns in `8id-bits/src/id8_i/configs/devices.yml`
-- **Motor Bundle Patterns**: Custom XY_Motors implementation in `8id-bits/src/id8_i/devices/xy_motors.py`
-- **Device Conversion**: POLAR team SRS810 integration in `polar-bits/src/polar_common/devices/`
-
 **Next Steps:**
 
-1. :doc:`Convert existing device implementations <converting_external_devices>`
-2. :doc:`Create custom devices in common packages <creating_devices>`
-3. :doc:`Develop standardized scan plans <creating_plans>`
-4. :doc:`Configure data management workflows <dm>`
-5. :doc:`Deploy multi-instrument systems <deployment_patterns>`
+1. :doc:`Create custom devices in common packages <creating_devices>`
+2. :doc:`Develop standardized scan plans <creating_plans>`
+3. :doc:`Configure data management workflows <dm>`
+4. :doc:`Deploy multi-instrument systems <deployment_patterns>`
