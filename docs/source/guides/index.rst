@@ -74,11 +74,12 @@ Working with existing systems and migration paths.
 AI Integration
 --------------
 
-bAIt (Bluesky AI Tools) integration for intelligent deployment analysis.
+bAIt (Bluesky AI Tools) integration and AI-assisted development for BITS.
 
 .. toctree::
    :maxdepth: 2
 
+   Claude Code Development Prompts <claude_code_prompts>
    AI-Assisted Development <bait_integration>
    Automated Analysis <automated_analysis>
    Deployment Validation <deployment_validation>

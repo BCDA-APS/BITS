@@ -8,31 +8,36 @@ This guide covers area detector setup in BITS, from simple configurations to adv
 Quick Start: Basic Area Detector
 ---------------------------------
 
-**Set up a Pilatus detector in 3 steps:**
+**Set up an ADSimDetector in 3 steps:**
 
 .. code-block:: python
 
-    # 1. devices/detectors.py - Basic detector
-    from ophyd.areadetector import PilatusDetector
+    # 1. devices/detectors.py - Basic simulation detector
+    from ophyd.areadetector import SimDetector
 
-    class MyPilatus(PilatusDetector):
-        """Basic Pilatus detector."""
+    class MySimDetector(SimDetector):
+        """Basic simulation detector for development and testing."""
         pass
 
 .. code-block:: yaml
 
     # 2. configs/devices.yml
-    my_instrument.devices.MyPilatus:
-    - name: pilatus
-      prefix: "IOC:PILATUS:"
+    my_instrument.devices.MySimDetector:
+    - name: adsim
+      prefix: "IOC:ADSIM:"
       labels: ["detectors", "primary"]
 
 .. code-block:: python
 
     # 3. Test detector
     from my_instrument.startup import *
-    pilatus.stage()
-    RE(count([pilatus]))
+    adsim.stage()
+    RE(count([adsim]))
+
+.. note::
+   ADSimDetector is available in all containerized environments and provides
+   realistic detector behavior for development. For production, substitute with
+   actual detector classes like PilatusDetector, PerkinElmerDetector, etc.
 
 Complete Area Detector Guide
 -----------------------------
@@ -70,11 +75,11 @@ Using apstools Area Detector Factory
     # devices/detectors.py - Factory approach
     from apstools.devices import ad_creator
 
-    # Create detector with standard plugins
-    pilatus = ad_creator(
-        "IOC:PILATUS:",
-        name="pilatus",
-        detector_class="PilatusDetectorCam",
+    # Create simulation detector with standard plugins
+    adsim = ad_creator(
+        "IOC:ADSIM:",
+        name="adsim",
+        detector_class="SimDetectorCam",
         plugins=["image", "stats", "roi", "hdf5"]
     )
 
@@ -82,7 +87,7 @@ Using apstools Area Detector Factory
     advanced_detector = ad_creator(
         "IOC:DETECTOR:",
         name="advanced_det",
-        detector_class="PerkinElmerDetectorCam",
+        detector_class="SimDetectorCam",  # Use SimDetectorCam for development
         plugins={
             "image": {"port": "DET1"},
             "stats": {"port": "DET1", "plugins": ["image"]},
@@ -90,6 +95,10 @@ Using apstools Area Detector Factory
             "hdf5": {"port": "DET1", "file_template": "%s%s_%06d.h5"}
         }
     )
+
+.. note::
+   For production detectors, replace ``SimDetectorCam`` with actual detector
+   camera classes like ``PilatusDetectorCam``, ``PerkinElmerDetectorCam``, etc.
 
 **Factory Benefits:**
 - Automatic plugin configuration
@@ -104,10 +113,10 @@ Version Compatibility Patterns
 
 .. code-block:: python
 
-    # devices/area_detector.py - Version compatibility from 12-ID
+    # devices/area_detector.py - Version compatibility pattern
     from apstools.devices import CamMixin_V34
     from ophyd.areadetector import CamBase
-    from ophyd.areadetector.cam import PilatusDetectorCam
+    from ophyd.areadetector.cam import SimDetectorCam
 
     class CamUpdates_V34(CamMixin_V34, CamBase):
         """Updates to CamBase for Area Detector 3.4+"""
@@ -118,13 +127,13 @@ Version Compatibility Patterns
         # Add any beamline-specific PVs here
         # custom_readout_mode = Cpt(EpicsSignal, ":CustomMode")
 
-    class BeamlinePilatusCam_V34(CamUpdates_V34, PilatusDetectorCam):
-        """Pilatus detector optimized for this beamline and AD 3.4+"""
+    class BeamlineSimDetectorCam_V34(CamUpdates_V34, SimDetectorCam):
+        """Simulation detector optimized for this beamline and AD 3.4+"""
 
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
-            # Beamline-specific configuration
+            # Configure simulation parameters
             self.acquire_time.limits = (0.001, 60.0)  # seconds
             self.num_images.limits = (1, 10000)
 
@@ -137,6 +146,10 @@ Version Compatibility Patterns
 
             # Call parent staging
             super().stage()
+
+.. note::
+   For production detectors, substitute ``SimDetectorCam`` with actual detector
+   camera classes like ``PilatusDetectorCam``, ``FastCCDDetectorCam``, etc.
 
 **Multi-Version Support:**
 
@@ -164,27 +177,31 @@ Version Compatibility Patterns
     AD_VERSION = get_area_detector_version()
 
     if AD_VERSION == "3.4+":
-        from .area_detector import BeamlinePilatusCam_V34 as PilatusDetector
+        from .area_detector import BeamlineSimDetectorCam_V34 as SimDetector
     else:
-        from ophyd.areadetector import PilatusDetector
+        from ophyd.areadetector import SimDetector
 
     logger.info(f"Using Area Detector version: {AD_VERSION}")
+
+.. note::
+   This pattern works for any detector type. Replace ``SimDetector`` with
+   ``PilatusDetector``, ``FastCCDDetector``, etc. for production systems.
 
 Common Detector Patterns
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Pilatus Detector Pattern:**
+**Simulation Detector Pattern:**
 
 .. code-block:: python
 
-    # devices/pilatus.py - Production Pilatus setup
+    # devices/adsim.py - ADSimDetector setup for development/testing
     from apstools.devices import CamMixin_V34
-    from ophyd.areadetector import PilatusDetector
+    from ophyd.areadetector import SimDetector
     from ophyd.areadetector.plugins import ImagePlugin_V34, StatsPlugin_V34
     from ophyd import Component as Cpt
 
-    class ProductionPilatus(PilatusDetector):
-        """Production-ready Pilatus with optimized plugins."""
+    class ProductionSimDetector(SimDetector):
+        """Production-ready simulation detector with optimized plugins."""
 
         # Use version-compatible plugins
         image = Cpt(ImagePlugin_V34, ":image1:")
@@ -194,17 +211,21 @@ Common Detector Patterns
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
 
-            # Configure for beamline use
+            # Configure for realistic simulation
             self.cam.acquire_period.put(0.005)  # 5ms overhead
             self.stats1.kind = "hinted"  # Show in plots
 
         def collect_dark_images(self, num_images=10):
-            """Collect dark images for background subtraction."""
-            # Close shutter, collect darks
+            """Simulate dark image collection for background subtraction."""
+            # Simulate dark collection process
             original_num = self.cam.num_images.get()
             self.cam.num_images.put(num_images)
             self.cam.image_mode.put("Multiple")
             # Implementation continues...
+
+.. note::
+   This pattern applies to any detector type. For production systems, replace
+   ``SimDetector`` with ``PilatusDetector``, ``PerkinElmerDetector``, etc.
 
 **Fast CCD Pattern:**
 
@@ -340,26 +361,30 @@ Configuration Patterns
 .. code-block:: yaml
 
     # configs/devices.yml - Standard detector configuration
-    my_instrument.devices.ProductionPilatus:
-    - name: pilatus
-      prefix: "IOC:PILATUS:"
+    my_instrument.devices.ProductionSimDetector:
+    - name: adsim
+      prefix: "IOC:ADSIM:"
       labels: ["detectors", "primary"]
 
     # apstools factory configuration
     apstools.devices.ad_creator:
     - name: fast_detector
       # Factory arguments
-      prefix: "IOC:FASTCCD:"
-      detector_class: "FastCCDDetectorCam"
+      prefix: "IOC:ADSIM2:"
+      detector_class: "SimDetectorCam"  # Use SimDetectorCam for development
       plugins: ["image", "stats", "hdf5"]
       labels: ["detectors", "fast"]
+
+.. note::
+   For production, replace ``SimDetectorCam`` with actual detector classes
+   like ``FastCCDDetectorCam``, ``PilatusDetectorCam``, etc.
 
 **Environment-Specific Configuration:**
 
 .. code-block:: yaml
 
     # configs/devices_aps_only.yml - Production detectors
-    my_instrument.devices.ProductionPilatus:
+    my_instrument.devices.ProductionPilatus:  # Replace with actual detector class
     - name: pilatus_real
       prefix: "12IDA:PILATUS:"
       labels: ["detectors", "primary"]
@@ -372,14 +397,14 @@ Configuration Patterns
 
     # configs/devices.yml - Development/simulation
     ophyd.areadetector.SimDetector:
-    - name: pilatus_sim
-      prefix: "SIM:PILATUS:"
+    - name: adsim_dev
+      prefix: "SIM:ADSIM:"
       labels: ["detectors", "primary"]
       # Simulation parameters
       init_kwargs:
         noise: true
-        image_width: 1475
-        image_height: 1679
+        image_width: 1024  # Typical detector dimensions
+        image_height: 1024
 
 Integration with Plans
 ~~~~~~~~~~~~~~~~~~~~~
@@ -497,11 +522,11 @@ Troubleshooting Area Detectors
    .. code-block:: bash
 
        # Check plugin connections
-       caget IOC:PILATUS:cam1:ArrayPort
-       caget IOC:PILATUS:image1:NDArrayPort
+       caget IOC:ADSIM:cam1:ArrayPort
+       caget IOC:ADSIM:image1:NDArrayPort
 
        # Verify plugin enable status
-       caget IOC:PILATUS:image1:EnableCallbacks
+       caget IOC:ADSIM:image1:EnableCallbacks
 
 2. **File Writing Problems:**
 
@@ -517,8 +542,8 @@ Troubleshooting Area Detectors
    .. code-block:: bash
 
        # Check memory pools
-       caget IOC:PILATUS:cam1:PoolMaxBuffers
-       caget IOC:PILATUS:cam1:PoolUsedBuffers
+       caget IOC:ADSIM:cam1:PoolMaxBuffers
+       caget IOC:ADSIM:cam1:PoolUsedBuffers
 
 **Diagnostic Tools:**
 
