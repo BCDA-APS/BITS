@@ -170,9 +170,18 @@ dev_*
 
 existing_plans_and_devices.yaml
 .vscode/
+# Logs and temporary files
 .logs/
+*.log
+*.log.*
+tutorial_test.log*
 *.dat
 *.hdf
+
+# Tutorial test reports and backups
+tutorial_test_reports/
+*.backup
+tutorial_improvement_reports/
 
 # Local Run Engine metadata dictionary
 .re_md_dict.yml
