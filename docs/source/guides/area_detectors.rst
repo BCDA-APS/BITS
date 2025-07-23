@@ -34,7 +34,7 @@ plugin) and support to view the acquired image(s) (the ``image`` plugin).
       labels: ["detectors"]
 
 For an explanation of these terms used by ``ad_creator``, see the
-:ref:`descriptive section <area_detector.ad_creator.explanation>` below.
+:ref:`explanation <area_detector.ad_creator.explanation>` below.
 
 Next, we show some Python code that demonstrates this object:
 
@@ -186,57 +186,6 @@ file name is specified in EPICS.
           kind: normal
       labels: ["detectors"]
 
-.. _area_detector.ad_creator.explanation:
-
-In this specification:
-
-* ``apstools.devices.ad_creator``: The Python callable (a class or function)
-    that will be used to create the object.  All keyword arguments (kwargs) of this
-    callable are specified as shown below.  It is not necessary to specify
-    any kwargs that have the default value.
-
-* ``- name: adsim``: The name of the Python object to be created.Must
-
-    .. important:: The ``name`` *must* be unique amongst *all* Python
-        object names to be created.
-
-* ``prefix: "IOC:ADSIM:"``: The EPICS PV prefix.  Most callables call this
-    ``prefix``. Verify with the callable source or documentation as necessary.
-
-* ``plugins:``: Plugins configure how this area detector object interfaces
-    with EPICS.  The ``ad_creator`` has standard names and defaults for many
-    plugins.  If all the defaults are acceptable, it is not necessary to
-    provide a kwargs dictionary.
-
-    * ``cam``: This "plugin" is the interface with the hardware.  In area
-        detector, it is the source of the image array.  This plugin provides
-        the image array to other plugins.
-
-        There is no default value for ``class``.  *It is always necessary to
-        provide this kwarg.*  The value is text name of the camera class.
-        This class will be imported by ``ad_creator``.  Alternatively,
-        the Python reference to a camera class could be provided.
-
-        For production detectors, use the class appropriate to your hardware,
-        such as ``"ophyd.areadetector.PilatusDetectorCam"`` for a Pilatus
-        area detector.
-
-    * ``image``: This "plugin" receives the image array and makes it available
-        (by EPICS Channel Access protocol, CA) from EPICS PVs.
-
-    * ``pva``: This "plugin" receives the image array and makes it available
-        (by EPICS PV Access protocol, PVA) from EPICS PVs.
-
-        .. Further description of CA and PVA is out of scope here.
-           Consult the EPICS area detector documentation for full details.
-
-    For full description of the available plugins and their
-    configuration using ``ad_creator``, including how to modify or
-    describe additional plugins, consult the documentation in apstools.
-
-* ``labels: "IOC:ADSIM:"``: The EPICS PV prefix.  Most callables call this
-    ``prefix``. Verify with the callable source or documentation as necessary.
-
 **Factory Benefits:**
 - **Automatic plugin configuration**: No need to manually set up plugin chains
 - **Proper port connections**: Data flows correctly between camera and plugins
@@ -246,8 +195,10 @@ In this specification:
 
 .. note::
    The numbered plugin convention (hdf1, stats1, etc.) allows for multiple
-   plugins of the same type. For example, you could have hdf1 for raw data
-   and hdf2 for processed data, or stats1 from camera and stats2 from ROI.
+   plugins of the same type. For example, you could have roi1 & roi2 for
+   two different regions of interest.
+
+See :ref:`area_detector.ad_creator.explanation` for more details.
 
 Version Compatibility Patterns
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -641,6 +592,61 @@ Integration with Plans
             nominal_distance + scan_range,  # mm
             num_points
         )
+
+.. _area_detector.ad_creator.explanation:
+
+ad_creator YAML Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+YAML specifications for area detector objects using ``ad_creator`` rely
+on these terms.
+
+* ``apstools.devices.ad_creator``: The Python callable (a class or function)
+    that will be used to create the object.  All keyword arguments (kwargs) of this
+    callable are specified as shown below.  It is not necessary to specify
+    any kwargs that have the default value.
+
+* ``- name: adsim``: The name of the Python object to be created.Must
+
+    .. important:: The ``name`` *must* be unique amongst *all* Python
+        object names to be created.
+
+* ``prefix: "IOC:ADSIM:"``: The EPICS PV prefix.  Most callables call this
+    ``prefix``. Verify with the callable source or documentation as necessary.
+
+* ``plugins:``: Plugins configure how this area detector object interfaces
+    with EPICS.  The ``ad_creator`` has standard names and defaults for many
+    plugins.  If all the defaults are acceptable, it is not necessary to
+    provide a kwargs dictionary.
+
+    * ``cam``: This "plugin" is the interface with the hardware.  In area
+        detector, it is the source of the image array.  This plugin provides
+        the image array to other plugins.
+
+        There is no default value for ``class``.  *It is always necessary to
+        provide this kwarg.*  The value is text name of the camera class.
+        This class will be imported by ``ad_creator``.  Alternatively,
+        the Python reference to a camera class could be provided.
+
+        For production detectors, use the class appropriate to your hardware,
+        such as ``"ophyd.areadetector.PilatusDetectorCam"`` for a Pilatus
+        area detector.
+
+    * ``image``: This "plugin" receives the image array and makes it available
+        (by EPICS Channel Access protocol, CA) from EPICS PVs.
+
+    * ``pva``: This "plugin" receives the image array and makes it available
+        (by EPICS PV Access protocol, PVA) from EPICS PVs.
+
+        .. Further description of CA and PVA is out of scope here.
+           Consult the EPICS area detector documentation for full details.
+
+* ``labels: "IOC:ADSIM:"``: The EPICS PV prefix.  Most callables call this
+    ``prefix``. Verify with the callable source or documentation as necessary.
+
+For full description of the available plugins and their
+configuration using ``ad_creator``, including how to modify or
+describe additional plugins, consult the documentation in apstools.
 
 Data Management Integration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
