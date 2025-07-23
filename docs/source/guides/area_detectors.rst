@@ -118,6 +118,8 @@ Area detectors in BITS follow the EPICS Area Detector architecture:
 .. code-block:: text
 
     Area Detector Components:
+    │   name                  # Name of the ophyd object (to create).
+    │   prefix                # EPICS PV prefix for the area detector support.  Use quotes.  Always include trailing ":".
     ├── Plugins/              # Image processing
     │   ├── cam               # Operate camera features and receive image(s) from hardware.
     │   ├── hdf1              # Save image(s) to HDF5 files.  In ophyd, the plugin is named 'hdf1'.
@@ -127,13 +129,10 @@ Area detectors in BITS follow the EPICS Area Detector architecture:
     │   ├── stat1             # Statistics calculation (could receive image array from roi1)
     │   ├── transform1        # Transform image array.
     │   └── other plugins     # as configured in EPICS
-    └── Configuration         # BITS integration
+    └── labels                # (optional) List of ophyd object labels.
 
 * All plugins are optional.  Usually, at least the cam and image plugins are
   needed for meaningful control and imaging.
-
-.. TODO: remove comment marking when anchor is identified.
-    See the :ref:`__anchor_needed__` section for details about configuration and integration with BITS.
 
 **BITS provides three approaches:**
 
