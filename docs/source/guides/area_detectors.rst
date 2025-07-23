@@ -648,150 +648,85 @@ For full description of the available plugins and their
 configuration using ``ad_creator``, including how to modify or
 describe additional plugins, consult the documentation in apstools.
 
-Data Management Integration
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. comment-out for now
+    Troubleshooting Area Detectors
+    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-**Metadata Collection:**
+    **Common Issues and Practical Solutions:**
 
-.. code-block:: python
+    1. **Connection Errors**:
 
-    # devices/detector_metadata.py - Metadata integration
-    from ophyd import Device, Component as Cpt, Signal
+    Various root causes are possible:
 
-    class DetectorMetadata(Device):
-        """Collect detector metadata for data management.
+    * IOC not running
+    * Wrong PV prefix
+    * Wrong PV name(s)
+    * IOC does not provide expected plugin
+    * Wrong asyn PORT name
 
-        This metadata gets automatically included in Bluesky documents
-        when using kind="config" - essential for data analysis.
-        """
+    .. TODO: show example of each error and how to fix
 
-        # Detector configuration (automatically saved with each scan)
-        exposure_time = Cpt(Signal, kind="config")  # Current exposure setting
-        num_images = Cpt(Signal, kind="config")     # Images per acquisition
-        detector_distance = Cpt(Signal, kind="config") # Sample-to-detector distance
+    2. **HDF5/JPEG/TIFF File Writing Problems** (always needs more than default setup):
 
-        # Environmental conditions (for data quality assessment)
-        detector_temperature = Cpt(EpicsSignal, ":TEMP:RBV", kind="config")
+    We'll show with the HDF5 File Plugin but similar instructions
+    apply to the other file writers.
 
-        # Calibration information (essential for data analysis)
-        pixel_size = Cpt(Signal, value=0.172, kind="config")  # mm per pixel
-        wavelength = Cpt(Signal, kind="config")  # X-ray wavelength in Angstroms
+    * file writer mode Wrong
+    * file path does not exist
+    * auto save and related parameters
+    * plugin not enabled
 
-**File Management:**
+    .. TODO: show example of each error and how to fix
+    .. code-block:: python
 
-.. code-block:: python
+        # Check complete HDF5 configuration (using hdf1 convention)
+        print(f"File path: {detector.hdf1.file_path.get()}")
+        print(f"File name: {detector.hdf1.file_name.get()}")
+        print(f"File template: {detector.hdf1.file_template.get()}")
+        print(f"Write mode: {detector.hdf1.file_write_mode.get()}")
+        print(f"Capture status: {detector.hdf1.capture.get()}")
+        print(f"Array port: {detector.hdf1.nd_array_port.get()}")
 
-    # callbacks/detector_files.py - File management
-    from apstools.callbacks import NXWriter
-    from pathlib import Path
+        # HDF5 plugin often needs explicit configuration:
+        # detector.hdf1.file_path.put("/data/experiment/")
+        # detector.hdf1.file_name.put("sample_001")
+        # detector.hdf1.file_template.put("%s%s_%06d.h5")
 
-    class DetectorFileManager:
-        """Practical file management for area detectors.
+    3. **Memory and Buffer Issues:**
 
-        This example shows working file management patterns used
-        in production beamlines. Handles directory creation,
-        file naming, and metadata integration.
-        """
+    .. code-block:: bash
 
-        def __init__(self, detector, base_path="/data"):
-            self.detector = detector
-            self.base_path = Path(base_path)
-            # Validate detector has required file writing capability
-            if not hasattr(detector, 'hdf1'):
-                raise ValueError(f"Detector {detector.name} lacks hdf1 plugin")
+        # TODO: refactor with ophyd code
+        # Check memory pools
+        caget IOC:ADSIM:cam1:PoolMaxBuffers
+        caget IOC:ADSIM:cam1:PoolUsedBuffers
 
-        def setup_scan_files(self, scan_id, sample_name):
-            """Configure files for a scan."""
+    4. Problems with the `hdf1` plugin and the `Capture_RBV` PV.
+    .. TODO: Show the error message, show how to fix.
 
-            scan_dir = self.base_path / f"scan_{scan_id:04d}"
-            scan_dir.mkdir(exist_ok=True)
+    Plugin needs to be *primed*.
 
-            # Configure HDF5 file (using hdf1 naming convention)
-            self.detector.hdf1.file_path.put(str(scan_dir))
-            self.detector.hdf1.file_name.put(f"{sample_name}")
+    5. Plugin known to be in use by EPICS but not configured here:
+    .. TODO: Show the error message, show how to fix.
 
-            # Setup NeXus writer
-            nx_writer = NXWriter(str(scan_dir / f"{sample_name}.nx.hdf5"))
-            return nx_writer
+    **Diagnostic Tools:**
 
-Troubleshooting Area Detectors
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    .. code-block:: python
 
-**Common Issues and Practical Solutions:**
+        # devices/detector_diagnostics.py - Diagnostic utilities
+        def diagnose_detector(detector):
+            """Run comprehensive detector diagnostics."""
 
-1. **Connection Errors**:
+            print(f"Detector: {detector.name}")
+            print(f"Connection: {detector.connected}")
+            print(f"Acquire state: {detector.cam.acquire.get()}")
+            print(f"Array size: {detector.cam.array_size.get()}")
 
-   Various root causes are possible:
-
-   * IOC not running
-   * Wrong PV prefix
-   * Wrong PV name(s)
-   * IOC does not provide expected plugin
-   * Wrong asyn PORT name
-
-   .. TODO: show example of each error and how to fix
-
-2. **HDF5/JPEG/TIFF File Writing Problems** (always needs more than default setup):
-
-   We'll show with the HDF5 File Plugin but similar instructions
-   apply to the other file writers.
-
-   * file writer mode Wrong
-   * file path does not exist
-   * auto save and related parameters
-   * plugin not enabled
-
-   .. TODO: show example of each error and how to fix
-   .. code-block:: python
-
-       # Check complete HDF5 configuration (using hdf1 convention)
-       print(f"File path: {detector.hdf1.file_path.get()}")
-       print(f"File name: {detector.hdf1.file_name.get()}")
-       print(f"File template: {detector.hdf1.file_template.get()}")
-       print(f"Write mode: {detector.hdf1.file_write_mode.get()}")
-       print(f"Capture status: {detector.hdf1.capture.get()}")
-       print(f"Array port: {detector.hdf1.nd_array_port.get()}")
-
-       # HDF5 plugin often needs explicit configuration:
-       # detector.hdf1.file_path.put("/data/experiment/")
-       # detector.hdf1.file_name.put("sample_001")
-       # detector.hdf1.file_template.put("%s%s_%06d.h5")
-
-3. **Memory and Buffer Issues:**
-
-   .. code-block:: bash
-
-       # TODO: refactor with ophyd code
-       # Check memory pools
-       caget IOC:ADSIM:cam1:PoolMaxBuffers
-       caget IOC:ADSIM:cam1:PoolUsedBuffers
-
-4. Problems with the `hdf1` plugin and the `Capture_RBV` PV.
-   .. TODO: Show the error message, show how to fix.
-
-   Plugin needs to be *primed*.
-
-5. Plugin known to be in use by EPICS but not configured here:
-   .. TODO: Show the error message, show how to fix.
-
-**Diagnostic Tools:**
-
-.. code-block:: python
-
-    # devices/detector_diagnostics.py - Diagnostic utilities
-    def diagnose_detector(detector):
-        """Run comprehensive detector diagnostics."""
-
-        print(f"Detector: {detector.name}")
-        print(f"Connection: {detector.connected}")
-        print(f"Acquire state: {detector.cam.acquire.get()}")
-        print(f"Array size: {detector.cam.array_size.get()}")
-
-        # Check plugins (using numbered convention)
-        for plugin_name in ['image', 'stats1', 'hdf1']:
-            if hasattr(detector, plugin_name):
-                plugin = getattr(detector, plugin_name)
-                print(f"{plugin_name}: enabled={plugin.enable.get()}")
+            # Check plugins (using numbered convention)
+            for plugin_name in ['image', 'stats1', 'hdf1']:
+                if hasattr(detector, plugin_name):
+                    plugin = getattr(detector, plugin_name)
+                    print(f"{plugin_name}: enabled={plugin.enable.get()}")
 
 AI Integration Guidelines
 ~~~~~~~~~~~~~~~~~~~~~~~~
