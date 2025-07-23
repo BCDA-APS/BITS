@@ -25,7 +25,7 @@ After completing this tutorial, you will:
 ### Required Software
 - **Python 3.11+**: Conda or system Python
 - **Git**: Version control system
-- **Podman or Docker**: For running example IOCs
+- **Podman**: For running example IOCs
 - **Modern Web Browser**: For Jupyter notebooks and monitoring tools
 
 ### Hardware Requirements
@@ -61,50 +61,167 @@ Use your system interactively, remotely, and for analysis.
 ### Phase 4: Deployment (Steps 8-10)
 Create production deployment and verify complete system.
 
-## Environment Setup
+## BITS Development Workflow
 
-### 1. Create Conda Environment
+This tutorial follows the complete BITS development workflow from environment setup to running instrument.
+
+### 1. Create Necessary Environment and Folder Structure
 ```bash
-# Create isolated environment
-conda create -y -n BITS_demo python=3.11
-conda activate BITS_demo
+# Create working directory
+mkdir -p ~/beamline_workspace
+cd ~/beamline_workspace
+
+# Create project structure
+mkdir -p tutorial_workspace
+cd tutorial_workspace
+echo "BITS tutorial workspace created at: $(pwd)"
+```
+
+### 2. Install BITS (Following Official BITS Guide)
+```bash
+# Check if conda is available
+which conda
+
+# If conda command not found, source the initialization script:
+# source ~/miniconda3/etc/profile.d/conda.sh  # Adjust path as needed
+
+# Create BITS environment (following official BITS naming)
+conda create -y -n bits_env python=3.11 pyepics
+conda activate bits_env
 
 # Install BITS framework
 pip install apsbits
 
-# Install additional tools
-pip install jupyterlab ipython
+# Verify installation
+python -c "import apsbits; print('✓ BITS installed')"
 ```
 
-### 2. Get Tutorial Materials
+### 3. Create Your First Instrument (Official BITS Method)
 ```bash
-# Clone or navigate to the tutorial location
-cd /path/to/bits_demo
+# Create a new project directory
+mkdir my_beamline && cd my_beamline
 
-# Verify structure
-ls -la tutorial/
-ls -la scripts/
-ls -la examples/
+# Create instrument using BITS API
+python -m apsbits.api.create_new_instrument my_instrument
+
+# Install the instrument
+pip install -e .
+
+# Test instrument import
+python -c "from my_instrument.startup import *; print('Instrument ready!')"
 ```
 
-### 3. Test Container System
+**What BITS creates (following official structure):**
+- `src/my_instrument/startup.py` - Entry point (REQUIRED)
+- `src/my_instrument/configs/iconfig.yml` - Main instrument config
+- `src/my_instrument/devices/` - Custom device implementations
+- `src/my_instrument/plans/` - Custom scan plans
+- `src/my_instrument/callbacks/` - Data writing and processing
+- `src/my_instrument_qserver/` - Queue server configuration
+
+### 4. Test Your Instrument with BITS Simulation
 ```bash
-# Test Podman installation
+# Verify components loaded (BITS official way)
+python -c "
+from my_instrument.startup import *
+print(f'RunEngine: {RE}')
+print(f'Catalog: {cat}')
+
+# Test with built-in simulation plans
+RE(sim_print_plan())        # Print scan information
+RE(sim_count_plan())        # Simulate data collection
+RE(sim_rel_scan_plan())     # Simulate a scan
+"
+```
+
+**Expected output:**
+```
+RunEngine: <bluesky.run_engine.RunEngine object>
+Catalog: <intake_bluesky.jsonl.BlueskyJSONLCatalog object>
+
+# Simulation plans will show scan progress and simulated data
+```
+
+### 5. Container: Check, Build (if necessary), and Run
+```bash
+# Check Podman installation
 podman --version
 
-# Pull the EPICS container (this may take a few minutes)
+# Pull pre-built EPICS container (recommended)
 podman pull ghcr.io/bcda-aps/epics-podman:latest
+podman tag ghcr.io/bcda-aps/epics-podman:latest epics-podman:latest
+
+# Verify container is available
+podman images | grep epics-podman
+
+# Start the demo IOCs container
+podman run -d --name demo_iocs \
+  --network=host \
+  epics-podman:latest
+
+# Check container is running
+podman ps | grep demo_iocs
 ```
 
-### 4. Verify Python Environment
+**Alternative: Build from source (if needed):**
+```bash
+# Download and build container from source
+curl -L https://github.com/BCDA-APS/epics-podman/raw/main/Containerfile -o Containerfile
+podman build -t epics-podman:latest -f Containerfile .
+```
+
+### 6. Check IOCs are Running
+```bash
+# Test IOC connectivity using EPICS tools
+# Wait a few seconds for IOCs to fully start
+sleep 10
+
+# Test General Purpose IOC (gp:)
+caget gp:m1.VAL gp:m2.VAL gp:scaler1.CNT
+
+# Test Area Detector IOC (adsim:)
+caget adsim:cam1:Acquire adsim:cam1:ImageMode
+
+# If caget command not found, install EPICS base tools or use container:
+# podman exec demo_iocs caget gp:m1.VAL
+
+echo "✅ IOCs are running and responding"
+```
+
+**Expected output:**
+```
+gp:m1.VAL                      0
+gp:m2.VAL                      0  
+gp:scaler1.CNT                 0
+adsim:cam1:Acquire             0
+adsim:cam1:ImageMode           2
+```
+
+## Next Phase: Connect Your Instrument to Real Hardware
+
+With your BITS instrument created (using simulation) and IOCs running, you're ready to connect to real hardware and proceed through the tutorial sequence:
+
+### 7. Connect to Real IOCs (Next Step)
 ```python
-# Test in Python
-import bluesky
-import ophyd
-import apsbits
+# After IOCs are confirmed running, connect your instrument to them
+from my_instrument.startup import *
 
-print("Environment ready!")
+# The following tutorials will show you how to:
+# - Replace simulation devices with real EPICS devices  
+# - Configure device connections using IOC PVs
+# - Create custom plans for your specific hardware
 ```
+
+**→ Next Step**: [IOC Exploration & Device Discovery](01_ioc_exploration.md)
+
+In the following tutorials, you'll learn the **official BITS way** to:
+1. **Explore IOCs** - Discover available devices and process variables from real hardware
+2. **Configure Devices** - Map IOC PVs to BITS device objects using proper configuration
+3. **Create Plans** - Develop custom scan plans following BITS patterns
+4. **Interactive Use** - Test your instrument with live data acquisition
+5. **Remote Execution** - Set up queue server for multi-user operations
+
+All tutorials follow the [BITS documentation](../../../docs/) for authentic development patterns and best practices.
 
 ## Container vs Real Hardware
 
@@ -155,22 +272,47 @@ Once you've completed the environment setup, you're ready to begin:
 
 ### Quick Environment Check
 ```bash
-# Verify everything is ready
-conda activate BITS_demo
-python -c "import bluesky, ophyd, apsbits; print('✓ All imports successful')"
+# Verify everything is ready (using official BITS environment name)
+conda activate bits_env
+python -c "import apsbits; print('✓ BITS installed')"
 podman --version && echo "✓ Podman ready"
-git --version && echo "✓ Git ready"
 echo "✓ Environment ready for tutorial!"
 ```
 
-### Troubleshooting Common Setup Issues
+### Troubleshooting Common Setup Issues (Following BITS Documentation)
+
+**Import errors after creating devices (from BITS docs)**:
+```bash
+# Solution: Reinstall the package
+pip install -e .
+```
+
+**EPICS connection timeouts (from BITS docs)**:
+```python
+# Solution: Use SIM: prefix for testing
+# In devices.yml, use "SIM:DEVICE" instead of real PV names
+```
+
+**Plans not found after creation (from BITS docs)**:
+```python
+# Solution: Check imports in plans/__init__.py
+from .my_plans import my_plan_name
+```
 
 **Conda Issues**:
 ```bash
-# If conda command not found
+# If conda command not found, try these in order:
 source ~/miniconda3/etc/profile.d/conda.sh
 # or
 source ~/anaconda3/etc/profile.d/conda.sh
+# or for Linux package manager installs
+source /opt/miniconda3/etc/profile.d/conda.sh
+# or
+source /usr/local/miniconda3/etc/profile.d/conda.sh
+
+# Alternative: Add conda to PATH permanently
+echo 'export PATH="~/miniconda3/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
 ```
 
 **Permission Issues with Podman**:

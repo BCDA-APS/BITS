@@ -35,7 +35,7 @@ Plans are Python generators that describe what to do during a measurement:
 ### Plan Structure
 
 ```python
-def my_plan(devices, ...):
+def my_plan(devices, *args, **kwargs):
     """A custom plan."""
     # Setup
     yield from bps.open_run()  # Start data collection
