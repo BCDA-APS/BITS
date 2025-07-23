@@ -3,64 +3,108 @@
 Area Detector Configuration Patterns
 =====================================
 
-This guide covers area detector setup in BITS, from simple configurations to advanced patterns using apstools factories and version compatibility.
+This guide covers area detector setup in BITS, from simple
+configurations to advanced patterns using apstools factories and version
+compatibility.
 
 Quick Start: Basic Area Detector
 ---------------------------------
 
 **YAML-First Approach (Recommended):**
 
-Start with YAML configuration - easier and more maintainable:
+Start with YAML configuration - easier and more maintainable.  Here we
+show the specification of a Python object that will be created when the
+session is started.
+
+This area detector object provide controls for the camera (the ``cam``
+plugin) and support to view the acquired image(s) (the ``image`` plugin).
 
 .. code-block:: yaml
+    :linenos:
 
     # 1. configs/devices.yml - Use apstools factory directly
     apstools.devices.ad_creator:
     - name: adsim
-      prefix: "IOC:ADSIM:"
-      detector_class: "SimDetectorCam"  # Works in containerized environments
-      plugins: ["image", "stats1", "hdf1"]  # Numbered plugins follow convention
-      labels: ["detectors", "primary"]
+      prefix: "IOC:ADSIM:"  # EPICS PV prefix for this area detector instance.
+      plugins:
+      - cam  # The cam gets the image from the hardware.
+          # In this case (ADSimDetector), the hardware is an EPICS simulation.
+          class: "apstools.devices.SimDetectorCam_V34"
+      - image  # no additional dictionary means to use default configuration from apstools
+      labels: ["detectors"]
+
+For an explanation of these terms used by ``ad_creator``, see the
+:ref:`descriptive section <area_detector.ad_creator.explanation>` below.
+
+Next, we show some Python code that demonstrates this object:
 
 .. code-block:: python
+    :linenos:
 
-    # 2. Test immediately - this creates a working detector
+    # 2. Test immediately - this creates the 'adsim' detector object.
     from my_instrument.startup import *
-    
-    # Verify detector is functional
+
+    # Verify detector is functional.
     print(f"Detector: {adsim.name}, Connected: {adsim.connected}")
-    
-    # Test acquisition
+
+    # Test acquisition.
     RE(count([adsim]))
 
 **Alternative Python Approach:**
 
-If you need custom detector classes:
+These are the Python steps that duplicate the YAML specification above.  First,
+create a Python file in the `devices/` directory:
 
 .. code-block:: python
+    :linenos:
 
-    # devices/detectors.py - Custom detector class
     from apstools.devices import ad_creator
-    
-    # Create functional detector with proper plugin setup
+
+    # Create functional detector with Python code.
     adsim = ad_creator(
-        "IOC:ADSIM:",
-        name="adsim", 
-        detector_class="SimDetectorCam",
-        plugins=["image", "stats1", "hdf1"]  # This creates a working detector
+        prefix="IOC:ADSIM:",
+        name="adsim",
+        plugins=[
+            {"name": "cam", "class": "apstools.devices.SimDetectorCam_V34"},
+            "image",
+        ]
+        labels=["detectors"]
     )
 
+The Python code to test this object is different, with one additional command line:
+
+.. code-block:: python
+    :linenos:
+
+    # 2. Test immediately - this creates the 'adsim' detector object.
+    from my_instrument.startup import *
+
+    # Get the 'adsim' detector object from the ophyd object registry.
+    adsim = oregistry["adsim"]
+
+    # Verify detector is functional
+    print(f"Detector: {adsim.name}, Connected: {adsim.connected}")
+
+    # Test acquisition
+    RE(count([adsim]))
+
+
 .. important::
-   **Why SimDetectorCam for Tutorials?** ADSimDetector is available in all
-   containerized environments and provides realistic detector behavior without
-   requiring specialized hardware. This makes tutorials immediately testable.
-   
+   **Why SimDetectorCam for Tutorials?** ADSimDetector simulates the hardware
+   of an area detector.  It can be available in many environments such as
+   containers.  It does not require any detector hardware. ADSimDetector
+   provides realistic detector behavior without requiring specialized
+   hardware. This makes it easy for anyone to duplicate this tutorial.
+
    **Production Transition:** To use real detectors, simply change:
-   
-   - ``detector_class: "SimDetectorCam"`` → ``"PilatusDetectorCam"``
-   - ``prefix: "IOC:ADSIM:"`` → ``"12IDA:PILATUS:"`` (actual IOC prefix)
-   - Test with your actual IOC running
-   
+
+   - Replace ``prefix: "IOC:ADSIM:"`` with actual IOC prefix
+       (such as ``"S12-PILATUS1:"``).
+   - In ``cam``, replace ``class: "apstools.devices.SimDetectorCam_V34"``
+       with appropriate class (such as ``"ophyd.areadetector.PilatusDetectorCam"``).
+   - Add additional plugins as necessary.
+   - Test with your actual IOC running.
+
    All plugin configurations and patterns remain identical.
 
 Complete Area Detector Guide
@@ -74,14 +118,22 @@ Area detectors in BITS follow the EPICS Area Detector architecture:
 .. code-block:: text
 
     Area Detector Components:
-    ├── Camera (cam)          # Detector control
     ├── Plugins/              # Image processing
-    │   ├── image             # Live image display
-    │   ├── stats             # Statistics calculation
-    │   ├── roi               # Region of interest
-    │   ├── transform         # Image transforms
-    │   └── hdf5              # File saving
+    │   ├── cam               # Operate camera features and receive image(s) from hardware.
+    │   ├── hdf1              # Save image(s) to HDF5 files.  In ophyd, the plugin is named 'hdf1'.
+    │   ├── image             # Live image display (EPICS CA interface)
+    │   ├── pva               # Live image display (EPICS PVA interface)
+    │   ├── roi1              # Select region of interest from image.
+    │   ├── stat1             # Statistics calculation (could receive image array from roi1)
+    │   ├── transform1        # Transform image array.
+    │   └── other plugins     # as configured in EPICS
     └── Configuration         # BITS integration
+
+* All plugins are optional.  Usually, at least the cam and image plugins are
+  needed for meaningful control and imaging.
+
+.. TODO: remove comment marking when anchor is identified.
+    See the :ref:`__anchor_needed__` section for details about configuration and integration with BITS.
 
 **BITS provides three approaches:**
 
@@ -94,34 +146,101 @@ Using apstools Area Detector Factory
 
 **Automatic Detector Creation:**
 
-.. code-block:: python
+Create ``adsim`` with support for viewing images with EPICS
+CA & PVA protocols.  No file saving or image processing.
 
-    # devices/detectors.py - Factory approach
-    from apstools.devices import ad_creator
+.. code-block:: yaml
+    :linenos:
 
-    # Create simulation detector with standard plugins
-    adsim = ad_creator(
-        "IOC:ADSIM:",
-        name="adsim",
-        detector_class="SimDetectorCam",
-        plugins=["image", "stats1", "roi", "hdf1"]  # Note: Use numbered convention (hdf1, stats1)
-    )
+    apstools.devices.ad_creator:
+    - name: adsim
+      prefix: "IOC:ADSIM:"
+      plugins:
+      - cam
+          class: "apstools.devices.SimDetectorCam_V34"
+      - image
+      - pva
+      labels: ["detectors"]
 
-    # Advanced factory configuration
-    advanced_detector = ad_creator(
-        "IOC:DETECTOR:",
-        name="advanced_det",
-        detector_class="SimDetectorCam",  # Use SimDetectorCam for development
-        plugins=["image", "stats1", "roi", "hdf1"]  # Note: Use numbered convention
-    )
+Create ``adsim2`` with additional support for computing statistics on a
+selected region of interest and saving image(s) to HDF5 files where the
+file name is specified in EPICS.
 
-.. note::
-   For production detectors, replace ``SimDetectorCam`` with actual detector
-   camera classes like ``PilatusDetectorCam``, ``PerkinElmerDetectorCam``, etc.
+.. code-block:: yaml
+    :linenos:
+
+    apstools.devices.ad_creator:
+    - name: adsim2
+      prefix: "IOC:ADSIM:"
+      plugins:
+      - cam
+          class: "apstools.devices.SimDetectorCam_V34"
+      - image
+      - pva
+      - roi1
+      - stats1
+      - hdf1:
+          class: "apstools.devices.area_detector_support.AD_EpicsFileNameHDF5Plugin"
+          # Path templates MUST end with a trailing `/`.
+          read_path_template: "/gdata/dm/TEST/2025-2/"
+          write_path_template: "/gdata/dm/TEST/2025-2/"
+          kind: normal
+      labels: ["detectors"]
+
+.. _area_detector.ad_creator.explanation:
+
+In this specification:
+
+* ``apstools.devices.ad_creator``: The Python callable (a class or function)
+    that will be used to create the object.  All keyword arguments (kwargs) of this
+    callable are specified as shown below.  It is not necessary to specify
+    any kwargs that have the default value.
+
+* ``- name: adsim``: The name of the Python object to be created.Must
+
+    .. important:: The ``name`` *must* be unique amongst *all* Python
+        object names to be created.
+
+* ``prefix: "IOC:ADSIM:"``: The EPICS PV prefix.  Most callables call this
+    ``prefix``. Verify with the callable source or documentation as necessary.
+
+* ``plugins:``: Plugins configure how this area detector object interfaces
+    with EPICS.  The ``ad_creator`` has standard names and defaults for many
+    plugins.  If all the defaults are acceptable, it is not necessary to
+    provide a kwargs dictionary.
+
+    * ``cam``: This "plugin" is the interface with the hardware.  In area
+        detector, it is the source of the image array.  This plugin provides
+        the image array to other plugins.
+
+        There is no default value for ``class``.  *It is always necessary to
+        provide this kwarg.*  The value is text name of the camera class.
+        This class will be imported by ``ad_creator``.  Alternatively,
+        the Python reference to a camera class could be provided.
+
+        For production detectors, use the class appropriate to your hardware,
+        such as ``"ophyd.areadetector.PilatusDetectorCam"`` for a Pilatus
+        area detector.
+
+    * ``image``: This "plugin" receives the image array and makes it available
+        (by EPICS Channel Access protocol, CA) from EPICS PVs.
+
+    * ``pva``: This "plugin" receives the image array and makes it available
+        (by EPICS PV Access protocol, PVA) from EPICS PVs.
+
+        .. Further description of CA and PVA is out of scope here.
+           Consult the EPICS area detector documentation for full details.
+
+    For full description of the available plugins and their
+    configuration using ``ad_creator``, including how to modify or
+    describe additional plugins, consult the documentation in apstools.
+
+* ``labels: "IOC:ADSIM:"``: The EPICS PV prefix.  Most callables call this
+    ``prefix``. Verify with the callable source or documentation as necessary.
 
 **Factory Benefits:**
 - **Automatic plugin configuration**: No need to manually set up plugin chains
-- **Proper port connections**: Data flows correctly between camera and plugins  
+- **Proper port connections**: Data flows correctly between camera and plugins
 - **Standard naming conventions**: Uses established patterns (stats1, hdf1, etc.)
 - **Built-in error handling**: Factory validates configuration before creation
 - **Immediate functionality**: Creates working detectors that can acquire data
@@ -277,7 +396,7 @@ Common Detector Patterns
             # Fast CCD specific configuration
             self.cam.fccd_fw_enable.put(1)  # Enable firmware processing
             self.cam.fccd_sw_enable.put(1)  # Enable software processing
-            
+
             # HDF5 requires additional setup beyond basic Component definition
             # See 12ID repository for complete HDF5 configuration example:
             # - file_path, file_name, file_template must be configured
@@ -308,7 +427,7 @@ Common Detector Patterns
 
         # Image processing
         proc1 = Cpt(ProcessPlugin_V34, "Proc1:")
-        
+
         # Statistics plugins that receive from ROI plugins (proper data flow)
         roi1_stats = Cpt(StatsPlugin_V34, "Stats3:")  # Stats3 gets input from ROI1
         roi2_stats = Cpt(StatsPlugin_V34, "Stats4:")  # Stats4 gets input from ROI2
@@ -337,18 +456,18 @@ Plugin Configuration Patterns
 
     class MultiFormatDetector(DetectorBase):
         """Working detector that saves in multiple formats.
-        
+
         This example provides practical file writing configuration
         based on established beamline patterns.
         """
 
         # Camera required for functional detector
         cam = Cpt(SimDetectorCam, "cam1:")
-        
+
         # File writing plugins (numbered convention allows multiple plugins)
         hdf1 = Cpt(HDF5Plugin_V34, "HDF1:")  # Primary HDF5 writer
         tiff1 = Cpt(TIFFPlugin_V34, "TIFF1:")  # Quick preview writer
-        
+
         # Stats plugin for monitoring
         stats1 = Cpt(StatsPlugin_V34, "Stats1:")
 
@@ -472,7 +591,7 @@ Integration with Plans
 
     def detector_count(detector, *, num=1, delay=0, acquire_time=0.1):
         """Count plan with detector-specific setup.
-        
+
         Parameters passed as keyword arguments for clarity and safety.
         This plan DOES publish Bluesky documents (start, event, stop).
         """
@@ -486,7 +605,7 @@ Integration with Plans
 
     def detector_series(detector, *, num_images, exposure_time):
         """Collect a series of images.
-        
+
         IMPORTANT: This plan does NOT publish normal Bluesky documents.
         It only triggers and reads - no start/event/stop documents.
         Use detector_count() if you need full document publishing.
@@ -508,10 +627,10 @@ Integration with Plans
     from apstools.plans import lineup2
     from bluesky import plan_stubs as bps
 
-    def align_detector_distance(detector, distance_motor, *, nominal_distance, 
+    def align_detector_distance(detector, distance_motor, *, nominal_distance,
                                scan_range=10, num_points=21):
         """Align detector to optimal distance.
-        
+
         Parameters passed as keyword arguments for safety and clarity.
         """
 
@@ -536,7 +655,7 @@ Data Management Integration
 
     class DetectorMetadata(Device):
         """Collect detector metadata for data management.
-        
+
         This metadata gets automatically included in Bluesky documents
         when using kind="config" - essential for data analysis.
         """
@@ -563,7 +682,7 @@ Data Management Integration
 
     class DetectorFileManager:
         """Practical file management for area detectors.
-        
+
         This example shows working file management patterns used
         in production beamlines. Handles directory creation,
         file naming, and metadata integration.
@@ -595,21 +714,29 @@ Troubleshooting Area Detectors
 
 **Common Issues and Practical Solutions:**
 
-1. **Plugin Connection Errors** (Most common cause of non-functional detectors):
+1. **Connection Errors**:
 
-   .. code-block:: bash
+   Various root causes are possible:
 
-       # Check plugin connections - data flow must be correct
-       caget IOC:ADSIM:cam1:ArrayPort      # Should show "DET"
-       caget IOC:ADSIM:image1:NDArrayPort  # Should show "DET"
-       caget IOC:ADSIM:Stats1:NDArrayPort  # Should show "DET" or "ROI1"
+   * IOC not running
+   * Wrong PV prefix
+   * Wrong PV name(s)
+   * IOC does not provide expected plugin
+   * Wrong asyn PORT name
 
-       # Verify plugin enable status - plugins must be enabled
-       caget IOC:ADSIM:image1:EnableCallbacks  # Should be 1
-       caget IOC:ADSIM:Stats1:EnableCallbacks  # Should be 1
+   .. TODO: show example of each error and how to fix
 
-2. **HDF5 File Writing Problems** (HDF5 needs more than default setup):
+2. **HDF5/JPEG/TIFF File Writing Problems** (always needs more than default setup):
 
+   We'll show with the HDF5 File Plugin but similar instructions
+   apply to the other file writers.
+
+   * file writer mode Wrong
+   * file path does not exist
+   * auto save and related parameters
+   * plugin not enabled
+
+   .. TODO: show example of each error and how to fix
    .. code-block:: python
 
        # Check complete HDF5 configuration (using hdf1 convention)
@@ -618,8 +745,8 @@ Troubleshooting Area Detectors
        print(f"File template: {detector.hdf1.file_template.get()}")
        print(f"Write mode: {detector.hdf1.file_write_mode.get()}")
        print(f"Capture status: {detector.hdf1.capture.get()}")
-       print(f"Array port: {detector.hdf1.nd_array_port.get()}")  # Must match source
-       
+       print(f"Array port: {detector.hdf1.nd_array_port.get()}")
+
        # HDF5 plugin often needs explicit configuration:
        # detector.hdf1.file_path.put("/data/experiment/")
        # detector.hdf1.file_name.put("sample_001")
@@ -629,9 +756,18 @@ Troubleshooting Area Detectors
 
    .. code-block:: bash
 
+       # TODO: refactor with ophyd code
        # Check memory pools
        caget IOC:ADSIM:cam1:PoolMaxBuffers
        caget IOC:ADSIM:cam1:PoolUsedBuffers
+
+4. Problems with the `hdf1` plugin and the `Capture_RBV` PV.
+   .. TODO: Show the error message, show how to fix.
+
+   Plugin needs to be *primed*.
+
+5. Plugin known to be in use by EPICS but not configured here:
+   .. TODO: Show the error message, show how to fix.
 
 **Diagnostic Tools:**
 
@@ -705,17 +841,17 @@ Before moving to production, verify your detector setup:
     print(f"Connected: {detector.connected}")
     print(f"Plugins enabled: {detector.hdf1.enable.get()}")
     print(f"File path set: {detector.hdf1.file_path.get()}")
-    
+
     # Test acquisition
     detector.stage()  # Should not raise exceptions
     detector.unstage()
-    
+
     # Test with Bluesky
     RE(count([detector]))  # Should complete successfully
 
 **Next Steps:**
 
 1. :doc:`Create detector-specific scan plans <creating_plans>`
-2. :doc:`Integrate with data management workflows <dm>`  
+2. :doc:`Integrate with data management workflows <dm>`
 3. :doc:`Set up queue server for detector operations <qserver>`
 4. **Reference 12ID repository** for complete HDF5 configuration examples
