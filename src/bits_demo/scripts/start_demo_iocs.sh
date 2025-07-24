@@ -100,8 +100,10 @@ echo "🔍 Checking for epics-podman container image..."
 if ! podman images | grep -q epics-podman; then
     echo -e "${YELLOW}⚠️  epics-podman image not found locally${NC}"
     echo "Pulling from registry (this may take a few minutes)..."
-    if podman pull ghcr.io/bcda-aps/epics-podman:latest; then
-        echo -e "${GREEN}✅ Container image downloaded${NC}"
+    if podman pull ghcr.io/bcda-aps/bits/epics-container:latest; then
+        # Tag the image for local use
+        podman tag ghcr.io/bcda-aps/bits/epics-container:latest epics-podman:latest
+        echo -e "${GREEN}✅ Container image downloaded and tagged${NC}"
     else
         echo -e "${RED}❌ Failed to pull container image${NC}"
         echo "Please check your internet connection and try again"

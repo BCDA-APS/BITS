@@ -38,14 +38,51 @@ This script starts:
 - **adsim IOC**: Area detector simulator (`adsim:` prefix)
 - **gp IOC**: General purpose devices (`gp:` prefix)
 
+### Alternative: Manual Container Commands
+
+You can also start IOCs manually using production-ready commands:
+
+```bash
+# Start ADSim IOC with custom prefix and volume mounting
+podman run -it -d --rm \
+    --name iocad \
+    -e "PREFIX=ad:" \
+    --net=host \
+    -v /tmp:/tmp \
+    ghcr.io/bcda-aps/bits/epics-container:latest adsim
+
+# Start General Purpose IOC
+podman run -it -d --rm \
+    --name iocgp \
+    -e "PREFIX=gp:" \
+    --net=host \
+    -v /tmp:/tmp \
+    ghcr.io/bcda-aps/bits/epics-container:latest gp
+```
+
+**Command Options:**
+- `-it -d`: Interactive, detached mode (runs in background)
+- `--rm`: Auto-remove container when stopped
+- `--name`: Assign memorable container name
+- `-e "PREFIX=..."`: Set IOC prefix environment variable
+- `--net=host`: Use host networking (required for EPICS)
+- `-v /tmp:/tmp`: Mount host /tmp for autosave files
+
 ### 2. Verify IOCs are Running
 ```bash
 # Check container status
 podman ps
 
 # Should show both containers running:
-# - adsim_ioc
-# - gp_ioc
+# - adsim_ioc, gp_ioc (from script)
+# - iocad, iocgp (from manual commands)
+
+# View IOC logs
+podman logs iocad        # or adsim_ioc
+podman logs iocgp        # or gp_ioc
+
+# Connect to running IOC shell
+podman exec -it iocad bash    # or adsim_ioc
 ```
 
 ### 3. Test Basic Connectivity
@@ -308,12 +345,19 @@ After completing your device inventory:
 # Check if ports are in use
 netstat -ln | grep 5064  # EPICS CA port
 
-# Stop existing containers
+# Stop existing containers (script names)
 podman stop adsim_ioc gp_ioc
 podman rm adsim_ioc gp_ioc
 
+# Or stop manual containers (custom names)
+podman stop iocad iocgp
+
 # Restart with fresh containers
 ./scripts/start_demo_iocs.sh
+
+# Or restart manually
+podman run -it -d --rm --name iocad -e "PREFIX=ad:" --net=host -v /tmp:/tmp \
+    ghcr.io/bcda-aps/bits/epics-container:latest adsim
 ```
 
 ### Can't Connect to PVs
