@@ -3,9 +3,10 @@
 
 .. automodule:: apsbits.core.run_engine_init
 
-
+   
    .. rubric:: Functions
 
    .. autosummary::
-
+   
       init_RE
+   
