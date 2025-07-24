@@ -9,7 +9,8 @@ In this step, you'll learn to use your BITS instrument interactively with IPytho
 
 ## Prerequisites
 
-✅ Completed Steps 1-4  
+✅ Completed Steps 0-3  
+✅ BITS-Starter repository set up  
 ✅ Working device configurations  
 ✅ Custom plans created and tested  
 ✅ IOCs running and responsive
@@ -544,7 +545,7 @@ With interactive operation mastered, you're ready for:
 - **Queue server** for remote and automated operation  
 - **Advanced data visualization** with specialized tools
 
-**Next Step**: [Jupyter Notebook Analysis](06_jupyter_notebooks.md)
+**Next Step**: Advanced topics (Queue Server, Data Analysis, Production Deployment)
 
 ---
 

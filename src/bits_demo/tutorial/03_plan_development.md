@@ -9,7 +9,8 @@ In this step, you'll create custom scan plans tailored to your configured device
 
 ## Prerequisites
 
-✅ Completed Steps 1-3  
+✅ Completed Steps 0-2  
+✅ BITS-Starter repository set up  
 ✅ Working device configurations  
 ✅ Devices connected and responsive  
 ✅ Basic device operations tested
@@ -785,7 +786,7 @@ git commit -m "Add custom scan plans
 "
 ```
 
-**Next Step**: [IPython Interactive Use](05_ipython_execution.md)
+**Next Step**: [IPython Interactive Use](04_ipython_execution.md)
 
 ---
 

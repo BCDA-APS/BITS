@@ -9,9 +9,9 @@ In this step, you'll replace the simulated devices with real configurations that
 
 ## Prerequisites
 
-✅ Completed Steps 1-2  
+✅ Completed Steps 0-1  
+✅ BITS-Starter repository set up  
 ✅ Demo IOCs running (adsim_ioc and gp_ioc)  
-✅ Working instrument package  
 ✅ Device inventory from IOC exploration
 
 ## Understanding Device Configuration
@@ -520,7 +520,7 @@ With working device configurations, you're ready to:
 2. Test different scanning patterns
 3. Analyze the data generated
 
-**Next Step**: [Plan Development](04_plan_development.md)
+**Next Step**: [Plan Development](03_plan_development.md)
 
 ---
 

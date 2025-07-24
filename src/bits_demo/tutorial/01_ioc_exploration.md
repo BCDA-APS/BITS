@@ -14,14 +14,24 @@ As a beamline scientist, you typically have several IOCs providing different typ
 - **Detector IOCs**: Area detectors, point detectors, scalers
 - **Support IOCs**: Temperature controllers, shutters, diagnostics
 
+## Prerequisites
+
+✅ Completed Step 0: BITS-Starter Setup  
+✅ Python environment with BITS installed  
+✅ Your instrument repository cloned and ready
+
 ## Starting the Demo IOCs
 
 Let's start with the tutorial IOCs that simulate a real beamline:
 
 ### 1. Start Both IOCs
 ```bash
-cd bits_demo/scripts
-./start_demo_iocs.sh
+# Navigate to your instrument repository
+cd ~/workspace/my_beamline_bits
+
+# Start the demo IOCs (using BITS demo scripts)
+# These will be provided as part of the tutorial setup
+./scripts/start_demo_iocs.sh
 ```
 
 This script starts:
@@ -333,7 +343,7 @@ After this step, you should have:
 - ✅ Prioritized list of devices for Bluesky configuration
 - ✅ Tested connectivity to key devices
 
-**Next Step**: [BITS-Starter Setup](02_bits_starter_setup.md)
+**Next Step**: [Device Configuration](02_device_configuration.md)
 
 ---
 
