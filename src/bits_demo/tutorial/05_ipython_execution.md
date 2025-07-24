@@ -104,9 +104,9 @@ list(cat)[-3:]  # Last 3 runs (if any exist)
 %movr m1 -0.1 m2 0.2 # Move multiple motors
 
 # Count detectors
-%ct                  # Count all detectors for 1 second
-%ct 5                # Count for 5 seconds
-%ct scaler1          # Count specific detector
+%ct                  # Count detectors with "detectors" label (uses their configured count times)
+%ct baseline         # Count devices with "baseline" label  
+%ct monitors         # Count devices with "monitors" label
 ```
 
 ### Information Commands
@@ -134,8 +134,8 @@ detector1.<TAB>      # Tab completion for detector methods
 RE.state             # Current state
 RE.pause()           # Pause current scan
 RE.resume()          # Resume paused scan
-RE.stop()            # Stop current scan
-RE.abort()           # Abort current scan (emergency)
+RE.stop()            # Stop current scan (abrupt)
+RE.abort()           # Return RunEngine to idle gracefully
 
 # Scan history
 RE.md                # Current metadata
@@ -186,6 +186,14 @@ RE(bp.count([scaler1, scaler2], num=3, delay=2))
 if 'simdet' in globals():
     print(f"Area detector connected: {simdet.connected}")
     RE(bp.count([simdet], num=1))
+
+# Setting count times for different detector types
+# Scaler count time
+RE(bps.mv(scaler1.preset_time, 0.1))  # 0.1 s counting time
+
+# Area detector count time
+if 'simdet' in globals():
+    RE(bps.mv(simdet.cam.acquire_time, 0.1))  # 0.1 s counting time
 ```
 
 ### 3. Combined Device Testing
@@ -547,7 +555,7 @@ With interactive operation mastered, you're ready for:
 | `%wa` | List all devices | `%wa motors` |
 | `%mov` | Move motors | `%mov m1 2.5` |
 | `%movr` | Relative move | `%movr m1 0.1` |
-| `%ct` | Count detectors | `%ct 5` |
+| `%ct` | Count detectors | `%ct baseline` |
 | `object?` | Get help | `bp.scan?` |
 | `object.<TAB>` | Tab completion | `motor1.<TAB>` |
 | `%hist` | Command history | `%hist -n 10` |

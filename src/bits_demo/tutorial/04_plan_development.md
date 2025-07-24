@@ -35,18 +35,23 @@ Plans are Python generators that describe what to do during a measurement:
 ### Plan Structure
 
 ```python
-def my_plan(devices, *args, **kwargs):
-    """A custom plan."""
+def my_plan(motor, detector, position, *, metadata=None):
+    """A custom plan that properly collects data."""
     # Setup
-    yield from bps.open_run()  # Start data collection
+    yield from bps.open_run(md=metadata)  # Start data collection
     
     # Measurement steps
     yield from bps.mv(motor, position)      # Move motor
+    yield from bps.create("primary")        # Create event document
+    yield from bps.read(motor)              # Read motor position
     yield from bps.trigger_and_read(detector) # Read detector
+    yield from bps.save()                   # Save event document
     
     # Cleanup  
     yield from bps.close_run()  # End data collection
 ```
+
+**Important Note**: The built-in bluesky plans handle `open_run`/`close_run` and `create`/`save` automatically. Only custom plans need explicit data collection statements.
 
 ## Built-in Plans Review
 
@@ -788,9 +793,12 @@ git commit -m "Add custom scan plans
 
 ### Basic Plan Structure
 ```python
-def my_plan(devices, parameters):
+def my_plan(devices, *, parameters, metadata=None):
+    """Use keyword-only parameters for safety."""
     yield from bps.open_run(md=metadata)
+    yield from bps.create("primary")
     # measurement steps
+    yield from bps.save()
     yield from bps.close_run()
 ```
 
@@ -799,6 +807,9 @@ def my_plan(devices, parameters):
 |----------|---------|
 | `bps.mv(device, value)` | Move device to value |
 | `bps.mvr(device, value)` | Move device relatively |
+| `bps.create(stream_name)` | Create event document |
+| `bps.read(device)` | Read device (without triggering) |
 | `bps.trigger_and_read(devices)` | Trigger and read devices |
+| `bps.save()` | Save event document |
 | `bps.sleep(time)` | Wait for specified time |
-| `bp.scan(detectors, motor, start, stop, num)` | Standard scan |
+| `bp.scan(detectors, motor, start, stop, num)` | Standard scan (handles data collection) |

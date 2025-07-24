@@ -21,24 +21,24 @@ In this step, you'll replace the simulated devices with real configurations that
 The `configs/devices.yml` file maps EPICS PVs to Bluesky devices:
 
 ```yaml
-# YAML structure
-device_category:
-  device_name:
-    device_class: BlueSkyDeviceClass
-    PV: "epics:pv:name"
-    labels: ["category1", "category2"]
-    # additional parameters...
+# YAML structure 
+device_callable: # Device class or function
+  - name: unique_name
+    labels: [ "category1", "category2" ]  # optional
+    # additional keyword arguments expected by the callable, typical for EPICS include:
+    prefix: "epics:pv:prefix:"  # include any trailing delimiter, such as ":"
+    # additional parameters... 
 ```
 
-### Common Device Classes
+### Device Callables
 
-| Device Class | Use Case | Required PVs |
-|--------------|----------|--------------|
-| `EpicsMotor` | Motors, positioners | Base PV (e.g., `gp:m1`) |
-| `ScalerCH` | Multi-channel scalers | Base PV (e.g., `gp:scaler1`) |
-| `ADBSoftDetector` | Area detectors | Base PV (e.g., `adsim:`) |
-| `EpicsSignalRO` | Read-only values | Full PV name |
-| `EpicsSignal` | Read-write values | Full PV name |
+| Device Callable | Use Case | Required PVs |
+|-----------------|----------|--------------|
+| `ophyd.EpicsMotor` | Motors, positioners | Base PV (e.g., `gp:m1`) |
+| `ophyd.scaler.ScalerCH` | Multi-channel scalers | Base PV (e.g., `gp:scaler1`) |
+| `apstools.devices.ad_creator` | Area detectors | Base PV (e.g., `adsim:`) |
+| `ophyd.EpicsSignalRO` | Read-only values | Full PV name |
+| `ophyd.EpicsSignal` | Read-write values | Full PV name |
 
 ### Device Labels
 
@@ -63,95 +63,67 @@ Replace the contents of `configs/devices.yml`:
 
 ```yaml
 # Device configuration for demo IOCs
-# Generated from IOC exploration in Step 1
+# Uses actual BITS YAML syntax matching production deployments
 
 # Motors from GP IOC (gp:m1 through gp:m20)
-motors:
-  # Primary scanning motors
-  m1:
-    device_class: EpicsMotor
-    PV: "gp:m1"
-    labels: ["motors"]
-    
-  m2:
-    device_class: EpicsMotor
-    PV: "gp:m2" 
-    labels: ["motors"]
-    
-  m3:
-    device_class: EpicsMotor
-    PV: "gp:m3"
-    labels: ["motors"]
+ophyd.EpicsMotor:
+- name: m1
+  prefix: "gp:m1"
+  labels: ["motors"]
+- name: m2
+  prefix: "gp:m2"
+  labels: ["motors"]
+- name: m3
+  prefix: "gp:m3"
+  labels: ["motors"]
+- name: sample_x
+  prefix: "gp:m4"
+  labels: ["motors", "sample"]
+- name: sample_y
+  prefix: "gp:m5"
+  labels: ["motors", "sample"]
+- name: sample_z
+  prefix: "gp:m6"
+  labels: ["motors", "sample"]
+- name: m7
+  prefix: "gp:m7"
+  labels: ["motors"]
+- name: m8
+  prefix: "gp:m8"
+  labels: ["motors"]
 
-  # Sample positioning motors
-  sample_x:
-    device_class: EpicsMotor
-    PV: "gp:m4"
-    labels: ["motors", "sample"]
-    
-  sample_y:
-    device_class: EpicsMotor
-    PV: "gp:m5"
-    labels: ["motors", "sample"]
-    
-  sample_z:
-    device_class: EpicsMotor
-    PV: "gp:m6"
-    labels: ["motors", "sample"]
+# Scalers from GP IOC
+ophyd.scaler.ScalerCH:
+- name: scaler1
+  prefix: "gp:scaler1"
+  labels: ["detectors"]
+- name: scaler2
+  prefix: "gp:scaler2"
+  labels: ["detectors", "baseline"]
 
-  # Additional motors (add as needed)
-  m7:
-    device_class: EpicsMotor
-    PV: "gp:m7"
-    labels: ["motors"]
-    
-  m8:
-    device_class: EpicsMotor
-    PV: "gp:m8"
-    labels: ["motors"]
-
-# Detectors from both IOCs
-detectors:
-  # Scalers from GP IOC
-  scaler1:
-    device_class: ScalerCH
-    PV: "gp:scaler1"
-    labels: ["detectors"]
-    
-  scaler2:
-    device_class: ScalerCH
-    PV: "gp:scaler2"
-    labels: ["detectors", "baseline"]
-
-  # Area detector from adsim IOC
-  simdet:
-    device_class: ADBSoftDetector
-    PV: "adsim:"
-    labels: ["detectors", "area_detectors"]
+# Area detector from adsim IOC
+apstools.devices.ad_creator:
+- name: simdet
+  prefix: "adsim:"
+  labels: ["detectors", "area_detectors"]
 
 # Support and monitoring devices
-support:
-  # IOC statistics
-  ioc_cpu:
-    device_class: EpicsSignalRO
-    PV: "gp:IOC_CPU_LOAD"
-    labels: ["baseline", "monitoring"]
-    
-  ioc_memory:
-    device_class: EpicsSignalRO
-    PV: "gp:IOC_MEM_USED"
-    labels: ["baseline", "monitoring"]
+ophyd.EpicsSignalRO:
+- name: ioc_cpu
+  prefix: "gp:IOC_CPU_LOAD"
+  labels: ["baseline", "monitoring"]
+- name: ioc_memory
+  prefix: "gp:IOC_MEM_USED"
+  labels: ["baseline", "monitoring"]
 
-  # User calculations (can be used for derived values)
-  calc1:
-    device_class: EpicsSignal
-    PV: "gp:userCalc1.VAL"
-    labels: ["calculations"]
-    
-  calc2:
-    device_class: EpicsSignal
-    PV: "gp:userCalc2.VAL"
-    labels: ["calculations"]
+# User calculations
+ophyd.EpicsSignal:
+- name: calc1
+  prefix: "gp:userCalc1.VAL"
+  labels: ["calculations"]
+- name: calc2
+  prefix: "gp:userCalc2.VAL"
+  labels: ["calculations"]
 ```
 
 ### 3. Test Configuration Syntax
@@ -252,65 +224,50 @@ RE(bp.count([simdet], num=1))
 ### 1. Custom Device Names and Metadata
 
 ```yaml
-motors:
-  theta:  # More descriptive name
-    device_class: EpicsMotor
-    PV: "gp:m1"
-    labels: ["motors", "diffractometer"]
-    # Add custom metadata
-    metadata:
-      description: "Sample rotation angle"
-      units: "degrees" 
-      typical_range: [-180, 180]
+# More descriptive device names
+ophyd.EpicsMotor:
+- name: theta
+  prefix: "gp:m1"
+  labels: ["motors", "diffractometer"]
+  # Custom metadata can be added via Python code after device creation
 ```
 
 ### 2. Device Grouping
 
 ```yaml
-# Group related devices
-sample_stage:
-  x:
-    device_class: EpicsMotor
-    PV: "gp:m4"
-    labels: ["motors", "sample_stage"]
-  y:
-    device_class: EpicsMotor 
-    PV: "gp:m5"
-    labels: ["motors", "sample_stage"]
-  z:
-    device_class: EpicsMotor
-    PV: "gp:m6" 
-    labels: ["motors", "sample_stage"]
+# Group related devices using consistent labeling
+ophyd.EpicsMotor:
+- name: sample_stage_x
+  prefix: "gp:m4"
+  labels: ["motors", "sample_stage"]
+- name: sample_stage_y
+  prefix: "gp:m5"
+  labels: ["motors", "sample_stage"]
+- name: sample_stage_z
+  prefix: "gp:m6"
+  labels: ["motors", "sample_stage"]
 ```
 
 ### 3. Area Detector Configuration
 
 ```yaml
-detectors:
-  camera:
-    device_class: ADBSoftDetector
-    PV: "adsim:"
-    labels: ["detectors", "area_detectors"]
-    # Configure image saving
-    configuration:
-      image_dir: "/tmp/images"
-      file_template: "%s%s_%6.6d.h5"
+# Area detectors use ad_creator
+apstools.devices.ad_creator:
+- name: camera
+  prefix: "adsim:"
+  labels: ["detectors", "area_detectors"]
+  # Additional configuration done via Python after creation
 ```
 
 ### 4. Scaler Channel Configuration
 
 ```yaml
-detectors:
-  main_scaler:
-    device_class: ScalerCH
-    PV: "gp:scaler1"
-    labels: ["detectors"]
-    # Name the channels for easier access
-    channel_names:
-      - "time"      # Channel 1 - time base
-      - "I0"        # Channel 2 - incident beam
-      - "I1"        # Channel 3 - transmitted beam  
-      - "photodiode" # Channel 4 - photodiode
+# Scalers with multiple instances
+ophyd.scaler.ScalerCH:
+- name: main_scaler
+  prefix: "gp:scaler1"
+  labels: ["detectors"]
+  # Channel naming done via Python code after device creation
 ```
 
 ## Creating Example Device Configurations
@@ -323,17 +280,15 @@ Create `examples/device_configurations/simple_scanning.yml`:
 
 ```yaml
 # Minimal configuration for basic scanning
-motors:
-  scan_motor:
-    device_class: EpicsMotor
-    PV: "gp:m1"
-    labels: ["motors"]
+ophyd.EpicsMotor:
+- name: scan_motor
+  prefix: "gp:m1"
+  labels: ["motors"]
 
-detectors:
-  counter:
-    device_class: ScalerCH
-    PV: "gp:scaler1" 
-    labels: ["detectors"]
+ophyd.scaler.ScalerCH:
+- name: counter
+  prefix: "gp:scaler1" 
+  labels: ["detectors"]
 ```
 
 ### 2. Diffractometer Setup
@@ -342,33 +297,29 @@ Create `examples/device_configurations/diffractometer.yml`:
 
 ```yaml
 # 4-circle diffractometer configuration
-diffractometer:
-  theta:
-    device_class: EpicsMotor
-    PV: "gp:m1"
-    labels: ["motors", "diffractometer"]
-  chi:
-    device_class: EpicsMotor
-    PV: "gp:m2"
-    labels: ["motors", "diffractometer"] 
-  phi:
-    device_class: EpicsMotor
-    PV: "gp:m3"
-    labels: ["motors", "diffractometer"]
-  tth:
-    device_class: EpicsMotor
-    PV: "gp:m4"
-    labels: ["motors", "diffractometer"]
+ophyd.EpicsMotor:
+- name: theta
+  prefix: "gp:m1"
+  labels: ["motors", "diffractometer"]
+- name: chi
+  prefix: "gp:m2"
+  labels: ["motors", "diffractometer"] 
+- name: phi
+  prefix: "gp:m3"
+  labels: ["motors", "diffractometer"]
+- name: tth
+  prefix: "gp:m4"
+  labels: ["motors", "diffractometer"]
 
-detectors:
-  point_detector:
-    device_class: ScalerCH
-    PV: "gp:scaler1"
-    labels: ["detectors"]
-  area_detector:
-    device_class: ADBSoftDetector
-    PV: "adsim:"
-    labels: ["detectors", "area_detectors"]
+ophyd.scaler.ScalerCH:
+- name: point_detector
+  prefix: "gp:scaler1"
+  labels: ["detectors"]
+
+apstools.devices.ad_creator:
+- name: area_detector
+  prefix: "adsim:"
+  labels: ["detectors", "area_detectors"]
 ```
 
 ## Device Testing and Validation
@@ -576,26 +527,20 @@ With working device configurations, you're ready to:
 ## Reference: Device Configuration Template
 
 ```yaml
-# Template for device configuration
-device_category:
-  device_name:
-    device_class: DeviceClass
-    PV: "prefix:pv_name"
-    labels: ["label1", "label2"]
-    # Optional parameters:
-    metadata:
-      description: "Device description"
-      units: "mm"
-    configuration:
-      parameter: value
+# BITS device configuration template
+device_callable_path:
+- name: device_name
+  prefix: "prefix:pv_name"
+  labels: ["label1", "label2"]
+  # Additional callable-specific parameters as needed
 ```
 
-## Common Device Classes Reference
+## Common Device Callables Reference
 
-| Class | Import | Use Case | Example PV |
-|-------|--------|----------|------------|
-| `EpicsMotor` | `ophyd` | Motors, positioners | `gp:m1` |
-| `ScalerCH` | `ophyd` | Multi-channel scalers | `gp:scaler1` | 
-| `ADBSoftDetector` | `apstools.devices` | Area detectors | `adsim:` |
-| `EpicsSignal` | `ophyd` | Read-write PVs | `gp:calc1.VAL` |
-| `EpicsSignalRO` | `ophyd` | Read-only PVs | `gp:status` |
+| Callable | Use Case | Example Prefix |
+|----------|----------|----------------|
+| `ophyd.EpicsMotor` | Motors, positioners | `gp:m1` |
+| `ophyd.scaler.ScalerCH` | Multi-channel scalers | `gp:scaler1` | 
+| `apstools.devices.ad_creator` | Area detectors | `adsim:` |
+| `ophyd.EpicsSignal` | Read-write PVs | `gp:calc1.VAL` |
+| `ophyd.EpicsSignalRO` | Read-only PVs | `gp:status` |
