@@ -82,7 +82,7 @@ podman logs iocad        # or adsim_ioc
 podman logs iocgp        # or gp_ioc
 
 # Connect to running IOC shell
-podman exec -it iocad bash    # or adsim_ioc
+podman exec -it iocad bash    # or adsim_ioc if using script
 ```
 
 ### 3. Test Basic Connectivity
@@ -103,7 +103,7 @@ The `dbl` (Database List) command shows all Process Variables (PVs) in an IOC:
 
 ```bash
 # Connect to running IOC and run dbl
-podman exec -it gp_ioc bash
+podman exec -it iocgp bash    # or gp_ioc if using script
 cd /epics/iocs/iocBoot/iocgp
 ./st.cmd.Linux
 # At IOC prompt:
@@ -224,14 +224,16 @@ python scripts/explore_iocs.py --analyze-device adsim:
 
 ### 1. Generate Device Summary
 ```bash
-# Create comprehensive inventory
-python scripts/explore_iocs.py --generate-inventory > my_devices.yaml
+# Create comprehensive inventory for planning
+python scripts/explore_iocs.py --generate-inventory > device_inventory.yaml
 
-# This creates a structured summary of all devices
+# This creates a structured summary of all devices for reference
 ```
 
 ### 2. Review and Customize
-Open `my_devices.yaml` and review:
+Open `device_inventory.yaml` and review:
+
+**Note**: This inventory file is for planning only. The actual Bluesky device configuration will be in `configs/devices.yml` (covered in Tutorial 02).
 
 ```yaml
 # Sample generated inventory
