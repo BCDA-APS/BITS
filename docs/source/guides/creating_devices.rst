@@ -201,17 +201,22 @@ Using apstools Devices (Recommended)
 
 **Area Detector Factory:**
 
-.. code-block:: python
+An area detector object can be specified as simply as:
 
-    # devices/detectors.py - Using apstools area detector factory
-    from apstools.devices import ad_creator
+.. code-block:: yaml
+    :linenos:
 
-    pilatus = ad_creator(
-        "IOC:PILATUS:",
-        name="pilatus",
-        detector_class="PilatusDetectorCam",
-        plugins=["image", "stats", "roi"]
-    )
+    apstools.devices.ad_creator:
+    - name: adsim
+      prefix: "IOC:ADSIM:"
+      plugins:
+      - cam
+          class: "apstools.devices.SimDetectorCam_V34"
+      - image
+      labels: ["detectors"]
+
+Add and configure more plugins to access additional features of EPICS
+area detectors. For more details, see the :ref:`area_detectors` section.
 
 Creating Custom Devices
 ~~~~~~~~~~~~~~~~~~~~~~~~
