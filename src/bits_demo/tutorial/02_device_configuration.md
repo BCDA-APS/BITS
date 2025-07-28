@@ -4,14 +4,14 @@
 
 In this step, you'll replace the simulated devices with real configurations that connect to your IOCs. You'll learn how to map EPICS PVs to Bluesky devices and test connectivity.
 
-**Time**: ~30 minutes  
+**Time**: ~30 minutes
 **Goal**: Working device configurations connected to demo IOCs
 
 ## Prerequisites
 
-✅ Completed Steps 0-1  
-✅ BITS-Starter repository set up  
-✅ Demo IOCs running (adsim_ioc and gp_ioc)  
+✅ Completed Steps 0-1
+✅ BITS-Starter repository set up
+✅ Demo IOCs running (adsim_ioc and gp_ioc)
 ✅ Device inventory from IOC exploration
 
 ## Understanding Device Configuration
@@ -21,28 +21,35 @@ In this step, you'll replace the simulated devices with real configurations that
 The `configs/devices.yml` file maps EPICS PVs to Bluesky devices:
 
 ```yaml
-# YAML structure 
+# YAML structure
 device_callable: # Device class or function
   - name: unique_name
     labels: [ "category1", "category2" ]  # optional
     # additional keyword arguments expected by the callable, typical for EPICS include:
     prefix: "epics:pv:prefix:"  # include any trailing delimiter, such as ":"
-    # additional parameters... 
+    # additional parameters...
 ```
 
 ### Device Callables
 
-| Device Callable | Use Case | Required PVs |
-|-----------------|----------|--------------|
-| `ophyd.EpicsMotor` | Motors, positioners | Base PV (e.g., `gp:m1`) |
-| `ophyd.scaler.ScalerCH` | Multi-channel scalers | Base PV (e.g., `gp:scaler1`) |
-| `apstools.devices.ad_creator` | Area detectors | Base PV (e.g., `adsim:`) |
-| `ophyd.EpicsSignalRO` | Read-only values | Full PV name |
-| `ophyd.EpicsSignal` | Read-write values | Full PV name |
+| Device Callable | Use Case | EPICS PV kwarg | kwarg meaning |
+|-----------------|----------|----------------| ------------- |
+| `ophyd.EpicsMotor` | Motors, positioners | `prefix` | Base PV (e.g., `gp:m1`) |
+| `ophyd.scaler.ScalerCH` | Multi-channel scalers | `prefix` | Base PV (e.g., `gp:scaler1`) |
+| `apstools.devices.ad_creator` | Area detectors | `prefix` | Base PV (e.g., `adsim:`) |
+| `ophyd.EpicsSignalRO` | Read-only values | `read_pv` | Full PV name |
+| `ophyd.EpicsSignal` | Read-write values | `write_pv` | Full PV name (add `read_pv` kwarg if different) |
+
+Notes:
+
+- When in doubt, check the source code for the `device_callable`.
+- For some reason, the `prefix` kwarg works just fine with both `EpicsSignal` & `EpicsSignalRO`.
 
 ### Device Labels
 
-Labels organize devices for different uses:
+Labels organize devices for different uses.  These are the labels with
+specific meanings.  Feel free to use other labels at your choice:
+
 - `"detectors"`: Used in scans for data collection
 - `"baseline"`: Monitored during every scan
 - `"motors"`: Available for motion commands
@@ -170,7 +177,7 @@ print(f"m1 position: {m1.position}")
 print(f"m1 limits: {m1.limits}")
 print(f"sample_x position: {sample_x.position}")
 
-# Test scaler connectivity  
+# Test scaler connectivity
 print("\n🔍 Testing Detectors:")
 print(f"scaler1 connected: {scaler1.connected}")
 print(f"scaler1 channels: {scaler1.channels}")
@@ -214,7 +221,7 @@ print(f"Final m1 position: {m1.position}")
 print("\n⏱️  Testing Scaler Counting:")
 RE(bp.count([scaler1], num=1, delay=1))
 
-# Test area detector acquisition  
+# Test area detector acquisition
 print("\n📸 Testing Area Detector:")
 RE(bp.count([simdet], num=1))
 ```
@@ -287,13 +294,16 @@ ophyd.EpicsMotor:
 
 ophyd.scaler.ScalerCH:
 - name: counter
-  prefix: "gp:scaler1" 
+  prefix: "gp:scaler1"
   labels: ["detectors"]
 ```
 
 ### 2. Diffractometer Setup
 
-Create `examples/device_configurations/diffractometer.yml`:
+Create `examples/device_configurations/diffractometer.yml` to support the rotation
+axes of a diffractometer such as this 4-circle example.  For complete control of a
+diffractometer, including crystallographic and reciprocal-space operations, see
+the ***hklpy2*** [package](https://blueskyproject.io/hklpy2).
 
 ```yaml
 # 4-circle diffractometer configuration
@@ -303,7 +313,7 @@ ophyd.EpicsMotor:
   labels: ["motors", "diffractometer"]
 - name: chi
   prefix: "gp:m2"
-  labels: ["motors", "diffractometer"] 
+  labels: ["motors", "diffractometer"]
 - name: phi
   prefix: "gp:m3"
   labels: ["motors", "diffractometer"]
@@ -336,10 +346,10 @@ def test_all_devices():
     """Test all configured devices"""
     from my_beamline.startup import *
     import bluesky.preprocessors as bpp
-    
+
     print("🔧 Device Connectivity Test")
     print("=" * 40)
-    
+
     # Test motors
     motors = list(bpp._devices_by_label.get('motors', []))
     print(f"\n🚗 Motors ({len(motors)}):")
@@ -350,7 +360,7 @@ def test_all_devices():
             print(f"  ✅ {motor.name}: pos={pos:.3f}, limits={limits}")
         except Exception as e:
             print(f"  ❌ {motor.name}: {e}")
-    
+
     # Test detectors
     detectors = list(bpp._devices_by_label.get('detectors', []))
     print(f"\n🔍 Detectors ({len(detectors)}):")
@@ -360,7 +370,7 @@ def test_all_devices():
             print(f"  {'✅' if connected else '❌'} {det.name}: connected={connected}")
         except Exception as e:
             print(f"  ❌ {det.name}: {e}")
-    
+
     # Test baseline devices
     baseline = list(bpp._devices_by_label.get('baseline', []))
     print(f"\n📊 Baseline ({len(baseline)}):")
@@ -456,7 +466,7 @@ Edit `configs/iconfig.yml` to increase timeouts:
 OPHYD:
     TIMEOUTS:
         PV_READ: 10      # Increase from 5
-        PV_WRITE: 10     # Increase from 5  
+        PV_WRITE: 10     # Increase from 5
         PV_CONNECTION: 10 # Increase from 5
 ```
 
@@ -506,7 +516,7 @@ git commit -m "Configure real IOC devices
 
 - Replace simulation devices with IOC devices
 - Add motors: m1, m2, m3, sample_x, sample_y, sample_z
-- Add detectors: scaler1, scaler2, simdet  
+- Add detectors: scaler1, scaler2, simdet
 - Add support devices: ioc_cpu, ioc_memory
 - Include device testing script
 - Verify connectivity to demo IOCs
@@ -537,10 +547,15 @@ device_callable_path:
 
 ## Common Device Callables Reference
 
-| Callable | Use Case | Example Prefix |
-|----------|----------|----------------|
-| `ophyd.EpicsMotor` | Motors, positioners | `gp:m1` |
-| `ophyd.scaler.ScalerCH` | Multi-channel scalers | `gp:scaler1` | 
-| `apstools.devices.ad_creator` | Area detectors | `adsim:` |
-| `ophyd.EpicsSignal` | Read-write PVs | `gp:calc1.VAL` |
-| `ophyd.EpicsSignalRO` | Read-only PVs | `gp:status` |
+| Device Callable | Use Case | EPICS PV kwarg | kwarg meaning |
+|-----------------|----------|----------------| ------------- |
+| `ophyd.EpicsMotor` | Motors, positioners | `prefix` | Base PV (e.g., `gp:m1`) |
+| `ophyd.scaler.ScalerCH` | Multi-channel scalers | `prefix` | Base PV (e.g., `gp:scaler1`) |
+| `apstools.devices.ad_creator` | Area detectors | `prefix` | Base PV (e.g., `adsim:`) |
+| `ophyd.EpicsSignalRO` | Read-only values | `read_pv` | Full PV name |
+| `ophyd.EpicsSignal` | Read-write values | `write_pv` | Full PV name (add `read_pv` kwarg if different) |
+
+Notes:
+
+- When in doubt, check the source code for the `device_callable`.
+- For some reason, the `prefix` kwarg works just fine with both `EpicsSignal` & `EpicsSignalRO`.

@@ -43,9 +43,9 @@ def my_plan(motor, detector, position, *, metadata=None):
     
     # Measurement steps
     yield from bps.mv(motor, position)      # Move motor
-    yield from bps.create("primary")        # Create event document
+    yield from bps.create("primary")        # Create event document in 'primary' stream
     yield from bps.read(motor)              # Read motor position
-    yield from bps.trigger_and_read(detector) # Read detector
+    yield from bps.trigger_and_read(detector) # Count, then read detector
     yield from bps.save()                   # Save event document
     
     # Cleanup  
@@ -799,6 +799,7 @@ def my_plan(devices, *, parameters, metadata=None):
     yield from bps.open_run(md=metadata)
     yield from bps.create("primary")
     # measurement steps
+    # Call every object to be recorded with 'yield from bps.read(obj)'
     yield from bps.save()
     yield from bps.close_run()
 ```
@@ -809,8 +810,8 @@ def my_plan(devices, *, parameters, metadata=None):
 | `bps.mv(device, value)` | Move device to value |
 | `bps.mvr(device, value)` | Move device relatively |
 | `bps.create(stream_name)` | Create event document |
-| `bps.read(device)` | Read device (without triggering) |
-| `bps.trigger_and_read(devices)` | Trigger and read devices |
+| `bps.read(device)` | Read device (a device that does not need triggering) |
+| `bps.trigger_and_read(devices)` | Trigger, then read devices |
 | `bps.save()` | Save event document |
 | `bps.sleep(time)` | Wait for specified time |
 | `bp.scan(detectors, motor, start, stop, num)` | Standard scan (handles data collection) |
