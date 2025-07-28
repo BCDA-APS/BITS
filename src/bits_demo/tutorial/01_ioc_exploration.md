@@ -99,16 +99,13 @@ python scripts/explore_iocs.py --test-connectivity
 
 ### 1. Get Complete Device List
 
-The `dbl` (Database List) command shows all Process Variables (PVs) in an IOC:
+The `dbl` (Database List) command shows all Process Variables (PVs) in an IOC.
+It is a command only available from the IOC's shell (and not bash).  Some IOCs
+(such as gp) write output from this command to a file as part of the startup.
 
 ```bash
-# Connect to running IOC and run dbl
-podman exec -it iocgp bash    # or gp_ioc if using script
-cd /epics/iocs/iocBoot/iocgp
-./st.cmd.Linux
-# At IOC prompt:
-dbl > /tmp/all_pvs.txt
-exit
+# Connect to running IOC and print its 'dbl' output file to the console.
+podman exec iocgp cat /epics/iocs/iocBoot/iocgp/dbl-all.txt
 ```
 
 **Or use our automated script:**
