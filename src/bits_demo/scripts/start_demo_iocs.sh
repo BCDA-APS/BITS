@@ -70,7 +70,7 @@ start_ioc() {
 import time
 try:
     import epics
-    test_pv = '${prefix}IOC_CPU_LOAD' if '${ioc_type}' == 'gp' else '${prefix}cam1:Acquire'
+    test_pv = f'${prefix}IOC_CPU_LOAD' if ioc_type == 'gp' else f'${prefix}cam1:Acquire'
     pv = epics.PV(test_pv)
     if pv.wait_for_connection(timeout=5):
         print(f'   📡 Connected to {test_pv}')
