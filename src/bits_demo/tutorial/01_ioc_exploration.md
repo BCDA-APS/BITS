@@ -4,7 +4,7 @@
 
 In this step, you'll learn how to explore your EPICS IOCs to discover what devices are available. This is the crucial first step before creating any Bluesky configuration.
 
-**Time**: ~20 minutes  
+**Time**: ~10 minutes  
 **Goal**: Create an inventory of available devices and understand their capabilities
 
 ## Understanding Your IOCs

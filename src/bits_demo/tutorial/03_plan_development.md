@@ -4,7 +4,7 @@
 
 In this step, you'll create custom scan plans tailored to your configured devices. You'll learn about Bluesky plan structure, create plans for common scientific use cases, and test them with your IOCs.
 
-**Time**: ~25 minutes  
+**Time**: ~30 minutes  
 **Goal**: Working custom scan plans for your instrument
 
 ## Prerequisites

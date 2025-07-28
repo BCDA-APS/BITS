@@ -4,7 +4,7 @@
 
 In this step, you'll learn to use your BITS instrument interactively with IPython. This is the primary way scientists interact with Bluesky for real-time data acquisition, analysis, and troubleshooting.
 
-**Time**: ~15 minutes  
+**Time**: ~30 minutes  
 **Goal**: Master interactive operation of your instrument
 
 ## Prerequisites
@@ -294,7 +294,7 @@ try:
     
     # Get motor and detector data
     motor_data = data[m1.name]
-    detector_data = data[f'{scaler1.channels.chan_02.name}']  # Adjust as needed
+    detector_data = data[f'{scaler1.channels.chan02.s.name}']  # Adjust as needed
     plan_name = run.metadata["start"].get("plan_name")
     scan_id = run.metadata["start"]["scan_id"]  # If scan_id not available, use 'uid'
     start_time = datetime.datetime.fromtimestamp(run.metadata['start']['time'])

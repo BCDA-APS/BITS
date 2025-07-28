@@ -4,7 +4,7 @@
 
 In this step, you'll replace the simulated devices with real configurations that connect to your IOCs. You'll learn how to map EPICS PVs to Bluesky devices and test connectivity.
 
-**Time**: ~30 minutes
+**Time**: ~25 minutes
 **Goal**: Working device configurations connected to demo IOCs
 
 ## Prerequisites
