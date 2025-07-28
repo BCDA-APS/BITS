@@ -26,6 +26,7 @@ Step 1: Install BITS (2 minutes)
     python -c "import apsbits; print('✓ BITS installed')"
 
 Step 2: Create Your First Instrument (1 minute)
+OPTIONAL: Use BITS-Starter template
 -----------------------------------------------
 
 .. code-block:: bash
@@ -34,7 +35,7 @@ Step 2: Create Your First Instrument (1 minute)
     mkdir my_beamline && cd my_beamline
 
     # Create instrument
-    python -m apsbits.api.create_new_instrument my_instrument
+    bits-create my_instrument
 
     # Install the instrument
     pip install -e .
@@ -85,7 +86,7 @@ Create a custom device:
 
 .. code-block:: python
 
-    # src/my_instrument/devices/my_devices.py
+    # src/my_instrument/devices/my_device.py
     from ophyd import Device, EpicsMotor
     from ophyd import Component as Cpt
 
@@ -100,24 +101,21 @@ Configure the device:
 
     # src/my_instrument/configs/devices.yml
     # Add this to the file:
-    my_instrument.devices.SampleStage:
+    my_instrument.devices.my_device.SampleStage:
     - name: sample_stage
       prefix: "SIM:STAGE"  # Use SIM: for testing without hardware
       labels: ["motors", "sample"]
 
-Import the device:
-
-.. code-block:: python
-
-    # src/my_instrument/devices/__init__.py
-    from .my_devices import SampleStage
 
 Test your device:
 
 .. code-block:: python
 
-    # Restart Python and reload
+    # Restart iPython and reload
     from my_instrument.startup import *
+
+    # See all your loaded devices
+    listobjects()
 
     # Your new device should be available
     print(sample_stage)
@@ -142,12 +140,12 @@ Create a custom scan plan:
         """Scan sample X position."""
         yield from rel_scan([detector], motor, -range_mm, range_mm, 21)
 
-Import and test your plan:
+Import and test your plan at the end of your startup script:
 
 .. code-block:: python
 
-    # src/my_instrument/plans/__init__.py
-    from .my_plans import quick_count, scan_sample_x
+    # src/my_instrument/startup.py
+    from .plans.my_plans import quick_count, scan_sample_x
 
 .. code-block:: python
 
@@ -155,8 +153,8 @@ Import and test your plan:
     from my_instrument.startup import *
 
     # Test your plans
-    RE(quick_count(sim_detector, num=3))
-    RE(scan_sample_x(sim_detector, sim_motor, range_mm=2.0))
+    RE(quick_count(sim_det, num=3))
+    RE(scan_sample_x(sim_det, sim_motor, range_mm=2.0))
 
 Step 6: Optional - Start Queue Server (2 minutes)
 -------------------------------------------------
@@ -167,10 +165,13 @@ For remote operation and multi-user access:
 
     # In one terminal - start queue server
     cd src/my_instrument_qserver
-    ./qs_host.sh
+    ./qs_host.sh start
+    
+    # Check status using:
+    ./qs_host.sh status
 
     # In another terminal - connect and test
-    qserver-console-monitor
+    queue-monitor
 
 .. code-block:: python
 

@@ -4,7 +4,7 @@
 
 In this step, you'll learn how to explore your EPICS IOCs to discover what devices are available. This is the crucial first step before creating any Bluesky configuration.
 
-**Time**: ~20 minutes  
+**Time**: ~10 minutes  
 **Goal**: Create an inventory of available devices and understand their capabilities
 
 ## Understanding Your IOCs
@@ -14,19 +14,59 @@ As a beamline scientist, you typically have several IOCs providing different typ
 - **Detector IOCs**: Area detectors, point detectors, scalers
 - **Support IOCs**: Temperature controllers, shutters, diagnostics
 
+## Prerequisites
+
+✅ Completed Step 0: BITS-Starter Setup  
+✅ Python environment with BITS installed  
+✅ Your instrument repository cloned and ready
+
 ## Starting the Demo IOCs
 
 Let's start with the tutorial IOCs that simulate a real beamline:
 
 ### 1. Start Both IOCs
 ```bash
-cd bits_demo/scripts
-./start_demo_iocs.sh
+# Navigate to your instrument repository
+cd ~/workspace/my_beamline_bits
+
+# Start the demo IOCs (using BITS demo scripts)
+# These will be provided as part of the tutorial setup
+./scripts/start_demo_iocs.sh
 ```
 
 This script starts:
 - **adsim IOC**: Area detector simulator (`adsim:` prefix)
 - **gp IOC**: General purpose devices (`gp:` prefix)
+
+### Alternative: Manual Container Commands
+
+You can also start IOCs manually using production-ready commands:
+
+```bash
+# Start ADSim IOC with custom prefix and volume mounting
+podman run -it -d --rm \
+    --name iocad \
+    -e "PREFIX=ad:" \
+    --net=host \
+    -v /tmp:/tmp \
+    ghcr.io/bcda-aps/bits/epics-container:latest adsim
+
+# Start General Purpose IOC
+podman run -it -d --rm \
+    --name iocgp \
+    -e "PREFIX=gp:" \
+    --net=host \
+    -v /tmp:/tmp \
+    ghcr.io/bcda-aps/bits/epics-container:latest gp
+```
+
+**Command Options:**
+- `-it -d`: Interactive, detached mode (runs in background)
+- `--rm`: Auto-remove container when stopped
+- `--name`: Assign memorable container name
+- `-e "PREFIX=..."`: Set IOC prefix environment variable
+- `--net=host`: Use host networking (required for EPICS)
+- `-v /tmp:/tmp`: Mount host /tmp for autosave files
 
 ### 2. Verify IOCs are Running
 ```bash
@@ -34,8 +74,15 @@ This script starts:
 podman ps
 
 # Should show both containers running:
-# - adsim_ioc
-# - gp_ioc
+# - adsim_ioc, gp_ioc (from script)
+# - iocad, iocgp (from manual commands)
+
+# View IOC logs
+podman logs iocad        # or adsim_ioc
+podman logs iocgp        # or gp_ioc
+
+# Connect to running IOC shell
+podman exec -it iocad bash    # or adsim_ioc if using script
 ```
 
 ### 3. Test Basic Connectivity
@@ -56,7 +103,7 @@ The `dbl` (Database List) command shows all Process Variables (PVs) in an IOC:
 
 ```bash
 # Connect to running IOC and run dbl
-podman exec -it gp_ioc bash
+podman exec -it iocgp bash    # or gp_ioc if using script
 cd /epics/iocs/iocBoot/iocgp
 ./st.cmd.Linux
 # At IOC prompt:
@@ -177,14 +224,16 @@ python scripts/explore_iocs.py --analyze-device adsim:
 
 ### 1. Generate Device Summary
 ```bash
-# Create comprehensive inventory
-python scripts/explore_iocs.py --generate-inventory > my_devices.yaml
+# Create comprehensive inventory for planning
+python scripts/explore_iocs.py --generate-inventory > device_inventory.yaml
 
-# This creates a structured summary of all devices
+# This creates a structured summary of all devices for reference
 ```
 
 ### 2. Review and Customize
-Open `my_devices.yaml` and review:
+Open `device_inventory.yaml` and review:
+
+**Note**: This inventory file is for planning only. The actual Bluesky device configuration will be in `configs/devices.yml` (covered in Tutorial 02).
 
 ```yaml
 # Sample generated inventory
@@ -298,12 +347,19 @@ After completing your device inventory:
 # Check if ports are in use
 netstat -ln | grep 5064  # EPICS CA port
 
-# Stop existing containers
+# Stop existing containers (script names)
 podman stop adsim_ioc gp_ioc
 podman rm adsim_ioc gp_ioc
 
+# Or stop manual containers (custom names)
+podman stop iocad iocgp
+
 # Restart with fresh containers
 ./scripts/start_demo_iocs.sh
+
+# Or restart manually
+podman run -it -d --rm --name iocad -e "PREFIX=ad:" --net=host -v /tmp:/tmp \
+    ghcr.io/bcda-aps/bits/epics-container:latest adsim
 ```
 
 ### Can't Connect to PVs
@@ -333,7 +389,7 @@ After this step, you should have:
 - ✅ Prioritized list of devices for Bluesky configuration
 - ✅ Tested connectivity to key devices
 
-**Next Step**: [BITS-Starter Setup](02_bits_starter_setup.md)
+**Next Step**: [Device Configuration](02_device_configuration.md)
 
 ---
 
