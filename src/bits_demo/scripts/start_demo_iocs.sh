@@ -53,7 +53,7 @@ start_ioc() {
     echo "🔧 Starting ${container_name} (${ioc_type} IOC with prefix '${prefix}')..."
     
     # Start container in detached mode
-    if podman run -d \
+    if podman run -d -it --rm \
         --name "${container_name}" \
         --net=host \
         -e "PREFIX=${prefix}" \
