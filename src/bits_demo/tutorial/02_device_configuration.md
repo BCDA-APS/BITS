@@ -433,17 +433,7 @@ export EPICS_CA_AUTO_ADDR_LIST=YES
 podman ps | grep -E "(adsim_ioc|gp_ioc)"
 ```
 
-### 2. Device Class Errors
-
-```python
-# Verify device classes are available
-from ophyd import EpicsMotor, ScalerCH
-from apstools.devices import ADBSoftDetector
-
-print("✅ All device classes available")
-```
-
-### 3. YAML Syntax Errors
+### 2. YAML Syntax Errors
 
 ```bash
 # Validate YAML syntax
@@ -486,6 +476,7 @@ OPHYD:
 ### 3. Configuration Organization
 - Start with essential devices (2-3 motors, 1 detector)
 - Add devices incrementally and test each addition
+- Seperate devices into yaml files as you see fit to simplify debugging
 - Use comments to document PV meanings
 
 ### 4. Testing Approach
