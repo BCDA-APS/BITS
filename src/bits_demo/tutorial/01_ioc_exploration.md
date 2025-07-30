@@ -24,7 +24,11 @@ As a beamline scientist, you typically have several IOCs providing different typ
 
 Let's start with the tutorial IOCs that simulate a real beamline:
 
-### 1. Start Both IOCs
+### 1. Get the epics poodman container
+```bash
+podman pull ghcr.io/bcda-aps/bits/epics-podman:latest
+```
+### 2. Start Both IOCs
 ```bash
 # Navigate to your instrument repository
 cd ~/workspace/my_beamline_bits
@@ -68,7 +72,7 @@ podman run -it -d --rm \
 - `--net=host`: Use host networking (required for EPICS)
 - `-v /tmp:/tmp`: Mount host /tmp for autosave files
 
-### 2. Verify IOCs are Running
+### 3. Verify IOCs are Running
 ```bash
 # Check container status
 podman ps
@@ -85,7 +89,7 @@ podman logs iocgp        # or gp_ioc
 podman exec -it iocad bash    # or adsim_ioc if using script
 ```
 
-### 3. Test Basic Connectivity
+### 4. Test Basic Connectivity
 ```bash
 # Test EPICS connectivity
 caget gp:m1.DESC
@@ -105,7 +109,7 @@ It is a command only available from the IOC's shell (and not bash).  Some IOCs
 
 ```bash
 # Connect to running IOC and print its 'dbl' output file to the console.
-podman exec iocgp cat /epics/iocs/iocBoot/iocgp/dbl-all.txt
+podman exec gp_ioc cat /epics/iocs/iocBoot/iocgp/dbl-all.txt
 ```
 
 **Or use our automated script:**
