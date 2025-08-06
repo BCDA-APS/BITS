@@ -230,46 +230,6 @@ def _setup_file_logger(logger, cfg):
     logger.bsdev("Log file: %s", file_name)
 
 
-# def _setup_ipython_logger(logger, cfg):
-#     """
-#     Internal: Log IPython console session In and Out to a file.
-
-#     See ``logrotate?`` int he IPython console for more information.
-#     """
-#     # Use user-provided log directory if specified, otherwise use package root
-#     if "log_directory" in cfg:
-#         log_path = pathlib.Path(cfg["log_directory"]).resolve()
-#     else:
-#         package_root = _get_package_root()
-#         log_path = package_root / ".logs"
-
-#     if not log_path.exists():
-#         os.makedirs(str(log_path))
-
-#     try:
-#         from IPython import get_ipython
-
-#         # start logging console to file
-#         # https://ipython.org/ipython-doc/3/interactive/magics.html#magic-logstart
-#         _ipython = get_ipython()
-#         log_file = log_path / cfg.get("log_filename_base", "ipython_log.py")
-#         log_mode = cfg.get("log_mode", "rotate")
-#         options = cfg.get("options", "-o -t")
-#         if _ipython is not None:
-#             print(
-#                 "\nBelow are the IPython logging settings for your session."
-#                 "\nThese settings have no impact on your experiment.\n"
-#             )
-#             _ipython.run_line_magic("logstart", f"{options} {log_file} {log_mode}")
-#             if logger is not None:
-#                 logger.bsdev("Console logging: %s", log_file)
-#     except Exception as exc:
-#         if logger is None:
-#             print(f"Could not setup console logging: {exc}")
-#         else:
-#             logger.exception("Could not setup console logging.")
-
-
 def _setup_ipython_logger(logger, cfg):
     """
     Internal: Log IPython console session In and Out to a file.
