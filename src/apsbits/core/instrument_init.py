@@ -31,15 +31,6 @@ logger.bsdev(__file__)
 MAIN_NAMESPACE = "__main__"
 
 
-def _get_make_devices_log_level() -> int:
-    """(internal) User choice for log level used in 'make_devices()'."""
-    level = get_config().get("MAKE_DEVICES", {}).get("LOG_LEVEL", "info")
-    if isinstance(level, str):
-        # Allow log level as str or int in iconfig.yml.
-        level = logging._nameToLevel[level.upper()]
-    return level
-
-
 def make_devices(
     *,
     pause: float = 1,
