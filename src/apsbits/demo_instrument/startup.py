@@ -104,10 +104,10 @@ else:
     from .plans.sim_plans import sim_rel_scan_plan  # noqa: F401
 
 # Experiment specific logic, device and plan loading
-RE(make_devices(clear=False, file="devices.yml"))  # Create the devices.
+make_devices(clear=False, file="devices.yml")  # Create the devices.
 
 if host_on_aps_subnet():
-    RE(make_devices(clear=False, file="devices_aps_only.yml"))
+    make_devices(clear=False, file="devices_aps_only.yml")
 
 # Setup baseline stream with connect=False is default
 # Devices with the label 'baseline' will be added to the baseline stream.
