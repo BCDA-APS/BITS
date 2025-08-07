@@ -102,7 +102,7 @@ def make_devices(
     else:
         logger.info("Loading device file: %s", device_path)
         try:
-            yield from run_blocking_function(namespace_loader, device_path, main=True)
+            namespace_loader(yaml_device_file=device_path, main=True)
         except Exception as e:
             logger.error("Error loading device file %s: %s", device_path, str(e))
 
@@ -111,7 +111,7 @@ def make_devices(
             "Waiting %s seconds for slow objects to connect.",
             pause,
         )
-        yield from bps.sleep(pause)
+        time.sleep(pause)
 
 
 def namespace_loader(yaml_device_file, main=True):
