@@ -18,6 +18,7 @@ import sys
 import time
 
 import guarneri
+import asyncio
 import yaml
 from ophyd_async.core import NotConnected
 
