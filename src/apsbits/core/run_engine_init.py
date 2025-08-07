@@ -12,9 +12,7 @@ settings based on a configuration dictionary.
 
 import logging
 from typing import Any
-from typing import Dict
 from typing import Optional
-from typing import Tuple
 
 import bluesky
 from bluesky.utils import ProgressBarManager
@@ -31,11 +29,11 @@ logger.bsdev(__file__)
 
 
 def init_RE(
-    iconfig: Dict[str, Any],
+    iconfig: dict[str, Any],
     bec_instance: Optional[Any] = None,
     cat_instance: Optional[Any] = None,
     **kwargs: Any,
-) -> Tuple[bluesky.RunEngine, bluesky.SupplementalData]:
+) -> tuple[bluesky.RunEngine, bluesky.SupplementalData]:
     """
     Initialize and configure a Bluesky RunEngine instance.
 
@@ -97,7 +95,7 @@ def init_RE(
         try:
             if handler_name == "PersistentDict":
                 RE.md = bluesky.utils.PersistentDict(MD_PATH)
-            else:
+            elif handler_name == "StoredDict":
                 RE.md = StoredDict(MD_PATH)
         except Exception as error:
             print(
@@ -105,7 +103,6 @@ def init_RE(
                 f"Could not create {handler_name} for RE metadata. Continuing "
                 f"without saving metadata to disk. {error=}\n"
             )
-            logger.warning("%s('%s') error:%s", handler_name, MD_PATH, error)
 
     if cat_instance is not None:
         RE.md.update(re_metadata(iconfig, cat_instance))  # programmatic metadata

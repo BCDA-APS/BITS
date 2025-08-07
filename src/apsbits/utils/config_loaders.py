@@ -10,10 +10,7 @@ import logging
 import pathlib
 from pathlib import Path
 from typing import Any
-from typing import Dict
-from typing import List
 from typing import Optional
-from typing import Tuple
 
 import tomli  # type: ignore
 import yaml
@@ -21,10 +18,10 @@ import yaml
 logger = logging.getLogger(__name__)
 
 # Global configuration instance
-_iconfig: Dict[str, Any] = {}
+_iconfig: dict[str, Any] = {}
 
 
-def load_config(config_path: Optional[Path] = None) -> Dict[str, Any]:
+def load_config(config_path: Optional[Path] = None) -> dict[str, Any]:
     """
     Load configuration from a YAML or TOML file.
 
@@ -54,11 +51,17 @@ def load_config(config_path: Optional[Path] = None) -> Dict[str, Any]:
                 config = tomli.load(f)
             else:
                 raise ValueError(
-                    f"Unsupported configuration file format: {config_path.suffix}"
+                    f"Unsupported configuration file format: {config_path.suffix}. "
+                    "Supported formats: .yml, .toml"
                 )
 
             if config is None:
+                logger.warning(
+                    "Configuration file %s is empty, using empty configuration",
+                    config_path,
+                )
                 config = {}
+
             _iconfig.update(config)
 
             _iconfig["ICONFIG_PATH"] = str(config_path)
@@ -66,12 +69,33 @@ def load_config(config_path: Optional[Path] = None) -> Dict[str, Any]:
             _iconfig["INSTRUMENT_FOLDER"] = str(config_path.parent.name)
 
             return _iconfig
+    except FileNotFoundError:
+        logger.error("Configuration file not found: %s", config_path)
+        raise
+    except PermissionError:
+        logger.error("Permission denied reading configuration file: %s", config_path)
+        raise
+    except yaml.YAMLError as e:
+        logger.error(
+            "YAML parsing error in configuration file %s: %s", config_path, str(e)
+        )
+        raise
+    except tomli.TOMLDecodeError as e:
+        logger.error(
+            "TOML parsing error in configuration file %s: %s", config_path, str(e)
+        )
+        raise
     except Exception as e:
-        logger.error("Error loading configuration: %s", e)
+        logger.error(
+            "Unexpected error loading configuration from %s: %s (type: %s)",
+            config_path,
+            str(e),
+            type(e).__name__,
+        )
         raise
 
 
-def get_config() -> Dict[str, Any]:
+def get_config() -> dict[str, Any]:
     """
     Get the current configuration.
 
@@ -81,7 +105,7 @@ def get_config() -> Dict[str, Any]:
     return _iconfig
 
 
-def update_config(updates: Dict[str, Any]) -> None:
+def update_config(updates: dict[str, Any]) -> None:
     """
     Update the current configuration.
 
@@ -111,24 +135,46 @@ def load_config_yaml(config_obj) -> dict:
     try:
         # If it's a path, open it first
         if isinstance(config_obj, (str, pathlib.Path)):
-            with open(config_obj, "r") as f:
+            config_path = pathlib.Path(config_obj)
+            if not config_path.exists():
+                raise FileNotFoundError(
+                    f"YAML configuration file not found: {config_path}"
+                )
+            with open(config_path, "r") as f:
                 content = f.read()
         # Otherwise assume it's a file-like object
         else:
             content = config_obj.read()
 
+        if not content.strip():
+            logger.warning("YAML configuration is empty")
+            return {}
+
         iconfig = yaml.load(content, yaml.Loader)
-        return iconfig
+        return iconfig if iconfig is not None else {}
+    except FileNotFoundError:
+        logger.error("YAML configuration file not found: %s", config_obj)
+        raise
+    except PermissionError:
+        logger.error("Permission denied reading YAML configuration: %s", config_obj)
+        raise
+    except yaml.YAMLError as e:
+        logger.error("YAML parsing error in configuration: %s", str(e))
+        raise
     except Exception as e:
-        logger.error("Error loading configuration: %s", e)
+        logger.error(
+            "Unexpected error loading YAML configuration: %s (type: %s)",
+            str(e),
+            type(e).__name__,
+        )
         raise
 
 
 def validate_instrument_path(
     instrument_path: Optional[Path] = None,
-    expected_files: Optional[List[str]] = None,
-    expected_dirs: Optional[List[str]] = None,
-) -> Tuple[bool, str]:
+    expected_files: Optional[list[str]] = None,
+    expected_dirs: Optional[list[str]] = None,
+) -> tuple[bool, str]:
     """
     Validate if the provided instrument path is correct by checking for expected files
     and directories.

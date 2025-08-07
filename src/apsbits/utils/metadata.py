@@ -13,6 +13,8 @@ import os
 import pathlib
 import socket
 import sys
+from typing import Any
+from typing import Optional
 
 import apstools
 import bluesky
@@ -53,7 +55,7 @@ VERSIONS = dict(
 )
 
 
-def get_md_path(iconfig=None):
+def get_md_path(iconfig: Optional[dict[str, Any]] = None) -> Optional[str]:
     """
     Get path for RE metadata.
 
@@ -68,6 +70,8 @@ def get_md_path(iconfig=None):
     paths are with respect to the present working directory when the
     bluesky session is started.
     """
+    if iconfig is None:
+        return None
     RE_CONFIG = iconfig.get("RUN_ENGINE", {})
     md_path_name = RE_CONFIG.get("MD_PATH", DEFAULT_MD_PATH)
     path = pathlib.Path(md_path_name)
@@ -75,7 +79,9 @@ def get_md_path(iconfig=None):
     return str(path)
 
 
-def re_metadata(iconfig=None, cat=None):
+def re_metadata(
+    iconfig: Optional[dict[str, Any]] = None, cat: Optional[Any] = None
+) -> dict[str, Any]:
     """Programmatic metadata for the RunEngine."""
     md = {
         "login_id": f"{USERNAME}@{HOSTNAME}",
@@ -85,8 +91,9 @@ def re_metadata(iconfig=None, cat=None):
     }
     if cat is not None:
         md["databroker_catalog"] = cat.name
-    RE_CONFIG = iconfig.get("RUN_ENGINE", {})
-    md.update(RE_CONFIG.get("DEFAULT_METADATA", {}))
+    if iconfig is not None:
+        RE_CONFIG = iconfig.get("RUN_ENGINE", {})
+        md.update(RE_CONFIG.get("DEFAULT_METADATA", {}))
 
     conda_prefix = os.environ.get("CONDA_PREFIX")
     if conda_prefix is not None:

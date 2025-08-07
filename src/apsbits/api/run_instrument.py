@@ -12,14 +12,12 @@ import argparse
 import importlib
 import sys
 from typing import Any
-from typing import Dict
 from typing import Optional
-from typing import Tuple
 
 from apsbits.core.instrument_init import oregistry as Registry
 
 
-def run_instrument_startup(package_name: str) -> Tuple[bool, Optional[Dict[str, Any]]]:
+def run_instrument_startup(package_name: str) -> tuple[bool, Optional[dict[str, Any]]]:
     """
     Run a package's startup module and return the ophyd registry information.
 

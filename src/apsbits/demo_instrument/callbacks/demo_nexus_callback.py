@@ -5,8 +5,10 @@ This module provides callbacks for writing data to Nexus data files.
 """
 
 import logging
+from typing import Any
 
-from apsbits.utils.aps_functions import host_on_aps_subnet
+from apstools.utils import host_on_aps_subnet
+
 from apsbits.utils.config_loaders import get_config
 
 logger = logging.getLogger(__name__)
@@ -25,7 +27,7 @@ else:
 class MyNXWriter(NXWriter):
     """Patch to get sample title from metadata, if available."""
 
-    def get_sample_title(self):
+    def get_sample_title(self) -> str:
         """
         Get the title from the metadata or modify the default.
 
@@ -39,7 +41,7 @@ class MyNXWriter(NXWriter):
         return title
 
 
-def nxwriter_init(RE):
+def nxwriter_init(RE: Any) -> Any:
     """Initialize the Nexus data file writer callback."""
     nxwriter = MyNXWriter()  # create the callback instance
     """The NeXus file writer object."""

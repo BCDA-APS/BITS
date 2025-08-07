@@ -15,7 +15,8 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Tuple
+
+# No typing imports needed - using built-in types
 
 
 def validate_instrument_name(name: str) -> bool:
@@ -28,7 +29,7 @@ def validate_instrument_name(name: str) -> bool:
     return re.fullmatch(r"[a-z][_a-z0-9]*", name) is not None
 
 
-def get_instrument_paths(name: str) -> Tuple[Path, Path]:
+def get_instrument_paths(name: str) -> tuple[Path, Path]:
     """
     Get the paths to the instrument and qserver directories.
 

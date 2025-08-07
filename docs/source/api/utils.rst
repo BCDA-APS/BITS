@@ -11,7 +11,6 @@ The utilities module provides helper functions and tools for working with Bluesk
    :toctree: generated
    :recursive:
 
-   aps_functions
    config_loaders
    controls_setup
    helper_functions

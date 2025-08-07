@@ -10,5 +10,4 @@ apsbits.demo\_instrument.plans
    :toctree:
    :recursive:
 
-   dm_plans
    sim_plans

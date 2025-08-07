@@ -17,6 +17,7 @@ import sys
 import time
 
 import guarneri
+import yaml
 from apstools.plans import run_blocking_function
 from apstools.utils import dynamic_import
 from bluesky import plan_stubs as bps
@@ -152,7 +153,18 @@ class Instrument(guarneri.Instrument):
 
         def parser(creator, specs):
             if creator not in self.device_classes:
-                self.device_classes[creator] = dynamic_import(creator)
+                try:
+                    self.device_classes[creator] = dynamic_import(creator)
+                except ImportError as e:
+                    logger.error(
+                        "Failed to import device creator '%s': %s", creator, str(e)
+                    )
+                    raise
+                except AttributeError as e:
+                    logger.error(
+                        "Device creator '%s' not found in module: %s", creator, str(e)
+                    )
+                    raise
             entries = [
                 {
                     "device_class": creator,
@@ -163,9 +175,30 @@ class Instrument(guarneri.Instrument):
             ]
             return entries
 
-        with open(config_file, "r") as f:
-            config_data = load_config_yaml(f)
+        try:
+            with open(config_file, "r") as f:
+                config_data = load_config_yaml(f)
+        except FileNotFoundError:
+            logger.error("Device configuration file not found: %s", config_file)
+            raise
+        except PermissionError:
+            logger.error("Permission denied reading device file: %s", config_file)
+            raise
+        except yaml.YAMLError as e:
+            logger.error(
+                "YAML parsing error in device file %s: %s", config_file, str(e)
+            )
+            raise
 
+        if not isinstance(config_data, dict):
+            logger.error(
+                "Invalid device file format in %s: expected dictionary, got %s",
+                config_file,
+                type(config_data).__name__,
+            )
+            raise ValueError(f"Invalid device file format in {config_file}")
+
+        try:
             devices = [
                 device
                 # parse the file using already loaded config data
@@ -173,6 +206,11 @@ class Instrument(guarneri.Instrument):
                 # each support type (class, factory, function, ...)
                 for device in parser(k, v)
             ]
+        except Exception as e:
+            logger.error(
+                "Error parsing device specifications in %s: %s", config_file, str(e)
+            )
+            raise
         return devices
 
 

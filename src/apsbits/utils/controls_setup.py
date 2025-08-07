@@ -11,6 +11,7 @@ EPICS & ophyd related setup
 """
 
 import logging
+from typing import Any
 from typing import Optional
 
 import ophyd
@@ -25,7 +26,7 @@ DEFAULT_TIMEOUT = 60  # default used next...
 SCAN_ID_SIGNAL_NAME = "scan_id_epics"
 
 
-def epics_scan_id_source(_md):
+def epics_scan_id_source(_md: dict[str, Any]) -> int:
     """
     Callback function for RunEngine.  Returns *next* scan_id to be used.
 
@@ -45,7 +46,7 @@ def epics_scan_id_source(_md):
     return new_scan_id
 
 
-def connect_scan_id_pv(RE, pv: Optional[str] = None):
+def connect_scan_id_pv(RE: Any, pv: Optional[str] = None) -> None:
     """
     Define a PV to use for the RunEngine's `scan_id`.
     """
@@ -90,7 +91,7 @@ def set_control_layer(control_layer: str = DEFAULT_CONTROL_LAYER):
     logger.info("using ophyd control layer: %r", ophyd.cl.name)
 
 
-def set_timeouts(timeouts):
+def set_timeouts(timeouts: dict[str, float]) -> None:
     """Set default timeout for all EpicsSignal connections & communications."""
     if not EpicsSignalBase._EpicsSignalBase__any_instantiated:
         # Only BEFORE any EpicsSignalBase (or subclass) are created!

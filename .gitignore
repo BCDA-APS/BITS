@@ -176,3 +176,9 @@ existing_plans_and_devices.yaml
 
 # Local Run Engine metadata dictionary
 .re_md_dict.yml
+
+# Test/deleted artifacts
+.deleted/
+
+# Claude Code context files
+CLAUDE.md

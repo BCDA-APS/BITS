@@ -72,7 +72,6 @@ The utilities module provides helper functions and tools:
    :toctree: generated
    :recursive:
 
-   apsbits.utils.aps_functions
    apsbits.utils.config_loaders
    apsbits.utils.controls_setup
    apsbits.utils.helper_functions
