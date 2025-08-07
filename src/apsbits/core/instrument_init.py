@@ -155,7 +155,7 @@ class Instrument(guarneri.Instrument):
         if isinstance(config_file, str):
             config_file = pathlib.Path(config_file)
 
-        def parser(creator, specs):
+        def yaml_parser(creator, specs):
             if creator not in self.device_classes:
                 try:
                     self.device_classes[creator] = dynamic_import(creator)
@@ -181,7 +181,7 @@ class Instrument(guarneri.Instrument):
 
         try:
             with open(config_file, "r") as f:
-                config_data = load_config_yaml(f)
+                config_data = yaml.safe_load(f)
         except FileNotFoundError:
             logger.error("Device configuration file not found: %s", config_file)
             raise
@@ -208,7 +208,7 @@ class Instrument(guarneri.Instrument):
                 # parse the file using already loaded config data
                 for k, v in config_data.items()
                 # each support type (class, factory, function, ...)
-                for device in parser(k, v)
+                for device in yaml_parser(k, v)
             ]
         except Exception as e:
             logger.error(
