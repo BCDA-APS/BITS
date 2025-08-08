@@ -24,6 +24,9 @@ from apsbits.utils.metadata import get_md_path
 from apsbits.utils.metadata import re_metadata
 from apsbits.utils.stored_dict import StoredDict
 
+from bluesky.callbacks.tiled_writer import TiledWriter
+
+
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
 
@@ -32,6 +35,7 @@ def init_RE(
     iconfig: dict[str, Any],
     bec_instance: Optional[Any] = None,
     cat_instance: Optional[Any] = None,
+    tiled_client_instance=None,
     **kwargs: Any,
 ) -> tuple[bluesky.RunEngine, bluesky.SupplementalData]:
     """
@@ -78,6 +82,9 @@ def init_RE(
 
     RE = bluesky.RunEngine(**kwargs)
     """The Bluesky RunEngine object."""
+
+    tiled_writer = TiledWriter(tiled_client_instance)
+    RE.subscribe(tiled_writer)
 
     sd = bluesky.SupplementalData()
     """Supplemental data providing baselines and monitors for the RunEngine."""
