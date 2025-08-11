@@ -15,6 +15,7 @@ from typing import Any
 from typing import Optional
 
 import bluesky
+from bluesky.callbacks.tiled_writer import TiledWriter
 from bluesky.utils import ProgressBarManager
 
 from apsbits.utils.controls_setup import connect_scan_id_pv
@@ -35,7 +36,7 @@ def init_RE(
     iconfig: dict[str, Any],
     bec_instance: Optional[Any] = None,
     cat_instance: Optional[Any] = None,
-    tiled_client_instance=None,
+    tiled_client_instance: Optional[Any] = None,
     **kwargs: Any,
 ) -> tuple[bluesky.RunEngine, bluesky.SupplementalData]:
     """
