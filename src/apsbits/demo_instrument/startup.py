@@ -13,6 +13,8 @@ Includes:
 import logging
 from pathlib import Path
 
+from tiled.client import from_uri
+
 from apsbits.core.best_effort_init import init_bec_peaks
 from apsbits.core.catalog_init import init_catalog
 from apsbits.core.instrument_init import make_devices
@@ -30,7 +32,6 @@ from apsbits.utils.config_loaders import load_config
 from apsbits.utils.helper_functions import register_bluesky_magics
 from apsbits.utils.helper_functions import running_in_queueserver
 from apsbits.utils.logging_setup import configure_logging
-from tiled.client import from_uri
 
 # Configuration block
 # Get the path to the instrument package
@@ -64,11 +65,15 @@ register_bluesky_magics()
 # oregistry.clear()
 bec, peaks = init_bec_peaks(iconfig)
 cat = init_catalog(iconfig)
-with open("/home/xf31id/.ipython/profile_blop_flyscan/startup/api_key.txt", 'r') as file:
+with open(
+    "/home/xf31id/.ipython/profile_blop_flyscan/startup/api_key.txt", "r"
+) as file:
     key = file.readline().strip()
 tiled_client = from_uri("http://localhost:8842", api_key=key)
 
-RE, sd = init_RE(iconfig, bec_instance=bec, cat_instance=cat, tiled_client_instance=tiled_client)
+RE, sd = init_RE(
+    iconfig, bec_instance=bec, cat_instance=cat, tiled_client_instance=tiled_client
+)
 
 
 # Optional Nexus callback block
