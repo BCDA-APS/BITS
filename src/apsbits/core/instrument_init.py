@@ -22,7 +22,6 @@ import yaml
 from ophyd_async.core import NotConnected
 
 from apsbits.utils.config_loaders import get_config
-from apsbits.utils.config_loaders import load_config_yaml
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
