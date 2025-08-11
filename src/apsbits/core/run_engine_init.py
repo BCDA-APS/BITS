@@ -25,6 +25,9 @@ from apsbits.utils.metadata import get_md_path
 from apsbits.utils.metadata import re_metadata
 from apsbits.utils.stored_dict import StoredDict
 
+from bluesky.callbacks.tiled_writer import TiledWriter
+
+
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
 
