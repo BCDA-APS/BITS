@@ -11,6 +11,7 @@ Construct ophyd-style devices from simple specifications in YAML files.
     ~Instrument
 """
 
+import asyncio
 import logging
 import pathlib
 import sys
@@ -18,12 +19,10 @@ import time
 
 import guarneri
 import yaml
-from apstools.plans import run_blocking_function
-from apstools.utils import dynamic_import
-from bluesky import plan_stubs as bps
+from ophyd_async.core import NotConnected
 
 from apsbits.utils.config_loaders import get_config
-from apsbits.utils.config_loaders import load_config_yaml
+from apsbits.utils.helper_functions import dynamic_import
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
@@ -102,7 +101,7 @@ def make_devices(
     else:
         logger.info("Loading device file: %s", device_path)
         try:
-            yield from run_blocking_function(namespace_loader, device_path, main=True)
+            asyncio.run(namespace_loader(yaml_device_file=device_path, main=True))
         except Exception as e:
             logger.error("Error loading device file %s: %s", device_path, str(e))
 
@@ -111,10 +110,10 @@ def make_devices(
             "Waiting %s seconds for slow objects to connect.",
             pause,
         )
-        yield from bps.sleep(pause)
+        time.sleep(pause)
 
 
-def namespace_loader(yaml_device_file, main=True):
+async def namespace_loader(yaml_device_file, main=True):
     """
     Load our ophyd-style controls as described in a YAML file into the main namespace.
 
@@ -132,6 +131,11 @@ def namespace_loader(yaml_device_file, main=True):
     current_devices = oregistry.device_names
 
     instrument.load(yaml_device_file)
+
+    try:
+        await instrument.connect()
+    except NotConnected as exc:
+        logger.exception(exc)
 
     logger.info("Devices loaded in %.3f s.", time.time() - t0)
     if main:
@@ -151,7 +155,7 @@ class Instrument(guarneri.Instrument):
         if isinstance(config_file, str):
             config_file = pathlib.Path(config_file)
 
-        def parser(creator, specs):
+        def yaml_parser(creator, specs):
             if creator not in self.device_classes:
                 try:
                     self.device_classes[creator] = dynamic_import(creator)
@@ -177,7 +181,7 @@ class Instrument(guarneri.Instrument):
 
         try:
             with open(config_file, "r") as f:
-                config_data = load_config_yaml(f)
+                config_data = yaml.safe_load(f)
         except FileNotFoundError:
             logger.error("Device configuration file not found: %s", config_file)
             raise
@@ -204,7 +208,7 @@ class Instrument(guarneri.Instrument):
                 # parse the file using already loaded config data
                 for k, v in config_data.items()
                 # each support type (class, factory, function, ...)
-                for device in parser(k, v)
+                for device in yaml_parser(k, v)
             ]
         except Exception as e:
             logger.error(

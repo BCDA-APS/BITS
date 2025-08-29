@@ -13,12 +13,13 @@ Includes:
 import logging
 from pathlib import Path
 
+# Core Functions
+from tiled.client import from_profile
+
 from apsbits.core.best_effort_init import init_bec_peaks
 from apsbits.core.catalog_init import init_catalog
 from apsbits.core.instrument_init import make_devices
 from apsbits.core.instrument_init import oregistry
-
-# Core Functions
 from apsbits.core.run_engine_init import init_RE
 
 # Utility functions
@@ -63,7 +64,15 @@ register_bluesky_magics()
 # oregistry.clear()
 bec, peaks = init_bec_peaks(iconfig)
 cat = init_catalog(iconfig)
-RE, sd = init_RE(iconfig, bec_instance=bec, cat_instance=cat)
+
+profile_name = iconfig.get("TILED_PROFILE_NAME")
+client = from_profile(profile_name)
+tiled_client = from_profile()
+
+RE, sd = init_RE(iconfig,
+                 bec_instance=bec,
+                 cat_instance=cat,
+                 tiled_client_instance=tiled_client)
 
 
 # Optional Nexus callback block
@@ -104,10 +113,10 @@ else:
     from .plans.sim_plans import sim_rel_scan_plan  # noqa: F401
 
 # Experiment specific logic, device and plan loading
-RE(make_devices(clear=False, file="devices.yml"))  # Create the devices.
+make_devices(clear=False, file="devices.yml")  # Create the devices.
 
 if host_on_aps_subnet():
-    RE(make_devices(clear=False, file="devices_aps_only.yml"))
+    make_devices(clear=False, file="devices_aps_only.yml")
 
 # Setup baseline stream with connect=False is default
 # Devices with the label 'baseline' will be added to the baseline stream.

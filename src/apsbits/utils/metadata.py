@@ -16,18 +16,18 @@ import sys
 from typing import Any
 from typing import Optional
 
-import apstools
+# import apstools
 import bluesky
 import databroker
 import epics
 import h5py
-import intake
+# import intake
 import matplotlib
 import numpy
 import ophyd
 import pyRestTable
 import pysumreg
-import spec2nexus
+# import spec2nexus
 
 import apsbits
 
@@ -39,19 +39,19 @@ HOSTNAME = socket.gethostname() or "localhost"
 USERNAME = getpass.getuser() or "Bluesky user"
 VERSIONS = dict(
     apsbits=apsbits.__version__,
-    apstools=apstools.__version__,
+    # apstools=apstools.__version__,
     bluesky=bluesky.__version__,
     databroker=databroker.__version__,
     epics=epics.__version__,
     h5py=h5py.__version__,
-    intake=intake.__version__,
+    # intake=intake.__version__,
     matplotlib=matplotlib.__version__,
     numpy=numpy.__version__,
     ophyd=ophyd.__version__,
     pyRestTable=pyRestTable.__version__,
     pysumreg=pysumreg.__version__,
     python=sys.version.split(" ")[0],
-    spec2nexus=spec2nexus.__version__,
+    # spec2nexus=spec2nexus.__version__,
 )
 
 
