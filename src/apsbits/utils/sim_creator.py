@@ -19,7 +19,7 @@ Device factories are used to:
 
 import logging
 
-from apsbits.core.instrument_init import dynamic_import
+from apsbits.utils.helper_functions import dynamic_import
 
 logger = logging.getLogger(__name__)
 

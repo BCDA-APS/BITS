@@ -13,14 +13,13 @@ Includes:
 import logging
 from pathlib import Path
 
-from tiled.client import from_uri
+# Core Functions
+from tiled.client import from_profile
 
 from apsbits.core.best_effort_init import init_bec_peaks
 from apsbits.core.catalog_init import init_catalog
 from apsbits.core.instrument_init import make_devices
 from apsbits.core.instrument_init import oregistry
-
-# Core Functions
 from apsbits.core.run_engine_init import init_RE
 
 # Utility functions
@@ -65,15 +64,15 @@ register_bluesky_magics()
 # oregistry.clear()
 bec, peaks = init_bec_peaks(iconfig)
 cat = init_catalog(iconfig)
-with open(
-    "/home/xf31id/.ipython/profile_blop_flyscan/startup/api_key.txt", "r"
-) as file:
-    key = file.readline().strip()
-tiled_client = from_uri("http://localhost:8842", api_key=key)
 
-RE, sd = init_RE(
-    iconfig, bec_instance=bec, cat_instance=cat, tiled_client_instance=tiled_client
-)
+profile_name = iconfig.get("TILED_PROFILE_NAME")
+client = from_profile(profile_name)
+tiled_client = from_profile()
+
+RE, sd = init_RE(iconfig,
+                 bec_instance=bec,
+                 cat_instance=cat,
+                 tiled_client_instance=tiled_client)
 
 
 # Optional Nexus callback block

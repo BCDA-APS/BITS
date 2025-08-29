@@ -32,6 +32,7 @@ logger.bsdev(__file__)
 def init_RE(
     iconfig: dict[str, Any],
     bec_instance: Optional[Any] = None,
+    cat_instance: Optional[Any] = None,
     tiled_client_instance: Optional[Any] = None,
     **kwargs: Any,
 ) -> tuple[bluesky.RunEngine, bluesky.SupplementalData]:
@@ -108,10 +109,10 @@ def init_RE(
                 f"without saving metadata to disk. {error=}\n"
             )
 
-    # if cat_instance is not None:
-    #     RE.md.update(re_metadata(iconfig, cat_instance))  # programmatic metadata
-    #     RE.md.update(re_config.get("DEFAULT_METADATA", {}))
-    #     RE.subscribe(cat_instance.v1.insert)
+    if cat_instance is not None:
+        RE.md.update(re_metadata(iconfig, cat_instance))  # programmatic metadata
+        RE.md.update(re_config.get("DEFAULT_METADATA", {}))
+        RE.subscribe(cat_instance.v1.insert)
     if bec_instance is not None:
         RE.subscribe(bec_instance)
 

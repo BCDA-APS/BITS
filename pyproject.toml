@@ -33,15 +33,17 @@ classifiers = [
     "Topic :: Utilities",
 ]
 dependencies = [
-    "bluesky-queueserver-api",
+    "apstools",
     "bluesky-queueserver >=0.0.22",
+    "bluesky-queueserver-api",
     "bluesky-widgets",
     "bluesky",
     "caproto",
-    "databroker<=1.2.5",
+    "databroker==1.2.5",
     "guarneri",
     "ipython",
     "jupyterlab",
+    "matplotlib",
     "ophyd-async",
     "ophyd-registry",
     "ophyd",
@@ -51,8 +53,8 @@ dependencies = [
     "qtpy",
     "tiled[all]",
     "toml",
-    "tomli",
     "tomli-w",
+    "tomli",
 ]
 
 [project.optional-dependencies]

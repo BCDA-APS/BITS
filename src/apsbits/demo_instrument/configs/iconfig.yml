@@ -5,6 +5,9 @@ ICONFIG_VERSION: 2.0.1
 
 # Add additional configuration for use with your instrument.
 
+#### Name of Tiled profile to use.
+TILED_PROFILE_NAME: temp
+
 ### The short name for the databroker catalog.
 DATABROKER_CATALOG: &databroker_catalog temp
 

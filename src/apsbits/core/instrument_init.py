@@ -22,6 +22,7 @@ import yaml
 from ophyd_async.core import NotConnected
 
 from apsbits.utils.config_loaders import get_config
+from apsbits.utils.helper_functions import dynamic_import
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
@@ -215,48 +216,6 @@ class Instrument(guarneri.Instrument):
             )
             raise
         return devices
-
-
-def dynamic_import(full_path: str) -> type:
-    """
-    Import the object given its import path as text.
-
-    Motivated by specification of class names for plugins
-    when using ``apstools.devices.ad_creator()``.
-
-    EXAMPLES::
-
-        obj = dynamic_import("ophyd.EpicsMotor")
-        m1 = obj("gp:m1", name="m1")
-
-        IocStats = dynamic_import("instrument.devices.ioc_stats.IocInfoDevice")
-        gp_stats = IocStats("gp:", name="gp_stats")
-    """
-    from importlib import import_module
-
-    import_object = None
-
-    if "." not in full_path:
-        # fmt: off
-        raise ValueError(
-            "Must use a dotted path, no local imports."
-            f" Received: {full_path!r}"
-        )
-        # fmt: on
-
-    if full_path.startswith("."):
-        # fmt: off
-        raise ValueError(
-            "Must use absolute path, no relative imports."
-            f" Received: {full_path!r}"
-        )
-        # fmt: on
-
-    module_name, object_name = full_path.rsplit(".", 1)
-    module_object = import_module(module_name)
-    import_object = getattr(module_object, object_name)
-
-    return import_object
 
 
 instrument = Instrument({})  # singleton
