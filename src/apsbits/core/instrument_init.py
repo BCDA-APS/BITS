@@ -22,6 +22,7 @@ import yaml
 from ophyd_async.core import NotConnected
 
 from apsbits.utils.config_loaders import get_config
+from apsbits.utils.helper_functions import dynamic_import
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
@@ -128,9 +129,9 @@ async def namespace_loader(yaml_device_file, main=True):
     t0 = time.time()
 
     current_devices = oregistry.device_names
-
+    print("before")
+    # print(yaml_device_file.type())
     instrument.load(yaml_device_file)
-
     try:
         await instrument.connect()
     except NotConnected as exc:
@@ -146,9 +147,8 @@ async def namespace_loader(yaml_device_file, main=True):
             setattr(main_namespace, label, oregistry[label])
 
 
-class Instrument(guarneri.Instrument):
+# class Instrument(guarneri.Instrument):
     """Custom YAML loader for guarneri."""
-
     def parse_yaml_file(self, config_file: pathlib.Path | str) -> list[dict]:
         """Read device configurations from YAML format file."""
         if isinstance(config_file, str):
@@ -216,49 +216,6 @@ class Instrument(guarneri.Instrument):
             raise
         return devices
 
-
-def dynamic_import(full_path: str) -> type:
-    """
-    Import the object given its import path as text.
-
-    Motivated by specification of class names for plugins
-    when using ``apstools.devices.ad_creator()``.
-
-    EXAMPLES::
-
-        obj = dynamic_import("ophyd.EpicsMotor")
-        m1 = obj("gp:m1", name="m1")
-
-        IocStats = dynamic_import("instrument.devices.ioc_stats.IocInfoDevice")
-        gp_stats = IocStats("gp:", name="gp_stats")
-    """
-    from importlib import import_module
-
-    import_object = None
-
-    if "." not in full_path:
-        # fmt: off
-        raise ValueError(
-            "Must use a dotted path, no local imports."
-            f" Received: {full_path!r}"
-        )
-        # fmt: on
-
-    if full_path.startswith("."):
-        # fmt: off
-        raise ValueError(
-            "Must use absolute path, no relative imports."
-            f" Received: {full_path!r}"
-        )
-        # fmt: on
-
-    module_name, object_name = full_path.rsplit(".", 1)
-    module_object = import_module(module_name)
-    import_object = getattr(module_object, object_name)
-
-    return import_object
-
-
-instrument = Instrument({})  # singleton
+instrument = guarneri.Instrument({})  # singleton
 oregistry = instrument.devices
 """Registry of all ophyd-style Devices and Signals."""
