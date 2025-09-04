@@ -10,6 +10,7 @@ Generic utility helper functions
     ~is_notebook
 """
 
+import collections.abc
 import logging
 import os
 
@@ -123,7 +124,7 @@ def mpl_setup() -> None:
                 mpl.use("Agg")
 
 
-def dynamic_import(full_path: str) -> type:
+def dynamic_import(full_path: str) -> collections.abc.Callable:
     """
     Import the object given its import path as text.
 
