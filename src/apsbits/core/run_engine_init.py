@@ -117,7 +117,7 @@ def init_RE(
         RE.subscribe(bec_instance)
 
     scan_id_pv = iconfig.get("RUN_ENGINE", {}).get("SCAN_ID_PV")
-    connect_scan_id_pv(RE, pv=scan_id_pv)
+    # connect_scan_id_pv(RE, pv=scan_id_pv)
 
     if re_config.get("USE_PROGRESS_BAR", True):
         # Add a progress bar.

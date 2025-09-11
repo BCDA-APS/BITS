@@ -12,10 +12,12 @@ Construct ophyd-style devices from simple specifications in YAML files.
 """
 
 import asyncio
+import functools
 import logging
 import pathlib
 import sys
 import time
+from typing import Callable
 
 import guarneri
 from ophyd_async.core import NotConnected
@@ -27,6 +29,8 @@ logger.bsdev(__file__)
 
 MAIN_NAMESPACE = "__main__"
 
+_instrument = None
+
 
 def make_devices(
     *,
@@ -34,6 +38,7 @@ def make_devices(
     clear: bool = True,
     file: str,
     path: str | pathlib.Path | None = None,
+    device_manager=None,
 ):
     """
     (plan stub) Create the ophyd-style controls for this instrument.
@@ -57,9 +62,8 @@ def make_devices(
 
     path: str | pathlib.Path | None
     """
-
+    # oregistry = instrument.devices
     logger.debug("(Re)Loading local control objects.")
-
     if file is None:
         logger.error("No custom device file provided.")
         return
@@ -76,18 +80,18 @@ def make_devices(
         logger.info(f"Using custom path for device files: {path}")
         configs_path = pathlib.Path(path)
 
-    if clear:
+    if clear and isinstance(device_manager, guarneri.Instrument):
         main_namespace = sys.modules[MAIN_NAMESPACE]
 
         # Clear the oregistry and remove any devices registered previously.
-        for dev_name in oregistry.device_names:
+        for dev_name in device_manager.devices.device_names:
             # Remove from __main__ namespace any devices registered previously.
             if hasattr(main_namespace, dev_name):
                 logger.info("Removing %r from %r", dev_name, MAIN_NAMESPACE)
 
                 delattr(main_namespace, dev_name)
 
-        oregistry.clear()
+        device_manager.devices.clear()
 
     logger.debug("Loading device files: %r", file)
 
@@ -98,11 +102,23 @@ def make_devices(
 
     else:
         logger.info("Loading device file: %s", device_path)
-        try:
-            asyncio.run(namespace_loader(yaml_device_file=device_path, main=True))
-        except Exception as e:
-            logger.error("Error loading device file %s: %s", device_path, str(e))
-
+        if isinstance(device_manager, guarneri.Instrument):
+            try:
+                asyncio.run(
+                    guarneri_namespace_loader(
+                        yaml_device_file=device_path,
+                        instrument=device_manager,
+                        oregistry=device_manager.devices,
+                        main=True,
+                    )
+                )
+            except Exception as e:
+                logger.error("Error loading device file %s: %s", device_path, str(e))
+        elif device_manager == "happi":
+            pass
+        elif device_manager is None:
+            logger.error("No device_manager provided.")
+            return
     if pause > 0:
         logger.debug(
             "Waiting %s seconds for slow objects to connect.",
@@ -111,7 +127,9 @@ def make_devices(
         time.sleep(pause)
 
 
-async def namespace_loader(yaml_device_file, main=True):
+async def guarneri_namespace_loader(
+    yaml_device_file, instrument=None, oregistry=None, main=True
+):
     """
     Load our ophyd-style controls as described in a YAML file into the main namespace.
 
@@ -145,6 +163,91 @@ async def namespace_loader(yaml_device_file, main=True):
             setattr(main_namespace, label, oregistry[label])
 
 
-instrument = guarneri.Instrument({})  # singleton
-oregistry = instrument.devices
-"""Registry of all ophyd-style Devices and Signals."""
+def set_instrument(instrument):
+    """Set the global instrument instance"""
+    global _instrument
+    _instrument = instrument
+
+
+def with_registry(func: Callable) -> Callable:
+    """
+    Decorator that provides access to the instrument's device registry.
+    Injects 'oregistry' as the first argument to the decorated function.
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if _instrument is None:
+            raise RuntimeError("Instrument not set. Call set_instrument() first.")
+        return func(_instrument.devices, *args, **kwargs)
+
+    return wrapper
+
+
+def with_devices(*device_names: str):
+    """
+    Decorator that injects specific devices as keyword arguments.
+
+    Usage:
+    @with_devices("sim_det", "sim_motor")
+    def my_plan(span=5, **devices):
+        sim_det = devices["sim_det"]
+        sim_motor = devices["sim_motor"]
+        # ... your plan code
+
+    Or with unpacking:
+    @with_devices("sim_det", "sim_motor")
+    def my_plan(span=5, sim_det=None, sim_motor=None, **kwargs):
+        # sim_det and sim_motor are automatically injected
+        # ... your plan code
+    """
+
+    def decorator(func: Callable) -> Callable:
+        @functools.wraps(func)
+        def wrapper(*args, **kwargs):
+            if _instrument is None:
+                raise RuntimeError("Instrument not set. Call set_instrument() first.")
+
+            # Inject devices as keyword arguments
+            for device_name in device_names:
+                if device_name in _instrument.devices:
+                    kwargs[device_name] = _instrument.devices[device_name]
+                else:
+                    print(f"Warning: Device '{device_name}' not found in registry")
+
+            return func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator
+
+
+def auto_inject_devices(func: Callable) -> Callable:
+    """
+    Decorator that automatically injects all devices from the registry
+    that match parameter names in the function signature.
+
+    Usage:
+    @auto_inject_devices
+    def my_plan(span=5, sim_det=None, sim_motor=None):
+        # sim_det and sim_motor are automatically injected if they exist in registry
+        # ... your plan code
+    """
+    import inspect
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if _instrument is None:
+            raise RuntimeError("Instrument not set. Call set_instrument() first.")
+
+        # Get function signature
+        sig = inspect.signature(func)
+
+        # Inject devices that match parameter names
+        for param_name in sig.parameters:
+            if param_name in _instrument.devices and param_name not in kwargs:
+                kwargs[param_name] = _instrument.devices[param_name]
+
+        return func(*args, **kwargs)
+
+    return wrapper
