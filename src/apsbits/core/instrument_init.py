@@ -30,7 +30,7 @@ logger.bsdev(__file__)
 MAIN_NAMESPACE = "__main__"
 
 _instrument = None
-
+oregistry = None
 
 def make_devices(
     *,
@@ -163,25 +163,14 @@ async def guarneri_namespace_loader(
             setattr(main_namespace, label, oregistry[label])
 
 
-def set_instrument(instrument):
+def init_instrument():
     """Set the global instrument instance"""
     global _instrument
-    _instrument = instrument
+    global oregistry
+    _instrument = guarneri.Instrument({})
+    oregistry = _instrument.devices
 
-
-def with_registry(func: Callable) -> Callable:
-    """
-    Decorator that provides access to the instrument's device registry.
-    Injects 'oregistry' as the first argument to the decorated function.
-    """
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        if _instrument is None:
-            raise RuntimeError("Instrument not set. Call set_instrument() first.")
-        return func(_instrument.devices, *args, **kwargs)
-
-    return wrapper
+    return _instrument, oregistry
 
 
 def with_devices(*device_names: str):
@@ -222,6 +211,20 @@ def with_devices(*device_names: str):
     return decorator
 
 
+def with_registry(func: Callable) -> Callable:
+    """
+    Decorator that provides access to the instrument's device registry.
+    Injects 'oregistry' as the first argument to the decorated function.
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if _instrument is None:
+            raise RuntimeError("Instrument not set. Call set_instrument() first.")
+        return func(_instrument.devices, *args, **kwargs)
+
+    return wrapper
+
 def auto_inject_devices(func: Callable) -> Callable:
     """
     Decorator that automatically injects all devices from the registry
@@ -251,3 +254,5 @@ def auto_inject_devices(func: Callable) -> Callable:
         return func(*args, **kwargs)
 
     return wrapper
+
+init_instrument()
