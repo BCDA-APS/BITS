@@ -153,6 +153,11 @@ async def guarneri_namespace_loader(
     except NotConnected as exc:
         logger.exception(exc)
 
+    try:
+        await instrument.connect()
+    except NotConnected as exc:
+        logger.exception(exc)
+
     logger.info("Devices loaded in %.3f s.", time.time() - t0)
     if main:
         main_namespace = sys.modules[MAIN_NAMESPACE]
@@ -264,6 +269,3 @@ def auto_inject_devices(func: Callable) -> Callable:
         return func(*args, **kwargs)
 
     return wrapper
-
-
-# init_instrument("guarneri")

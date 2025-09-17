@@ -43,6 +43,7 @@ dependencies = [
     "guarneri",
     "ipython",
     "jupyterlab",
+    "matplotlib",
     "ophyd-async",
     "ophyd-registry",
     "ophyd",
