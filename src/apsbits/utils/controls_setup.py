@@ -5,7 +5,6 @@ EPICS & ophyd related setup
 .. autosummary::
     ~connect_scan_id_pv
     ~epics_scan_id_source
-    ~oregistry
     ~set_control_layer
     ~set_timeouts
 """
@@ -17,8 +16,6 @@ from typing import Optional
 import ophyd
 from ophyd.signal import EpicsSignalBase
 
-from apsbits.core.instrument_init import oregistry
-
 logger = logging.getLogger(__name__)
 
 DEFAULT_CONTROL_LAYER = "PyEpics"
@@ -26,7 +23,7 @@ DEFAULT_TIMEOUT = 60  # default used next...
 SCAN_ID_SIGNAL_NAME = "scan_id_epics"
 
 
-def epics_scan_id_source(_md: dict[str, Any]) -> int:
+def epics_scan_id_source(_md: dict[str, Any], oregistry: Any) -> int:
     """
     Callback function for RunEngine.  Returns *next* scan_id to be used.
 
@@ -46,7 +43,9 @@ def epics_scan_id_source(_md: dict[str, Any]) -> int:
     return new_scan_id
 
 
-def connect_scan_id_pv(RE: Any, pv: Optional[str] = None) -> None:
+def connect_scan_id_pv(RE: Any,
+                       pv: Optional[str] = None,
+                       oregistry: Optional[Any] = None) -> None:
     """
     Define a PV to use for the RunEngine's `scan_id`.
     """
@@ -63,7 +62,7 @@ def connect_scan_id_pv(RE: Any, pv: Optional[str] = None) -> None:
 
     # Setup the RunEngine to call epics_scan_id_source()
     # which uses the EPICS PV to provide the scan_id.
-    RE.scan_id_source = epics_scan_id_source
+    RE.scan_id_source = epics_scan_id_source(oregistry)
 
     scan_id_epics.wait_for_connection()
     try:

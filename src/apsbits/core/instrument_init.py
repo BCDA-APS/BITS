@@ -62,7 +62,6 @@ def make_devices(
 
     path: str | pathlib.Path | None
     """
-    # oregistry = instrument.devices
     logger.debug("(Re)Loading local control objects.")
     if file is None:
         logger.error("No custom device file provided.")
@@ -163,14 +162,21 @@ async def guarneri_namespace_loader(
             setattr(main_namespace, label, oregistry[label])
 
 
-def init_instrument():
+def init_instrument(device_manager):
     """Set the global instrument instance"""
-    global _instrument
-    global oregistry
-    _instrument = guarneri.Instrument({})
-    oregistry = _instrument.devices
-
-    return _instrument, oregistry
+    if device_manager == "guarneri" or None:
+        global _instrument
+        global oregistry
+        _instrument = guarneri.Instrument({})
+        oregistry = _instrument.devices
+        return _instrument, oregistry
+    elif device_manager == "happi":
+        logger.info("Happi device manager not implemented yet.")
+        return None, None
+    elif device_manager is None:
+        logger.error("No device_manager provided.\n Please state if you want to use " \
+        "guarneri or happi")
+        return None, None
 
 
 def with_devices(*device_names: str):
@@ -255,4 +261,4 @@ def auto_inject_devices(func: Callable) -> Callable:
 
     return wrapper
 
-init_instrument()
+# init_instrument("guarneri")
