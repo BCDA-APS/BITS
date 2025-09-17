@@ -32,6 +32,7 @@ MAIN_NAMESPACE = "__main__"
 _instrument = None
 oregistry = None
 
+
 def make_devices(
     *,
     pause: float = 1,
@@ -174,8 +175,10 @@ def init_instrument(device_manager):
         logger.info("Happi device manager not implemented yet.")
         return None, None
     elif device_manager is None:
-        logger.error("No device_manager provided.\n Please state if you want to use " \
-        "guarneri or happi")
+        logger.error(
+            "No device_manager provided.\n Please state if you want to use "
+            "guarneri or happi"
+        )
         return None, None
 
 
@@ -231,6 +234,7 @@ def with_registry(func: Callable) -> Callable:
 
     return wrapper
 
+
 def auto_inject_devices(func: Callable) -> Callable:
     """
     Decorator that automatically injects all devices from the registry
@@ -260,5 +264,6 @@ def auto_inject_devices(func: Callable) -> Callable:
         return func(*args, **kwargs)
 
     return wrapper
+
 
 # init_instrument("guarneri")

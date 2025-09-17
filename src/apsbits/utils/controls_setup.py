@@ -43,9 +43,9 @@ def epics_scan_id_source(_md: dict[str, Any], oregistry: Any) -> int:
     return new_scan_id
 
 
-def connect_scan_id_pv(RE: Any,
-                       pv: Optional[str] = None,
-                       oregistry: Optional[Any] = None) -> None:
+def connect_scan_id_pv(
+    RE: Any, pv: Optional[str] = None, oregistry: Optional[Any] = None
+) -> None:
     """
     Define a PV to use for the RunEngine's `scan_id`.
     """
