@@ -69,10 +69,9 @@ profile_name = iconfig.get("TILED_PROFILE_NAME")
 client = from_profile(profile_name)
 tiled_client = from_profile()
 
-RE, sd = init_RE(iconfig,
-                 bec_instance=bec,
-                 cat_instance=cat,
-                 tiled_client_instance=tiled_client)
+RE, sd = init_RE(
+    iconfig, bec_instance=bec, cat_instance=cat, tiled_client_instance=tiled_client
+)
 
 
 # Optional Nexus callback block
