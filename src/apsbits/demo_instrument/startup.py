@@ -127,3 +127,4 @@ setup_baseline_stream(sd, oregistry, connect=False)
 from .plans.sim_plans import sim_count_plan  # noqa: E402, F401
 from .plans.sim_plans import sim_print_plan  # noqa: E402, F401
 from .plans.sim_plans import sim_rel_scan_plan  # noqa: E402, F401
+from .plans.sim_plans import sim_scan_plan  # noqa: E402, F401
