@@ -187,44 +187,6 @@ def init_instrument(device_manager):
         return None, None
 
 
-def with_devices(*device_names: str):
-    """
-    Decorator that injects specific devices as keyword arguments.
-
-    Usage:
-    @with_devices("sim_det", "sim_motor")
-    def my_plan(span=5, **devices):
-        sim_det = devices["sim_det"]
-        sim_motor = devices["sim_motor"]
-        # ... your plan code
-
-    Or with unpacking:
-    @with_devices("sim_det", "sim_motor")
-    def my_plan(span=5, sim_det=None, sim_motor=None, **kwargs):
-        # sim_det and sim_motor are automatically injected
-        # ... your plan code
-    """
-
-    def decorator(func: Callable) -> Callable:
-        @functools.wraps(func)
-        def wrapper(*args, **kwargs):
-            if _instrument is None:
-                raise RuntimeError("Instrument not set. Call set_instrument() first.")
-
-            # Inject devices as keyword arguments
-            for device_name in device_names:
-                if device_name in _instrument.devices:
-                    kwargs[device_name] = _instrument.devices[device_name]
-                else:
-                    print(f"Warning: Device '{device_name}' not found in registry")
-
-            return func(*args, **kwargs)
-
-        return wrapper
-
-    return decorator
-
-
 def with_registry(func: Callable) -> Callable:
     """
     Decorator that provides access to the instrument's device registry.
@@ -236,36 +198,5 @@ def with_registry(func: Callable) -> Callable:
         if _instrument is None:
             raise RuntimeError("Instrument not set. Call set_instrument() first.")
         return func(_instrument.devices, *args, **kwargs)
-
-    return wrapper
-
-
-def auto_inject_devices(func: Callable) -> Callable:
-    """
-    Decorator that automatically injects all devices from the registry
-    that match parameter names in the function signature.
-
-    Usage:
-    @auto_inject_devices
-    def my_plan(span=5, sim_det=None, sim_motor=None):
-        # sim_det and sim_motor are automatically injected if they exist in registry
-        # ... your plan code
-    """
-    import inspect
-
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        if _instrument is None:
-            raise RuntimeError("Instrument not set. Call set_instrument() first.")
-
-        # Get function signature
-        sig = inspect.signature(func)
-
-        # Inject devices that match parameter names
-        for param_name in sig.parameters:
-            if param_name in _instrument.devices and param_name not in kwargs:
-                kwargs[param_name] = _instrument.devices[param_name]
-
-        return func(*args, **kwargs)
 
     return wrapper
