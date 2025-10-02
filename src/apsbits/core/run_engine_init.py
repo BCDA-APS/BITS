@@ -34,6 +34,7 @@ def init_RE(
     bec_instance: Optional[Any] = None,
     cat_instance: Optional[Any] = None,
     tiled_client_instance: Optional[Any] = None,
+    oregistry: Optional[Any] = None,
     **kwargs: Any,
 ) -> tuple[bluesky.RunEngine, bluesky.SupplementalData]:
     """
@@ -117,7 +118,7 @@ def init_RE(
         RE.subscribe(bec_instance)
 
     scan_id_pv = iconfig.get("RUN_ENGINE", {}).get("SCAN_ID_PV")
-    connect_scan_id_pv(RE, pv=scan_id_pv)
+    connect_scan_id_pv(RE, pv=scan_id_pv, oregistry=oregistry)
 
     if re_config.get("USE_PROGRESS_BAR", True):
         # Add a progress bar.

@@ -12,22 +12,25 @@ Construct ophyd-style devices from simple specifications in YAML files.
 """
 
 import asyncio
+import functools
 import logging
 import pathlib
 import sys
 import time
+from typing import Callable
 
 import guarneri
-import yaml
 from ophyd_async.core import NotConnected
 
 from apsbits.utils.config_loaders import get_config
-from apsbits.utils.helper_functions import dynamic_import
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
 
 MAIN_NAMESPACE = "__main__"
+
+_instrument = None
+oregistry = None
 
 
 def make_devices(
@@ -36,6 +39,7 @@ def make_devices(
     clear: bool = True,
     file: str,
     path: str | pathlib.Path | None = None,
+    device_manager=None,
 ):
     """
     (plan stub) Create the ophyd-style controls for this instrument.
@@ -59,9 +63,7 @@ def make_devices(
 
     path: str | pathlib.Path | None
     """
-
     logger.debug("(Re)Loading local control objects.")
-
     if file is None:
         logger.error("No custom device file provided.")
         return
@@ -78,18 +80,18 @@ def make_devices(
         logger.info(f"Using custom path for device files: {path}")
         configs_path = pathlib.Path(path)
 
-    if clear:
+    if clear and isinstance(device_manager, guarneri.Instrument):
         main_namespace = sys.modules[MAIN_NAMESPACE]
 
         # Clear the oregistry and remove any devices registered previously.
-        for dev_name in oregistry.device_names:
+        for dev_name in device_manager.devices.device_names:
             # Remove from __main__ namespace any devices registered previously.
             if hasattr(main_namespace, dev_name):
                 logger.info("Removing %r from %r", dev_name, MAIN_NAMESPACE)
 
                 delattr(main_namespace, dev_name)
 
-        oregistry.clear()
+        device_manager.devices.clear()
 
     logger.debug("Loading device files: %r", file)
 
@@ -100,11 +102,23 @@ def make_devices(
 
     else:
         logger.info("Loading device file: %s", device_path)
-        try:
-            asyncio.run(namespace_loader(yaml_device_file=device_path, main=True))
-        except Exception as e:
-            logger.error("Error loading device file %s: %s", device_path, str(e))
-
+        if isinstance(device_manager, guarneri.Instrument):
+            try:
+                asyncio.run(
+                    guarneri_namespace_loader(
+                        yaml_device_file=device_path,
+                        instrument=device_manager,
+                        oregistry=device_manager.devices,
+                        main=True,
+                    )
+                )
+            except Exception as e:
+                logger.error("Error loading device file %s: %s", device_path, str(e))
+        elif device_manager == "happi":
+            pass
+        elif device_manager is None:
+            logger.error("No device_manager provided.")
+            return
     if pause > 0:
         logger.debug(
             "Waiting %s seconds for slow objects to connect.",
@@ -113,7 +127,9 @@ def make_devices(
         time.sleep(pause)
 
 
-async def namespace_loader(yaml_device_file, main=True):
+async def guarneri_namespace_loader(
+    yaml_device_file, instrument=None, oregistry=None, main=True
+):
     """
     Load our ophyd-style controls as described in a YAML file into the main namespace.
 
@@ -129,8 +145,13 @@ async def namespace_loader(yaml_device_file, main=True):
     t0 = time.time()
 
     current_devices = oregistry.device_names
-
-    instrument.load(yaml_device_file)
+    # Convert pathlib.Path to string - this fixes the guarneri bug
+    yaml_file_path = str(yaml_device_file)
+    instrument.load(yaml_file_path)
+    try:
+        await instrument.connect()
+    except NotConnected as exc:
+        logger.exception(exc)
 
     try:
         await instrument.connect()
@@ -147,77 +168,35 @@ async def namespace_loader(yaml_device_file, main=True):
             setattr(main_namespace, label, oregistry[label])
 
 
-class Instrument(guarneri.Instrument):
-    """Custom YAML loader for guarneri."""
-
-    def parse_yaml_file(self, config_file: pathlib.Path | str) -> list[dict]:
-        """Read device configurations from YAML format file."""
-        if isinstance(config_file, str):
-            config_file = pathlib.Path(config_file)
-
-        def yaml_parser(creator, specs):
-            if creator not in self.device_classes:
-                try:
-                    self.device_classes[creator] = dynamic_import(creator)
-                except ImportError as e:
-                    logger.error(
-                        "Failed to import device creator '%s': %s", creator, str(e)
-                    )
-                    raise
-                except AttributeError as e:
-                    logger.error(
-                        "Device creator '%s' not found in module: %s", creator, str(e)
-                    )
-                    raise
-            entries = [
-                {
-                    "device_class": creator,
-                    "args": (),  # ALL specs are kwargs!
-                    "kwargs": table,
-                }
-                for table in specs
-            ]
-            return entries
-
-        try:
-            with open(config_file, "r") as f:
-                config_data = yaml.safe_load(f)
-        except FileNotFoundError:
-            logger.error("Device configuration file not found: %s", config_file)
-            raise
-        except PermissionError:
-            logger.error("Permission denied reading device file: %s", config_file)
-            raise
-        except yaml.YAMLError as e:
-            logger.error(
-                "YAML parsing error in device file %s: %s", config_file, str(e)
-            )
-            raise
-
-        if not isinstance(config_data, dict):
-            logger.error(
-                "Invalid device file format in %s: expected dictionary, got %s",
-                config_file,
-                type(config_data).__name__,
-            )
-            raise ValueError(f"Invalid device file format in {config_file}")
-
-        try:
-            devices = [
-                device
-                # parse the file using already loaded config data
-                for k, v in config_data.items()
-                # each support type (class, factory, function, ...)
-                for device in yaml_parser(k, v)
-            ]
-        except Exception as e:
-            logger.error(
-                "Error parsing device specifications in %s: %s", config_file, str(e)
-            )
-            raise
-        return devices
+def init_instrument(device_manager):
+    """Set the global instrument instance"""
+    if device_manager == "guarneri" or None:
+        global _instrument
+        global oregistry
+        _instrument = guarneri.Instrument({})
+        oregistry = _instrument.devices
+        return _instrument, oregistry
+    elif device_manager == "happi":
+        logger.info("Happi device manager not implemented yet.")
+        return None, None
+    elif device_manager is None:
+        logger.error(
+            "No device_manager provided.\n Please state if you want to use "
+            "guarneri or happi"
+        )
+        return None, None
 
 
-instrument = Instrument({})  # singleton
-oregistry = instrument.devices
-"""Registry of all ophyd-style Devices and Signals."""
+def with_registry(func: Callable) -> Callable:
+    """
+    Decorator that provides access to the instrument's device registry.
+    Injects 'oregistry' as the first argument to the decorated function.
+    """
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        if _instrument is None:
+            raise RuntimeError("Instrument not set. Call set_instrument() first.")
+        return func(_instrument.devices, *args, **kwargs)
+
+    return wrapper

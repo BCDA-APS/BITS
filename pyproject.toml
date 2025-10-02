@@ -52,7 +52,7 @@ dependencies = [
     "pysumreg",
     "qtpy",
     "tiled[all]",
-     "tomli-w",
+    "tomli-w",
 ]
 
 [project.optional-dependencies]
