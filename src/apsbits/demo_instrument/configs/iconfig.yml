@@ -5,11 +5,8 @@ ICONFIG_VERSION: 2.0.1
 
 # Add additional configuration for use with your instrument.
 
-#### Name of Tiled profile to use.
-TILED_PROFILE_NAME: temp
-
 ### The short name for the databroker catalog.
-DATABROKER_CATALOG: &databroker_catalog temp
+DATABROKER_CATALOG: temp
 
 ### RunEngine configuration
 RUN_ENGINE:
@@ -17,7 +14,6 @@ RUN_ENGINE:
         beamline_id: demo_instrument
         instrument_name: Most Glorious Scientific Instrument
         proposal_id: commissioning
-        databroker_catalog: *databroker_catalog
 
     ### EPICS PV to use for the `scan_id`.
     ### Default: `RE.md["scan_id"]` (not using an EPICS PV)

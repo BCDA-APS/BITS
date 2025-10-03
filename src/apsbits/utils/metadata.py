@@ -80,9 +80,7 @@ def get_md_path(iconfig: Optional[dict[str, Any]] = None) -> Optional[str]:
     return str(path)
 
 
-def re_metadata(
-    iconfig: Optional[dict[str, Any]] = None, cat: Optional[Any] = None
-) -> dict[str, Any]:
+def re_metadata(iconfig: Optional[dict[str, Any]] = None) -> dict[str, Any]:
     """Programmatic metadata for the RunEngine."""
     md = {
         "login_id": f"{USERNAME}@{HOSTNAME}",
@@ -90,8 +88,6 @@ def re_metadata(
         "pid": os.getpid(),
         "iconfig": iconfig,
     }
-    if cat is not None:
-        md["databroker_catalog"] = cat.name
     if iconfig is not None:
         RE_CONFIG = iconfig.get("RUN_ENGINE", {})
         md.update(RE_CONFIG.get("DEFAULT_METADATA", {}))

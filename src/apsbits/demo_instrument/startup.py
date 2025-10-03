@@ -62,20 +62,14 @@ oregistry.clear()
 register_bluesky_magics()
 
 # Bluesky initialization block
-# Instrument = ...
-# oregistry = ...
-# oregistry.clear()
+
+if iconfig.get("TILED_PROFILE_NAME", {}):
+    profile_name = iconfig.get("TILED_PROFILE_NAME")
+    tiled_client = from_profile(profile_name)
+
 bec, peaks = init_bec_peaks(iconfig)
 cat = init_catalog(iconfig)
-
-profile_name = iconfig.get("TILED_PROFILE_NAME")
-client = from_profile(profile_name)
-tiled_client = from_profile()
-
-RE, sd = init_RE(
-    iconfig, bec_instance=bec, cat_instance=cat, tiled_client_instance=tiled_client
-)
-
+RE, sd = init_RE(iconfig, subscribers=[bec, cat])
 
 # Optional Nexus callback block
 # delete this block if not using Nexus
