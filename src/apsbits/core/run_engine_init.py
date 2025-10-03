@@ -10,6 +10,7 @@ settings based on a configuration dictionary.
     ~init_RE
 """
 
+import collections
 import logging
 from typing import Any
 from typing import Optional
@@ -32,7 +33,7 @@ logger.bsdev(__file__)
 
 
 def init_RE(
-    iconfig: dict[str, Any],
+    iconfig: collections.abc.Mapping[str, Any],
     subscribers: Optional[list[Any]] = None,
     oregistry: Optional[Any] = None,
     **kwargs: Any,
