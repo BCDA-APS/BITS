@@ -48,7 +48,7 @@ def init_RE(
     adds a progress bar and metadata updates from a catalog or BestEffortCallback.
 
     Parameters:
-        iconfig (Dict[str, Any]): Configuration dictionary with keys including:
+        iconfig (collections.abc.Mapping[str, Any]): Configuration dictionary with keys:
             - "RUN_ENGINE": A dict containing RunEngine-specific settings.
             - "DEFAULT_METADATA": (Optional) Default metadata for the RunEngine.
             - "USE_PROGRESS_BAR": (Optional) Boolean flag to enable the progress bar.
