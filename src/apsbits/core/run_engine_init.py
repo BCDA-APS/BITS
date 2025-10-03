@@ -126,18 +126,40 @@ def init_RE(
 
             # Check if it's a tiled client
             if isinstance(instance, tiled.client.container.Container):
-                tiled_writer = TiledWriter(instance)
-                RE.subscribe(tiled_writer)
+                try:
+                    tiled_writer = TiledWriter(instance)
+                    RE.subscribe(tiled_writer)
+                except Exception:
+                    logger.exception(
+                        "Failed to subscribe TiledWriter for tiled client %r (type=%s)",
+                        instance,
+                        type(instance).__name__,
+                    )
 
             # Check if it's a databroker catalog
             elif isinstance(
                 instance, databroker._drivers.msgpack.BlueskyMsgpackCatalog
             ):
-                RE.subscribe(instance.v1.insert)
+                try:
+                    RE.subscribe(instance.v1.insert)
+                except Exception:
+                    logger.exception(
+                        "Failed to subscribe databroker catalog insert for %r "
+                        "(type=%s)",
+                        instance,
+                        type(instance).__name__,
+                    )
 
             # Default: subscribe directly (handles BEC and other callbacks)
             else:
-                RE.subscribe(instance)
+                try:
+                    RE.subscribe(instance)
+                except Exception:
+                    logger.exception(
+                        "Failed to subscribe callback %r (type=%s)",
+                        instance,
+                        type(instance).__name__,
+                    )
 
     scan_id_pv = iconfig.get("RUN_ENGINE", {}).get("SCAN_ID_PV")
     connect_scan_id_pv(RE, pv=scan_id_pv, oregistry=oregistry)
