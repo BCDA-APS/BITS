@@ -53,7 +53,7 @@ def init_RE(
             - "DEFAULT_METADATA": (Optional) Default metadata for the RunEngine.
             - "USE_PROGRESS_BAR": (Optional) Boolean flag to enable the progress bar.
             - "OPHYD": A dict for control layer settings
-            (e.g., "CONTROL_LAYER" and "TIMEOUTS").
+            (other keys are possible, such as: "CONTROL_LAYER" and "TIMEOUTS").
 
         subscribers : Optional[list[Any]], default=None
             List of callback instances to subscribe to the RunEngine.
