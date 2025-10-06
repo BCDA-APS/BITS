@@ -7,6 +7,7 @@ RunEngine Metadata
     ~re_metadata
 """
 
+import collections
 import getpass
 import logging
 import os
@@ -16,20 +17,16 @@ import sys
 from typing import Any
 from typing import Optional
 
-# import apstools
 import bluesky
 import databroker
 import epics
 import h5py
-
-# import intake
 import matplotlib
 import numpy
 import ophyd
 import pyRestTable
 import pysumreg
 
-# import spec2nexus
 import apsbits
 
 logger = logging.getLogger(__name__)
@@ -56,7 +53,7 @@ VERSIONS = dict(
 )
 
 
-def get_md_path(iconfig: Optional[dict[str, Any]] = None) -> Optional[str]:
+def get_md_path(iconfig: collections.abc.Mapping[str, Any] = None) -> Optional[str]:
     """
     Get path for RE metadata.
 
@@ -80,7 +77,7 @@ def get_md_path(iconfig: Optional[dict[str, Any]] = None) -> Optional[str]:
     return str(path)
 
 
-def re_metadata(iconfig: Optional[dict[str, Any]] = None) -> dict[str, Any]:
+def re_metadata(iconfig: collections.abc.Mapping[str, Any] = None) -> dict[str, Any]:
     """Programmatic metadata for the RunEngine."""
     md = {
         "login_id": f"{USERNAME}@{HOSTNAME}",
