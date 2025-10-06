@@ -53,7 +53,7 @@ VERSIONS = dict(
 )
 
 
-def get_md_path(iconfig: collections.abc.Mapping[str, Any] = None) -> Optional[str]:
+def get_md_path(iconfig: collections.abc.Mapping[str, Any] | None = None) -> str | None:
     """
     Get path for RE metadata.
 
@@ -77,7 +77,7 @@ def get_md_path(iconfig: collections.abc.Mapping[str, Any] = None) -> Optional[s
     return str(path)
 
 
-def re_metadata(iconfig: collections.abc.Mapping[str, Any] = None) -> dict[str, Any]:
+def re_metadata(iconfig: collections.abc.Mapping[str, Any] = {}) -> dict[str, Any]:
     """Programmatic metadata for the RunEngine."""
     md = {
         "login_id": f"{USERNAME}@{HOSTNAME}",
@@ -85,9 +85,9 @@ def re_metadata(iconfig: collections.abc.Mapping[str, Any] = None) -> dict[str, 
         "pid": os.getpid(),
         "iconfig": iconfig,
     }
-    if iconfig is not None:
-        RE_CONFIG = iconfig.get("RUN_ENGINE", {})
-        md.update(RE_CONFIG.get("DEFAULT_METADATA", {}))
+
+    RE_CONFIG = iconfig.get("RUN_ENGINE", {})
+    md.update(RE_CONFIG.get("DEFAULT_METADATA", {}))
 
     conda_prefix = os.environ.get("CONDA_PREFIX")
     if conda_prefix is not None:

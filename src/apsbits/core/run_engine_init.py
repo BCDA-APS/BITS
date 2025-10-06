@@ -61,7 +61,8 @@ def init_RE(
             it appropriately:
             - Tiled clients are wrapped in TiledWriter before subscription
             - Databroker catalogs subscribe via their v1.insert method
-            - BestEffortCallback and other callbacks subscribe according to their documentation.
+            - BestEffortCallback and other callbacks subscribe according to their
+              documentation.
             Order in the list does not matter.
 
         oregistry : Optional[Any], default=None
