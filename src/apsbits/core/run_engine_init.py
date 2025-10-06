@@ -136,6 +136,7 @@ def init_RE(
                         instance,
                         type(instance).__name__,
                     )
+                    raise
 
             # Check if it's a databroker catalog
             elif isinstance(
@@ -150,6 +151,7 @@ def init_RE(
                         instance,
                         type(instance).__name__,
                     )
+                    raise
 
             # Default: subscribe directly (handles BEC and other callbacks)
             else:
@@ -161,6 +163,7 @@ def init_RE(
                         instance,
                         type(instance).__name__,
                     )
+                    raise
 
     scan_id_pv = iconfig.get("RUN_ENGINE", {}).get("SCAN_ID_PV")
     connect_scan_id_pv(RE, pv=scan_id_pv, oregistry=oregistry)
