@@ -15,7 +15,6 @@ import pathlib
 import socket
 import sys
 from typing import Any
-from typing import Optional
 
 import bluesky
 import databroker
