@@ -10,11 +10,14 @@ settings based on a configuration dictionary.
     ~init_RE
 """
 
+import collections
 import logging
 from typing import Any
 from typing import Optional
 
 import bluesky
+import databroker
+import tiled
 from bluesky.callbacks.tiled_writer import TiledWriter
 from bluesky.utils import ProgressBarManager
 
@@ -30,10 +33,8 @@ logger.bsdev(__file__)
 
 
 def init_RE(
-    iconfig: dict[str, Any],
-    bec_instance: Optional[Any] = None,
-    cat_instance: Optional[Any] = None,
-    tiled_client_instance: Optional[Any] = None,
+    iconfig: collections.abc.Mapping[str, Any],
+    subscribers: Optional[list[Any]] = None,
     oregistry: Optional[Any] = None,
     **kwargs: Any,
 ) -> tuple[bluesky.RunEngine, bluesky.SupplementalData]:
@@ -47,16 +48,26 @@ def init_RE(
     adds a progress bar and metadata updates from a catalog or BestEffortCallback.
 
     Parameters:
-        iconfig (Dict[str, Any]): Configuration dictionary with keys including:
+        iconfig (collections.abc.Mapping[str, Any]): Configuration dictionary with keys:
             - "RUN_ENGINE": A dict containing RunEngine-specific settings.
             - "DEFAULT_METADATA": (Optional) Default metadata for the RunEngine.
             - "USE_PROGRESS_BAR": (Optional) Boolean flag to enable the progress bar.
             - "OPHYD": A dict for control layer settings
-            (e.g., "CONTROL_LAYER" and "TIMEOUTS").
-        bec_instance (Optional[Any]): Instance of BestEffortCallback for subscribing
-            to the RunEngine. Defaults to None.
-        cat_instance (Optional[Any]): Instance of a databroker catalog for subscribing
-            to the RunEngine. Defaults to None.
+            (other keys are possible, such as: "CONTROL_LAYER", "TIMEOUTS", etc...).
+
+        subscribers : Optional[list[Any]], default=None
+            List of callback instances to subscribe to the RunEngine.
+            The function auto-detects the type of each instance and subscribes
+            it appropriately:
+            - Tiled clients are wrapped in TiledWriter before subscription
+            - Databroker catalogs subscribe via their v1.insert method
+            - BestEffortCallback and other callbacks subscribe according to their
+              documentation.
+            Order in the list does not matter.
+
+        oregistry : Optional[Any], default=None
+            Registry instance for scan ID PV connection.
+
         **kwargs: Additional keyword arguments passed to the RunEngine constructor.
             For example, run_returns_result=True.
 
@@ -81,9 +92,6 @@ def init_RE(
 
     RE = bluesky.RunEngine(**kwargs)
     """The Bluesky RunEngine object."""
-
-    tiled_writer = TiledWriter(tiled_client_instance)
-    RE.subscribe(tiled_writer)
 
     sd = bluesky.SupplementalData()
     """Supplemental data providing baselines and monitors for the RunEngine."""
@@ -110,12 +118,53 @@ def init_RE(
                 f"without saving metadata to disk. {error=}\n"
             )
 
-    if cat_instance is not None:
-        RE.md.update(re_metadata(iconfig, cat_instance))  # programmatic metadata
-        RE.md.update(re_config.get("DEFAULT_METADATA", {}))
-        RE.subscribe(cat_instance.v1.insert)
-    if bec_instance is not None:
-        RE.subscribe(bec_instance)
+    RE.md.update(re_config.get("DEFAULT_METADATA", {}))
+    RE.md.update(re_metadata(iconfig))  # programmatic metadata
+
+    if subscribers:
+        for instance in subscribers:
+            if instance is None:
+                continue
+
+            # Check if it's a tiled client
+            if isinstance(instance, tiled.client.container.Container):
+                try:
+                    tiled_writer = TiledWriter(instance)
+                    RE.subscribe(tiled_writer)
+                except Exception:
+                    logger.exception(
+                        "Failed to subscribe TiledWriter for tiled client %r (type=%s)",
+                        instance,
+                        type(instance).__name__,
+                    )
+                    raise
+
+            # Check if it's a databroker catalog
+            elif isinstance(
+                instance, databroker._drivers.msgpack.BlueskyMsgpackCatalog
+            ):
+                try:
+                    RE.subscribe(instance.v1.insert)
+                except Exception:
+                    logger.exception(
+                        "Failed to subscribe databroker catalog insert for %r "
+                        "(type=%s)",
+                        instance,
+                        type(instance).__name__,
+                    )
+                    raise
+
+            # Default: subscribe directly (handles BEC and other callbacks)
+            else:
+                try:
+                    RE.subscribe(instance)
+                except Exception:
+                    logger.exception(
+                        "Failed to subscribe callback %r (type=%s)",
+                        instance,
+                        type(instance).__name__,
+                    )
+                    raise
 
     scan_id_pv = iconfig.get("RUN_ENGINE", {}).get("SCAN_ID_PV")
     connect_scan_id_pv(RE, pv=scan_id_pv, oregistry=oregistry)
