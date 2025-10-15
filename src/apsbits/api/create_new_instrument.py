@@ -46,6 +46,7 @@ def create_qserver_script(scripts_dir: Path, name: str) -> None:
     # Make script executable
     os.chmod(new_script_path, new_script_path.stat().st_mode | 0o755)
 
+
 def copy_instrument(destination_dir: Path) -> None:
     """
     Copy template directory to the destination.
@@ -103,7 +104,7 @@ def main() -> None:
 
     new_instrument_dir: Path = main_path / "src" / args.name
 
-    qserver_dir: Path = main_path / "src" / args.name/ "qserver"
+    qserver_dir: Path = main_path / "src" / args.name / "qserver"
 
     scripts_dir: Path = main_path / "scripts"
 
