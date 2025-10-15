@@ -15,6 +15,27 @@ import sys
 from pathlib import Path
 
 
+def create_qserver_script(scripts_dir: Path, name: str) -> None:
+    """
+    Create a qserver script file in the scripts directory.
+    """
+
+    new_script_path = scripts_dir / "qs_host.sh"
+
+    # Read script contents
+    with open(new_script_path, "r") as src:
+        script_contents = src.read()
+
+    # Replace demo package name with new instrument name
+    updated_contents = script_contents.replace("demo_instrument", name)
+
+    # Write updated script
+    with open(new_script_path, "w") as dest:
+        dest.write(updated_contents)
+
+    # Make script executable
+    os.chmod(new_script_path, new_script_path.stat().st_mode | 0o755)
+
 def copy_instrument(destination_dir: Path) -> None:
     """
     Copy template directory to the destination.
@@ -31,19 +52,10 @@ def copy_instrument(destination_dir: Path) -> None:
     shutil.copytree(str(demo_template_path), str(destination_dir))
 
 
-def create_qserver(qserver_dir: Path, name: str) -> None:
+def edit_qserver(qserver_dir: Path, name: str) -> None:
     """
     Create a qserver config file in the destination directory.
     """
-
-    demo_qserver_path: Path = (
-        Path(__file__).resolve().parent.parent / "demo_qserver"
-    ).resolve()
-
-    os.makedirs(qserver_dir, exist_ok=True)
-    # Copy all yml files from demo_qserver to destination qserver dir
-    for yml_file in demo_qserver_path.glob("*"):
-        shutil.copy2(yml_file, qserver_dir)
 
     # Update startup module in qs-config.yml
     qs_config_path = qserver_dir / "qs-config.yml"
@@ -57,22 +69,6 @@ def create_qserver(qserver_dir: Path, name: str) -> None:
 
     with open(qs_config_path, "w") as f:
         f.write(updated_contents)
-
-    new_script_path = qserver_dir / "qs_host.sh"
-
-    # Read script contents
-    with open(new_script_path, "r") as src:
-        script_contents = src.read()
-
-    # Replace demo package name with new instrument name
-    updated_contents = script_contents.replace("demo_instrument", name)
-
-    # Write updated script
-    with open(new_script_path, "w") as dest:
-        dest.write(updated_contents)
-
-    # Make script executable
-    os.chmod(new_script_path, new_script_path.stat().st_mode | 0o755)
 
 
 def main() -> None:
@@ -97,12 +93,18 @@ def main() -> None:
 
     new_instrument_dir: Path = main_path / "src" / args.name
 
-    new_qserver_dir: Path = main_path / "src" / f"{args.name}_qserver"
+    qserver_dir: Path = main_path / "src" / args.name/ "qserver"
+
+    scripts_dir: Path = main_path / "scripts"
 
     print(
         f"Creating instrument '{args.name}' from demo_instrument into \
         '{new_instrument_dir}'."
     )
+
+    if not scripts_dir.exists():
+        print("Error: Destination scripts directory does not exist.", file=sys.stderr)
+        sys.exit(1)
 
     if new_instrument_dir.exists():
         print(f"Error: Destination '{new_instrument_dir}' exists.", file=sys.stderr)
@@ -116,8 +118,14 @@ def main() -> None:
         sys.exit(1)
 
     try:
-        create_qserver(new_qserver_dir, args.name)
-        print(f"Qserver config created in '{new_qserver_dir}'.")
+        edit_qserver(qserver_dir, args.name)
+        print(f"Qserver config created in '{qserver_dir}'.")
+    except Exception as exc:
+        print(f"Error creating qserver config: {exc}", file=sys.stderr)
+        sys.exit(1)
+    try:
+        create_qserver_script(scripts_dir, args.name)
+        print(f"Qserver config created in '{scripts_dir}'.")
     except Exception as exc:
         print(f"Error creating qserver config: {exc}", file=sys.stderr)
         sys.exit(1)
