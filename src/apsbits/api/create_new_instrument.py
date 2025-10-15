@@ -20,7 +20,17 @@ def create_qserver_script(scripts_dir: Path, name: str) -> None:
     Create a qserver script file in the scripts directory.
     """
 
-    new_script_path = scripts_dir / "qs_host.sh"
+    demo_scripts_path: Path = (
+        Path(__file__).resolve().parent.parent / "demo_scripts"
+    ).resolve()
+
+    for scripts_file in demo_scripts_path.glob("*"):
+        shutil.copy2(scripts_file, scripts_dir)
+
+    # Rename qs_host.sh to include the instrument name
+    os.rename(scripts_dir / "qs_host.sh", scripts_dir / f"{name}_qs_host.sh")
+
+    new_script_path = scripts_dir / f"{name}_qs_host.sh"
 
     # Read script contents
     with open(new_script_path, "r") as src:
@@ -125,9 +135,9 @@ def main() -> None:
         sys.exit(1)
     try:
         create_qserver_script(scripts_dir, args.name)
-        print(f"Qserver config created in '{scripts_dir}'.")
+        print(f"Qserver script created in '{scripts_dir}'.")
     except Exception as exc:
-        print(f"Error creating qserver config: {exc}", file=sys.stderr)
+        print(f"Error creating qserver script: {exc}", file=sys.stderr)
         sys.exit(1)
 
     print(f"Instrument '{args.name}' created.")
