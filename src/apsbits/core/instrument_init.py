@@ -150,10 +150,6 @@ async def guarneri_namespace_loader(
     # Convert pathlib.Path to string - this fixes the guarneri bug
     yaml_file_path = str(yaml_device_file)
     instrument.load(yaml_file_path)
-    try:
-        await instrument.connect()
-    except NotConnected as exc:
-        logger.exception(exc)
 
     try:
         await instrument.connect()
