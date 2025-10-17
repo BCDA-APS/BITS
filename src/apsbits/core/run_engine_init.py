@@ -141,7 +141,7 @@ def init_RE(
 
             # Check if it's a databroker catalog
             elif isinstance(
-                instance, databroker._drivers.msgpack.BlueskyMsgpackCatalog
+                instance, (databroker._drivers.msgpack.BlueskyMsgpackCatalog, databroker._drivers.mongo_normalized.BlueskyMongoCatalog)
             ):
                 try:
                     RE.subscribe(instance.v1.insert)
