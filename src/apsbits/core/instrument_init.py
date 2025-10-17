@@ -42,7 +42,8 @@ def make_devices(
     device_manager=None,
 ):
     """
-    (plan stub) Create the ophyd-style controls for this instrument.
+    Initialize ophyd-style devices using a device manager, connect them,
+    then make them part of main namespace.
 
     EXAMPLE::
 
