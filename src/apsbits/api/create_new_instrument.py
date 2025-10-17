@@ -63,7 +63,7 @@ def copy_instrument(destination_dir: Path) -> None:
     shutil.copytree(str(demo_template_path), str(destination_dir))
 
 
-def edit_qserver(qserver_dir: Path, name: str) -> None:
+def edit_qserver_folder(qserver_dir: Path, name: str) -> None:
     """
     Create a qserver config file in the destination directory.
     """
@@ -127,19 +127,20 @@ def main() -> None:
     except Exception as exc:
         print(f"Error copying instrument: {exc}", file=sys.stderr)
         sys.exit(1)
-
-    try:
-        edit_qserver(qserver_dir, args.name)
-        print(f"Qserver config created in '{qserver_dir}'.")
-    except Exception as exc:
-        print(f"Error creating qserver config: {exc}", file=sys.stderr)
-        sys.exit(1)
     try:
         create_qserver_script(scripts_dir, args.name)
         print(f"Qserver script created in '{scripts_dir}'.")
     except Exception as exc:
         print(f"Error creating qserver script: {exc}", file=sys.stderr)
         sys.exit(1)
+
+    try:
+        edit_qserver_folder(qserver_dir, args.name)
+        print(f"Qserver config created in '{qserver_dir}'.")
+    except Exception as exc:
+        print(f"Error creating qserver config: {exc}", file=sys.stderr)
+        sys.exit(1)
+
 
     print(f"Instrument '{args.name}' created.")
 
