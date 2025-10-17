@@ -6,7 +6,6 @@ RunEngine Metadata
     ~get_md_path
     ~re_metadata
 """
-
 import collections
 import getpass
 import logging
@@ -16,6 +15,7 @@ import socket
 import sys
 from typing import Any
 
+import apstools
 import bluesky
 import databroker
 import epics
@@ -36,19 +36,17 @@ HOSTNAME = socket.gethostname() or "localhost"
 USERNAME = getpass.getuser() or "Bluesky user"
 VERSIONS = dict(
     apsbits=apsbits.__version__,
-    # apstools=apstools.__version__,
+    apstools=apstools.__version__,
     bluesky=bluesky.__version__,
     databroker=databroker.__version__,
     epics=epics.__version__,
     h5py=h5py.__version__,
-    # intake=intake.__version__,
     matplotlib=matplotlib.__version__,
     numpy=numpy.__version__,
     ophyd=ophyd.__version__,
     pyRestTable=pyRestTable.__version__,
     pysumreg=pysumreg.__version__,
     python=sys.version.split(" ")[0],
-    # spec2nexus=spec2nexus.__version__,
 )
 
 
