@@ -148,9 +148,7 @@ async def guarneri_namespace_loader(
     t0 = time.time()
 
     current_devices = oregistry.device_names
-    # Convert pathlib.Path to string - this fixes the guarneri bug
-    yaml_file_path = str(yaml_device_file)
-    instrument.load(yaml_file_path)
+    instrument.load(yaml_device_file)
 
     try:
         await instrument.connect()
