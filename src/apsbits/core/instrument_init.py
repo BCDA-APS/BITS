@@ -60,6 +60,8 @@ def make_devices(
         Optional path to a custom YAML/TOML file containing device configurations.
         If provided, this file will be used instead of the default iconfig.yml.
         If None (default), uses the standard iconfig.yml configuration.
+    device_manager:
+        The device manager to use. Options are 'guarneri' (default) or 'happi' (A WIP).
 
     path: str | pathlib.Path | None
     """
