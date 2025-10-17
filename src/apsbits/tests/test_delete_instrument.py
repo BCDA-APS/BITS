@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from pytest_mock.plugin import MockerFixture
 
 from apsbits.api.create_new_instrument import copy_instrument
-from apsbits.api.create_new_instrument import create_qserver
+from apsbits.api.create_new_instrument import create_qserver_script
 from apsbits.api.create_new_instrument import main as create_main
 from apsbits.api.delete_instrument import delete_instrument
 from apsbits.api.delete_instrument import get_instrument_paths
@@ -366,7 +366,7 @@ def test_create_qserver(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> No
     name = "new_instrument"
 
     # Create the qserver
-    create_qserver(qserver_dir, name)
+    create_qserver_script(qserver_dir, name)
 
     # Verify the directory was created
     assert qserver_dir.exists()

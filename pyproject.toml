@@ -54,7 +54,6 @@ dependencies = [
     "tiled[all]",
     "tomli-w",
     "tomli",
-    "pre-commit"
 ]
 
 [project.optional-dependencies]
