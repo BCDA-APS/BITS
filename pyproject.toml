@@ -53,7 +53,8 @@ dependencies = [
     "qtpy",
     "tiled[all]",
     "tomli-w",
-    "tomli"
+    "tomli",
+    "pre-commit"
 ]
 
 [project.optional-dependencies]

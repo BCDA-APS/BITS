@@ -141,7 +141,6 @@ def main() -> None:
         print(f"Error creating qserver config: {exc}", file=sys.stderr)
         sys.exit(1)
 
-
     print(f"Instrument '{args.name}' created.")
 
 
