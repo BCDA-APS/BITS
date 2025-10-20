@@ -4,21 +4,6 @@ Test that instrument can be started.
 Here is just enough testing to get a CI workflow started. More are possible.
 """
 
-import time
-
-import pytest
-
-from apsbits.demo_instrument.plans.sim_plans import sim_count_plan
-from apsbits.demo_instrument.plans.sim_plans import sim_print_plan
-from apsbits.demo_instrument.plans.sim_plans import sim_rel_scan_plan
-from apsbits.demo_instrument.startup import bec
-from apsbits.demo_instrument.startup import cat
-from apsbits.demo_instrument.startup import peaks
-from apsbits.demo_instrument.startup import running_in_queueserver
-from apsbits.demo_instrument.startup import sd
-from apsbits.demo_instrument.startup import specwriter
-from apsbits.utils.config_loaders import get_config
-
 
 # def test_startup(runengine_with_devices: object) -> None:
 #     """
