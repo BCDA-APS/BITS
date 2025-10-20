@@ -4,7 +4,7 @@ Test to check if the make_devices function works as expected.
 
 import logging
 
-from apsbits.demo_instrument.startup import RE
+from apsbits.core.instrument_init import init_instrument
 from apsbits.demo_instrument.startup import make_devices
 
 
@@ -15,9 +15,10 @@ def test_make_devices_file_name(caplog):
 
     # Set the log level to capture INFO messages
     caplog.set_level(logging.INFO)
+    instrument, oregistry = init_instrument("guarneri")
 
     # Run your function
-    RE(make_devices(file="devices.yml"))
+    make_devices(file="devices.yml", device_manager=instrument)
 
     # Expected device names
     expected_devices = ["sim_motor", "shutter", "sim_det"]
