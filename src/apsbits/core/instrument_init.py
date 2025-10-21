@@ -197,9 +197,13 @@ def with_registry(func: Callable) -> Callable:
     """
 
     @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        if _instrument is None:
-            raise RuntimeError("Instrument not set. Call set_instrument() first.")
-        return func(_instrument.devices, *args, **kwargs)
+    def wrapper(*args, **kwargs, oregistry=None):
+        if oregistry is None:
+            if _instrument is None:
+                raise RuntimeError("Instrument not set. Call set_instrument() first.")
+             else:
+                 oregistry = _instrument.devices
+        if 
+        return func(*args, **kwargs, oregistry=oregistry)
 
     return wrapper
