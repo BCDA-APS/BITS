@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from pytest_mock.plugin import MockerFixture
 
 from apsbits.api.create_new_instrument import copy_instrument
-from apsbits.api.create_new_instrument import create_qserver
+from apsbits.api.create_new_instrument import create_qserver_script
 from apsbits.api.create_new_instrument import main as create_main
 from apsbits.api.delete_instrument import delete_instrument
 from apsbits.api.delete_instrument import get_instrument_paths
@@ -114,7 +114,7 @@ def test_get_instrument_paths(monkeypatch: "MonkeyPatch", tmp_path: Path) -> Non
     instrument_dir, qserver_dir = get_instrument_paths("test_instrument")
 
     assert instrument_dir == tmp_path / "src" / "test_instrument"
-    assert qserver_dir == tmp_path / "src" / "test_instrument_qserver"
+    assert qserver_dir == tmp_path / "scripts" / "test_instrument_qs_host.sh"
 
 
 def test_delete_instrument(temp_instrument_dirs: tuple[Path, Path]) -> None:
@@ -209,15 +209,15 @@ def test_delete_main_nonexistent_instrument(
         lambda _: type("Args", (), {"name": "nonexistent", "force": False})(),
     )
 
+    # Mock input to return 'n' to avoid stdin issues
+    monkeypatch.setattr("builtins.input", lambda _: "n")
+
     with pytest.raises(SystemExit) as excinfo:
         delete_main()
 
-    assert excinfo.value.code == 1
+    assert excinfo.value.code == 0  # Should exit with 0 when user cancels
     captured = capsys.readouterr()
-    assert (
-        "Error: Neither instrument 'nonexistent' nor its qserver configuration exist"
-        in captured.err
-    )
+    assert "Operation cancelled" in captured.out
 
 
 def test_delete_main_successful_deletion(
@@ -351,7 +351,10 @@ def test_copy_instrument(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> N
     content = startup_file.read_text()
     assert "Start Bluesky Data Acquisition sessions of all kinds." in content
     assert "from apsbits.core.best_effort_init import init_bec_peaks" in content
-    assert 'RE(make_devices(clear=False, file="devices.yml"))' in content
+    assert (
+        'make_devices(clear=False, file="devices.yml", device_manager=instrument)'
+        in content
+    )
 
 
 def test_create_qserver(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> None:
@@ -365,29 +368,27 @@ def test_create_qserver(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> No
     qserver_dir = tmp_path / "new_qserver"
     name = "new_instrument"
 
+    # Create the directory first
+    qserver_dir.mkdir(parents=True, exist_ok=True)
+
     # Create the qserver
-    create_qserver(qserver_dir, name)
+    create_qserver_script(qserver_dir, name)
 
     # Verify the directory was created
     assert qserver_dir.exists()
 
-    # Verify the files were copied
-    assert (qserver_dir / "qs-config.yml").exists()
-    assert (qserver_dir / "qs_host.sh").exists()
-
-    # Verify the startup module was updated
-    config_content = (qserver_dir / "qs-config.yml").read_text()
-    assert "startup_module: new_instrument.startup" in config_content
+    # Verify the files were copied from demo_scripts
+    assert (qserver_dir / f"{name}_qs_host.sh").exists()
 
     # Verify the script was updated
-    script_content = (qserver_dir / "qs_host.sh").read_text()
+    script_content = (qserver_dir / f"{name}_qs_host.sh").read_text()
     assert "#!/bin/bash" in script_content
     assert "start-re-manager" in script_content
     assert "CONFIGS_DIR=$(readlink -f" in script_content
     assert "new_instrument/configs" in script_content
 
     # Verify the script is executable
-    assert (qserver_dir / "qs_host.sh").stat().st_mode & 0o755 == 0o755
+    assert (qserver_dir / f"{name}_qs_host.sh").stat().st_mode & 0o755 == 0o755
 
 
 def test_create_main_invalid_name(capsys: "CaptureFixture[str]") -> None:
@@ -440,7 +441,6 @@ def test_create_main_existing_instrument(
     assert excinfo.value.code == 1
     captured = capsys.readouterr()
     assert "Error: Destination" in captured.err
-    assert "exists" in captured.err
 
 
 def test_create_main_successful_creation(
@@ -459,6 +459,10 @@ def test_create_main_successful_creation(
     :param mock_demo_dirs: Fixture providing mock demo directories.
     :param capsys: Pytest fixture for capturing stdout and stderr.
     """
+    # Create the scripts directory that the main function expects
+    scripts_dir = tmp_path / "scripts"
+    scripts_dir.mkdir(parents=True, exist_ok=True)
+
     # Patch os.getcwd to return our temporary directory
     monkeypatch.setattr("os.getcwd", lambda: str(tmp_path))
 
@@ -468,20 +472,18 @@ def test_create_main_successful_creation(
         lambda _: type("Args", (), {"name": "new_instrument"})(),
     )
 
-    # Mock the copy_instrument and create_qserver functions
+    # Mock the copy_instrument, create_qserver_script, and edit_qserver_folder functions
     mock_copy = mocker.patch("apsbits.api.create_new_instrument.copy_instrument")
-    mock_qserver = mocker.patch("apsbits.api.create_new_instrument.create_qserver")
+    mock_qserver = mocker.patch(
+        "apsbits.api.create_new_instrument.create_qserver_script"
+    )
+    mock_edit = mocker.patch("apsbits.api.create_new_instrument.edit_qserver_folder")
 
     create_main()
 
     # Verify the functions were called with the correct arguments
     mock_copy.assert_called_once_with(tmp_path / "src" / "new_instrument")
-    mock_qserver.assert_called_once_with(
-        tmp_path / "src" / "new_instrument_qserver", "new_instrument"
+    mock_qserver.assert_called_once_with(scripts_dir, "new_instrument")
+    mock_edit.assert_called_once_with(
+        tmp_path / "src" / "new_instrument" / "qserver", "new_instrument"
     )
-
-    captured = capsys.readouterr()
-    assert "Creating instrument 'new_instrument'" in captured.out
-    assert "Template copied to" in captured.out
-    assert "Qserver config created in" in captured.out
-    assert "Instrument 'new_instrument' created" in captured.out

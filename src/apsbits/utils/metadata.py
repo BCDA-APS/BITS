@@ -7,6 +7,7 @@ RunEngine Metadata
     ~re_metadata
 """
 
+import collections
 import getpass
 import logging
 import os
@@ -14,20 +15,23 @@ import pathlib
 import socket
 import sys
 from typing import Any
-from typing import Optional
 
-import apstools
 import bluesky
 import databroker
 import epics
 import h5py
-import intake
 import matplotlib
 import numpy
 import ophyd
 import pyRestTable
 import pysumreg
-import spec2nexus
+
+try:
+    import apstools
+
+    APSTOOLS_VERSION = apstools.__version__
+except ImportError:
+    APSTOOLS_VERSION = "(not installed)"
 
 import apsbits
 
@@ -39,23 +43,21 @@ HOSTNAME = socket.gethostname() or "localhost"
 USERNAME = getpass.getuser() or "Bluesky user"
 VERSIONS = dict(
     apsbits=apsbits.__version__,
-    apstools=apstools.__version__,
+    apstools=APSTOOLS_VERSION,
     bluesky=bluesky.__version__,
     databroker=databroker.__version__,
     epics=epics.__version__,
     h5py=h5py.__version__,
-    intake=intake.__version__,
     matplotlib=matplotlib.__version__,
     numpy=numpy.__version__,
     ophyd=ophyd.__version__,
     pyRestTable=pyRestTable.__version__,
     pysumreg=pysumreg.__version__,
     python=sys.version.split(" ")[0],
-    spec2nexus=spec2nexus.__version__,
 )
 
 
-def get_md_path(iconfig: Optional[dict[str, Any]] = None) -> Optional[str]:
+def get_md_path(iconfig: collections.abc.Mapping[str, Any] | None = None) -> str | None:
     """
     Get path for RE metadata.
 
@@ -79,9 +81,7 @@ def get_md_path(iconfig: Optional[dict[str, Any]] = None) -> Optional[str]:
     return str(path)
 
 
-def re_metadata(
-    iconfig: Optional[dict[str, Any]] = None, cat: Optional[Any] = None
-) -> dict[str, Any]:
+def re_metadata(iconfig: collections.abc.Mapping[str, Any] = {}) -> dict[str, Any]:
     """Programmatic metadata for the RunEngine."""
     md = {
         "login_id": f"{USERNAME}@{HOSTNAME}",
@@ -89,11 +89,9 @@ def re_metadata(
         "pid": os.getpid(),
         "iconfig": iconfig,
     }
-    if cat is not None:
-        md["databroker_catalog"] = cat.name
-    if iconfig is not None:
-        RE_CONFIG = iconfig.get("RUN_ENGINE", {})
-        md.update(RE_CONFIG.get("DEFAULT_METADATA", {}))
+
+    RE_CONFIG = iconfig.get("RUN_ENGINE", {})
+    md.update(RE_CONFIG.get("DEFAULT_METADATA", {}))
 
     conda_prefix = os.environ.get("CONDA_PREFIX")
     if conda_prefix is not None:

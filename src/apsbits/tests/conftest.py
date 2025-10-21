@@ -35,5 +35,10 @@ def runengine_with_devices() -> Any:
     iconfig_path = instrument_path / "configs" / "iconfig.yml"
     load_config(iconfig_path)
 
-    RE(make_devices(file="devices.yml"))
+    # Initialize instrument and make devices
+    from apsbits.core.instrument_init import init_instrument
+
+    instrument, oregistry = init_instrument("guarneri")
+    make_devices(file="devices.yml", device_manager=instrument)
+
     return RE

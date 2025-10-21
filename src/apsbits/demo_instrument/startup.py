@@ -13,12 +13,13 @@ Includes:
 import logging
 from pathlib import Path
 
+# Core Functions
+from tiled.client import from_profile
+
 from apsbits.core.best_effort_init import init_bec_peaks
 from apsbits.core.catalog_init import init_catalog
+from apsbits.core.instrument_init import init_instrument
 from apsbits.core.instrument_init import make_devices
-from apsbits.core.instrument_init import oregistry
-
-# Core Functions
 from apsbits.core.run_engine_init import init_RE
 
 # Utility functions
@@ -48,6 +49,9 @@ configure_logging(extra_logging_configs_path=extra_logging_configs_path)
 logger = logging.getLogger(__name__)
 logger.info("Starting Instrument with iconfig: %s", iconfig_path)
 
+# initialize instrument
+instrument, oregistry = init_instrument("guarneri")
+
 # Discard oregistry items loaded above.
 oregistry.clear()
 
@@ -58,13 +62,14 @@ oregistry.clear()
 register_bluesky_magics()
 
 # Bluesky initialization block
-# Instrument = ...
-# oregistry = ...
-# oregistry.clear()
+
+if iconfig.get("TILED_PROFILE_NAME", {}):
+    profile_name = iconfig.get("TILED_PROFILE_NAME")
+    tiled_client = from_profile(profile_name)
+
 bec, peaks = init_bec_peaks(iconfig)
 cat = init_catalog(iconfig)
-RE, sd = init_RE(iconfig, bec_instance=bec, cat_instance=cat)
-
+RE, sd = init_RE(iconfig, subscribers=[bec, cat])
 
 # Optional Nexus callback block
 # delete this block if not using Nexus
@@ -98,17 +103,16 @@ else:
     from bluesky import plan_stubs as bps  # noqa: F401
     from bluesky import plans as bp  # noqa: F401
 
-    # Import demo plans
-    from .plans.sim_plans import sim_count_plan  # noqa: F401
-    from .plans.sim_plans import sim_print_plan  # noqa: F401
-    from .plans.sim_plans import sim_rel_scan_plan  # noqa: F401
-
-# Experiment specific logic, device and plan loading
-RE(make_devices(clear=False, file="devices.yml"))  # Create the devices.
+# Experiment specific logic, device and plan loading. # Create the devices.
+make_devices(clear=False, file="devices.yml", device_manager=instrument)
 
 if host_on_aps_subnet():
-    RE(make_devices(clear=False, file="devices_aps_only.yml"))
+    make_devices(clear=False, file="devices_aps_only.yml", device_manager=instrument)
 
 # Setup baseline stream with connect=False is default
 # Devices with the label 'baseline' will be added to the baseline stream.
 setup_baseline_stream(sd, oregistry, connect=False)
+
+from .plans.sim_plans import sim_count_plan  # noqa: E402, F401
+from .plans.sim_plans import sim_print_plan  # noqa: E402, F401
+from .plans.sim_plans import sim_rel_scan_plan  # noqa: E402, F401

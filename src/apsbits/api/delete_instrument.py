@@ -39,17 +39,17 @@ def get_instrument_paths(name: str) -> tuple[Path, Path]:
     """
     main_path: Path = Path(os.getcwd()).resolve()
     instrument_dir: Path = main_path / "src" / name
-    qserver_dir: Path = main_path / "src" / f"{name}_qserver"
+    qserver_script_dir: Path = main_path / "scripts" / f"{name}_qs_host.sh"
 
-    return instrument_dir, qserver_dir
+    return instrument_dir, qserver_script_dir
 
 
-def delete_instrument(instrument_dir: Path, qserver_dir: Path) -> None:
+def delete_instrument(instrument_dir: Path, qserver_script_dir: Path) -> None:
     """
     Move the instrument and qserver directories to a .deleted directory.
 
     :param instrument_dir: Path to the instrument directory.
-    :param qserver_dir: Path to the qserver directory.
+    :param qserver_script_dir: Path to the qserver script.
     :return: None
     """
     main_path: Path = Path(os.getcwd()).resolve()
@@ -73,13 +73,15 @@ def delete_instrument(instrument_dir: Path, qserver_dir: Path) -> None:
     else:
         print(f"Warning: Instrument directory '{instrument_dir}' does not exist.")
 
-    if qserver_dir.exists():
+    if qserver_script_dir.exists():
         # Create a new path with timestamp
-        new_qserver_path = deleted_dir / f"{qserver_dir.name}_{timestamp}"
-        shutil.move(str(qserver_dir), str(new_qserver_path))
-        print(f"Qserver directory '{qserver_dir}' moved to '{new_qserver_path}'.")
+        new_qserver_path = deleted_dir / f"{qserver_script_dir.name}_{timestamp}"
+        shutil.move(str(qserver_script_dir), str(new_qserver_path))
+        print(
+            f"Qserver directory '{qserver_script_dir}' moved to '{new_qserver_path}'."
+        )
     else:
-        print(f"Warning: Qserver directory '{qserver_dir}' does not exist.")
+        print(f"Warning: Qserver directory '{qserver_script_dir}' does not exist.")
 
 
 def main() -> None:
@@ -109,13 +111,13 @@ def main() -> None:
 
     instrument_dir, qserver_dir = get_instrument_paths(args.name)
 
-    if not instrument_dir.exists() and not qserver_dir.exists():
-        msg = (
-            f"Error: Neither instrument '{args.name}' nor its qserver "
-            f"configuration exist."
-        )
+    if not instrument_dir.exists():
+        msg = f"Error: Instrument '{args.name}' does not exist."
         print(msg, file=sys.stderr)
-        sys.exit(1)
+
+    if not qserver_dir.exists():
+        msg = f"Error: Qserver script for instrument '{args.name}' does not exist."
+        print(msg, file=sys.stderr)
 
     if not args.force:
         prompt = (
