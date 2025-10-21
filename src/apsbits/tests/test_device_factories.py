@@ -1,15 +1,11 @@
 """Test the device factories."""
 
-from typing import TYPE_CHECKING
 from typing import Any
 
 import pytest
 
 from apsbits.utils.sim_creator import motors
 from apsbits.utils.sim_creator import predefined_device
-
-if TYPE_CHECKING:
-    pass
 
 
 @pytest.mark.parametrize(
