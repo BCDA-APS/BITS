@@ -16,7 +16,6 @@ import socket
 import sys
 from typing import Any
 
-import apstools
 import bluesky
 import databroker
 import epics
@@ -26,6 +25,13 @@ import numpy
 import ophyd
 import pyRestTable
 import pysumreg
+
+try:
+    import apstools
+
+    APSTOOLS_VERSION = apstools.__version__
+except ImportError:
+    APSTOOLS_VERSION = "(not installed)"
 
 import apsbits
 
@@ -37,7 +43,7 @@ HOSTNAME = socket.gethostname() or "localhost"
 USERNAME = getpass.getuser() or "Bluesky user"
 VERSIONS = dict(
     apsbits=apsbits.__version__,
-    apstools=apstools.__version__,
+    apstools=APSTOOLS_VERSION,
     bluesky=bluesky.__version__,
     databroker=databroker.__version__,
     epics=epics.__version__,
