@@ -74,11 +74,6 @@ def make_devices(
     if path is None:
         iconfig = get_config()
         instrument_path_config = iconfig.get("INSTRUMENT_PATH")
-        # if instrument_path_config is None:
-        #     # Fallback: use the demo_instrument path relative to this file
-        #     instrument_path = pathlib.Path(__file__).parent.parent / "demo_instrument"
-        # else:
-        # instrument_path = pathlib.Path(instrument_path_config).parent
         instrument_path = pathlib.Path(instrument_path_config).parent
         configs_path = instrument_path / "configs"
         logger.info(
