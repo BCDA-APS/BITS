@@ -4,10 +4,6 @@ apsbits.utils.sim_creator.predefined_device:
 - { creator: ophyd.sim.motor, name: sim_motor }
 - { creator: ophyd.sim.noisy_det, name: sim_det }
 
-apstools.devices.SimulatedApsPssShutterWithStatus:
-- name: shutter
-  labels: [ "shutters", "baseline" ]
-
 ## THIS ARE EXAMPLES OF OTHER DEVICES THAT YOU CAN USE
 # ophyd.Signal:
 # - name: test
