@@ -73,7 +73,12 @@ def make_devices(
 
     if path is None:
         iconfig = get_config()
-        instrument_path = pathlib.Path(iconfig.get("INSTRUMENT_PATH")).parent
+        instrument_path_config = iconfig.get("INSTRUMENT_PATH")
+        if instrument_path_config is None:
+            # Fallback: use the demo_instrument path relative to this file
+            instrument_path = pathlib.Path(__file__).parent.parent / "demo_instrument"
+        else:
+            instrument_path = pathlib.Path(instrument_path_config).parent
         configs_path = instrument_path / "configs"
         logger.info(
             f"No custom path provided.\n\nUsing default configs path: {configs_path}"
@@ -117,6 +122,7 @@ def make_devices(
                 )
             except Exception as e:
                 logger.error("Error loading device file %s: %s", device_path, str(e))
+                logger.error("Full exception:", exc_info=True)
         elif device_manager == "happi":
             pass
         elif device_manager is None:
