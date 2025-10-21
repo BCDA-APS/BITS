@@ -40,7 +40,7 @@ dependencies = [
     "bluesky",
     "caproto",
     "databroker==1.2.5",
-    "guarneri",
+    "guarneri>=0.4.0",
     "ipython",
     "jupyterlab",
     "matplotlib",
