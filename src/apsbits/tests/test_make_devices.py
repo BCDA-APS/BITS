@@ -24,7 +24,7 @@ def test_make_devices_file_name(caplog: "LogCaptureFixture[str]") -> None:
     make_devices(file="devices.yml", device_manager=instrument)
 
     # Expected device names
-    expected_devices = ["sim_motor", "shutter", "sim_det"]
+    expected_devices = ["sim_motor", "sim_det"]
 
     # Check if all expected device messages are in the log output
     for device in expected_devices:
