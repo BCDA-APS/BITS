@@ -35,6 +35,9 @@ class EpicsScanIdSource:
         scan_id_epics = ophyd.EpicsSignal("IOC:scan_id", name="scan_id_epics")
         source = EpicsScanIdSource(scan_id_epics)
         RE.scan_id_source = source.epics_scan_id_source
+
+    .. autosummary::
+        ~epics_scan_id_source
     """
 
     def __init__(self, signal: ophyd.Signal):

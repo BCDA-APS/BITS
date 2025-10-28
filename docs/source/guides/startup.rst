@@ -70,7 +70,7 @@ Bluesky Initialization
 
     bec, peaks = init_bec_peaks(iconfig)
     cat = init_catalog(iconfig)
-    RE, sd = init_RE(iconfig, bec_instance=bec, cat_instance=cat)
+    RE, sd = init_RE(iconfig, subscribers=[bec, cat])
 
 This block initializes:
 * Best Effort Callback (BEC) and peak finding
