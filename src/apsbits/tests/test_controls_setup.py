@@ -68,6 +68,8 @@ def test_EpicsScanIdSource(signal, initial, context, ioc):
         signal.wait_for_connection()
         assert signal.connected
 
+        assert isinstance(ioc, dict)
+
         original_scan_id = signal.get()
         assert isinstance(original_scan_id, int)
 
