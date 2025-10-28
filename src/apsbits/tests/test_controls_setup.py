@@ -3,7 +3,6 @@ Test the controls_setup module.
 """
 
 from contextlib import nullcontext as does_not_raise
-from typing import Any
 
 import ophyd
 import pytest
@@ -13,10 +12,11 @@ from bluesky import plans as bp
 from apsbits.utils.controls_setup import EpicsScanIdSource
 
 
-@pytest.fixture(scope="session")
-def scanid_pv() -> Any:
-    """Provide a scan id PV in an IOC for testing."""
-    pass
+def test_ioc(ioc):
+    """Test the soft IOC."""
+    signal = ophyd.EpicsSignal("test:scan_id", name="signal", connection_timeout=4)
+    signal.wait_for_connection()
+    assert signal.get() == -10
 
 
 @pytest.mark.parametrize(
@@ -30,13 +30,13 @@ def scanid_pv() -> Any:
         ),
         pytest.param(
             ophyd.Signal(name="signal", value=-10),
-            110,
+            1234,
             does_not_raise(),
             id="non-zero scan_id",
         ),
         pytest.param(
             ophyd.Signal(name="signal", value=-10),
-            -110,
+            -654321,
             does_not_raise(),
             id="negative scan_id",
         ),
@@ -50,21 +50,19 @@ def scanid_pv() -> Any:
             pytest.raises(TimeoutError, match="could not connect"),
             id="non-existing EPICS PV",
         ),
-        # # TODO: needs working caproto 'ioc' fixture.
-        # # ConnectionTimeoutError: Failed to connect with 'test:scan_id'
-        # pytest.param(
-        #     ophyd.EpicsSignal(
-        #         "test:scan_id",
-        #         name="signal",
-        #         connection_timeout=2,
-        #     ),
-        #     0,
-        #     does_not_raise(),
-        #     id="existing EPICS PV",
-        # ),
+        pytest.param(
+            ophyd.EpicsSignal(
+                "test:scan_id",
+                name="signal",
+                connection_timeout=2,
+            ),
+            0,
+            does_not_raise(),
+            id="existing EPICS PV",
+        ),
     ],
 )
-def test_EpicsScanIdSource(signal, initial, context):
+def test_EpicsScanIdSource(signal, initial, context, ioc):
     """Test the EpicsScanIdSource class"""
     with context:
         signal.wait_for_connection()
@@ -90,7 +88,7 @@ def test_EpicsScanIdSource(signal, initial, context):
         assert signal.get() == original_scan_id  # still not updated by RE yet
 
         signal.put(initial)  # update the signal directly
-        assert signal.get() == initial  # and confirm
+        assert signal.get(use_monitor=False) == initial  # and confirm
 
         RE(bp.count([detector]))  # advances the scan_id
         assert "scan_id" in RE.md
