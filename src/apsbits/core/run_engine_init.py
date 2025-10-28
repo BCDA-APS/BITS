@@ -36,7 +36,6 @@ logger.bsdev(__file__)
 def init_RE(
     iconfig: collections.abc.Mapping[str, Any],
     subscribers: Optional[list[Any]] = None,
-    oregistry: Optional[Any] = None,
     **kwargs: Any,
 ) -> tuple[bluesky.RunEngine, bluesky.SupplementalData]:
     """
@@ -65,9 +64,6 @@ def init_RE(
             - BestEffortCallback and other callbacks subscribe according to their
               documentation.
             Order in the list does not matter.
-
-        oregistry : Optional[Any], default=None
-            Registry instance for scan ID PV connection.
 
         **kwargs: Additional keyword arguments passed to the RunEngine constructor.
             For example, run_returns_result=True.
@@ -172,7 +168,7 @@ def init_RE(
                     raise
 
     scan_id_pv = iconfig.get("RUN_ENGINE", {}).get("SCAN_ID_PV")
-    connect_scan_id_pv(RE, pv=scan_id_pv, oregistry=oregistry)
+    connect_scan_id_pv(RE, pv=scan_id_pv)
 
     if re_config.get("USE_PROGRESS_BAR", True):
         # Add a progress bar.
