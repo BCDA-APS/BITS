@@ -79,17 +79,13 @@ def ioc():  # FIXME: IOC and PV is not found by test code
     }
 
     loop = asyncio.new_event_loop()
-    thread_exc = {}
-    # Will be populated after run() starts with a mapping containing server info,
-    # specifically the selected tcp_port (CA server port) used for connecting.
+    thread_exc = {}  # fliled after run() starts with mapping of server info
     started = {}
 
     def run_ioc():
         asyncio.set_event_loop(loop)
         try:
-            # run(opts) returns when IOC is running; it exposes server info via its return
             info = loop.run_until_complete(run(opts))
-            # run() may return None in some builds; try to read opts['tcp_port'] if set later.
             started["info"] = info
         except Exception as exc:
             thread_exc["exc"] = exc
@@ -114,16 +110,19 @@ def ioc():  # FIXME: IOC and PV is not found by test code
     if thread_exc.get("exc"):
         raise thread_exc["exc"]
 
-    # If run() returned server info use that. Otherwise fallback: try to obtain tcp_port from opts
+    # If run() returned server info use that. Otherwise fallback:
+    # try to obtain tcp_port from opts
     tcp_port = None
     if started.get("info") and isinstance(started["info"], dict):
         tcp_port = started["info"].get("tcp_port")
     if tcp_port is None:
-        # If run() didn't return info, inspect opts -- caproto may have set tcp_port to actual value.
+        # If run() didn't return info, inspect opts
+        # -- caproto may have set tcp_port to actual value.
         tcp_port = opts.get("tcp_port") or 0
 
-    # If tcp_port is 0 here, discovery by broadcast may still work; to be deterministic,
-    # let the test use the host/port returned by the IOC via CA search. Provide prefix and port.
+    # If tcp_port is 0 here, discovery by broadcast may still work;
+    # to be deterministic, let the test use the host/port returned
+    # by the IOC via CA search. Provide prefix and port.
     yield {"prefix": "test:", "ca_port": tcp_port, "host": "127.0.0.1"}
 
     # Teardown: stop IOC by stopping its event loop thread
