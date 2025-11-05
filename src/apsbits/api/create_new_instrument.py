@@ -30,21 +30,46 @@ def create_qserver_script(scripts_dir: Path, name: str) -> None:
     # Rename qs_host.sh to include the instrument name
     os.rename(scripts_dir / "qs_host.sh", scripts_dir / f"{name}_qs_host.sh")
 
-    new_script_path = scripts_dir / f"{name}_qs_host.sh"
+    # Rename start_tiled.sh to include the instrument name
+    os.rename(scripts_dir / "start_tiled.sh", scripts_dir / f"{name}_start_tiled.sh")
 
-    # Read script contents
-    with open(new_script_path, "r") as src:
-        script_contents = src.read()
+    new_qserver_script_path = scripts_dir / f"{name}_qs_host.sh"
+    new_tiled_script_path = scripts_dir / f"{name}_start_tiled.sh"
+
+    # Read qserver script contents
+    with open(new_qserver_script_path, "r") as src:
+        qserver_script_contents = src.read()
+    # Read tiled script contents
+    with open(new_tiled_script_path, "r") as src:
+        tiled_script_contents = src.read()
 
     # Replace demo package name with new instrument name
-    updated_contents = script_contents.replace("demo_instrument", name)
+    updated_qserver_contents = qserver_script_contents.replace("demo_instrument", name)
+    updated_tiled_contents = tiled_script_contents.replace("demo_instrument", name)
 
-    # Write updated script
-    with open(new_script_path, "w") as dest:
-        dest.write(updated_contents)
+    # Write updated qserver script
+    with open(new_qserver_script_path, "w") as dest:
+        dest.write(updated_qserver_contents)
+    # Write updated tiled script
+    with open(new_tiled_script_path, "w") as dest:
+        dest.write(updated_tiled_contents)
 
-    # Make script executable
-    os.chmod(new_script_path, new_script_path.stat().st_mode | 0o755)
+    # Make scripts executable
+    os.chmod(new_qserver_script_path, new_qserver_script_path.stat().st_mode | 0o755)
+    os.chmod(new_tiled_script_path, new_tiled_script_path.stat().st_mode | 0o755)
+
+
+def create_tiled_script(scripts_dir: Path, name: str) -> None:
+    """
+    Create a tiled server script file in the scripts directory.
+    """
+
+    demo_scripts_path: Path = (
+        Path(__file__).resolve().parent.parent / "demo_scripts"
+    ).resolve()
+
+    for scripts_file in demo_scripts_path.glob("*"):
+        shutil.copy2(scripts_file, scripts_dir)
 
 
 def copy_instrument(destination_dir: Path) -> None:
