@@ -15,9 +15,9 @@ import sys
 from pathlib import Path
 
 
-def create_qserver_script(scripts_dir: Path, name: str) -> None:
+def create_scripts(scripts_dir: Path, name: str) -> None:
     """
-    Create a qserver script file in the scripts directory.
+    Create a qserver & a tiled script file in the scripts directory.
     """
 
     demo_scripts_path: Path = (
@@ -153,7 +153,7 @@ def main() -> None:
         print(f"Error copying instrument: {exc}", file=sys.stderr)
         sys.exit(1)
     try:
-        create_qserver_script(scripts_dir, args.name)
+        create_scripts(scripts_dir, args.name)
         print(f"Qserver script created in '{scripts_dir}'.")
     except Exception as exc:
         print(f"Error creating qserver script: {exc}", file=sys.stderr)
