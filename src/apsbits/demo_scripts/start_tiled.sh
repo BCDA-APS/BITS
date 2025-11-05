@@ -20,4 +20,4 @@ if [ -z "$TILED_API_KEY" ]; then
 fi
 
 # 4. Now $TILED_API_KEY is populated and can be used in your command
-tiled serve config "$CONFIGS_DIR/my_config_file.yml" --api-key "$TILED_API_KEY"
+tiled serve config "$CONFIGS_DIR/tiled_config.yml" --api-key "$TILED_API_KEY"

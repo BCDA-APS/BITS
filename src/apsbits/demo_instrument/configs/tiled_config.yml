@@ -1,0 +1,22 @@
+# tiled server configuration file
+
+authentication:
+      # The default is false.
+      # When true, any HTTP client that can connect has *read only* permission.
+      # An API key is still required to write.
+  allow_anonymous_access: true
+
+trees:
+
+- path: developer
+  tree: catalog
+  args:
+    specs:
+    - name: CatalogOfBlueskyRuns
+    uri: 
+      postgresql://bs-developer:80ff-1845-d869-bs-2025-10@wow.xray.aps.anl.gov:5432/developer-bluesky
+    writable_storage:
+    - postgresql://bs-developer:80ff-1845-d869-bs-2025-10@wow.xray.aps.anl.gov:5432/developer-bluesky-storage
+    readable_storage: []
+    init_if_not_exists: false
+ 
