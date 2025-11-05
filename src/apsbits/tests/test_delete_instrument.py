@@ -357,9 +357,9 @@ def test_copy_instrument(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> N
     )
 
 
-def test_create_qserver(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> None:
+def test_create_scripts(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> None:
     """
-    Test the create_qserver function.
+    Test the create_scripts function.
 
     :param tmp_path: Pytest fixture providing a temporary directory.
     :param mock_demo_dirs: Fixture providing mock demo directories.
@@ -381,11 +381,14 @@ def test_create_qserver(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> No
     assert (scripts_dir / f"{name}_qs_host.sh").exists()
 
     # Verify the script was updated
-    script_content = (scripts_dir / f"{name}_qs_host.sh").read_text()
-    assert "#!/bin/bash" in script_content
-    assert "start-re-manager" in script_content
-    assert "CONFIGS_DIR=$(readlink -f" in script_content
-    assert "new_instrument/configs" in script_content
+    qserver_script_content = (scripts_dir / f"{name}_qs_host.sh").read_text()
+    tiled_script_content = (scripts_dir / f"{name}_start_tiled.sh").read_text()
+
+    assert "#!/bin/bash" in qserver_script_content
+    assert "start-re-manager" in qserver_script_content
+    assert "CONFIGS_DIR=$(readlink -f" in qserver_script_content
+    assert "new_instrument/configs" in qserver_script_content
+    assert "new_instrument/configs" in tiled_script_content
 
     # Verify the script is executable
     assert (scripts_dir / f"{name}_qs_host.sh").stat().st_mode & 0o755 == 0o755
