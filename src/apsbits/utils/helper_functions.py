@@ -42,8 +42,15 @@ def running_in_queueserver() -> bool:
     Returns:
         True if running in a queueserver, False otherwise.
     """
-    qs_key = "QS_CONFIG_YML"
-    return os.environ.get(qs_key) is not None
+    keys = """
+    QS_CONFIG_YML
+    _QSERVER_RE_WORKER_ACTIVE
+    _QSERVER_RUNNING_IPYTHON_KERNEL
+    """.split()
+    for key in keys:
+        if os.environ.get(key) is not None:
+            return True
+    return False
 
 
 def get_xmode_level() -> str:
