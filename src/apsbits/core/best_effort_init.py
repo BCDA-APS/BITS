@@ -14,7 +14,7 @@ from bluesky.callbacks.best_effort import BestEffortCallback
 from apsbits.utils.helper_functions import running_in_queueserver
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
+getattr(logger, "bsdev", logger.debug)(__file__)
 
 
 def init_bec_peaks(

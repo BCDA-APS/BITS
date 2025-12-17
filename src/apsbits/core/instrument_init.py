@@ -25,7 +25,7 @@ from ophyd_async.core import NotConnected
 from apsbits.utils.config_loaders import get_config
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
+getattr(logger, "bsdev", logger.debug)(__file__)
 
 MAIN_NAMESPACE = "__main__"
 

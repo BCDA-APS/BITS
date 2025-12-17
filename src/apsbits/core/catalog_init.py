@@ -21,7 +21,7 @@ from tiled.client.container import Container
 from tiled.server import SimpleTiledServer
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
+getattr(logger, "bsdev", logger.debug)(__file__)
 
 # The httpx (via tiled) logger is set too noisy.  Make it quieter.
 logging.getLogger("httpx").setLevel(logging.WARNING)
