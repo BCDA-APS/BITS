@@ -12,7 +12,7 @@ from typing import Any
 import databroker
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
+getattr(logger, "bsdev", logger.debug)(__file__)
 
 TEMPORARY_CATALOG_NAME = "temporalcat"
 

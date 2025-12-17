@@ -13,6 +13,9 @@ Includes:
 from apsbits.utils.logging_setup import configure_logging  # isort:skip
 configure_logging()
 
+from apsbits.core import prepare_bits  # isort:skip
+prepare_bits()
+
 # Standard Library Imports
 import logging
 from pathlib import Path
