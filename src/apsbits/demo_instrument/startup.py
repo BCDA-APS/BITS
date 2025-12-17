@@ -9,6 +9,10 @@ Includes:
 * Bluesky queueserver
 """
 
+# Needs to run before import other apsbits modules
+from apsbits.utils.logging_setup import configure_logging  # isort:skip
+configure_logging()
+
 # Standard Library Imports
 import logging
 from pathlib import Path
@@ -31,6 +35,7 @@ from apsbits.utils.config_loaders import load_config
 from apsbits.utils.helper_functions import register_bluesky_magics
 from apsbits.utils.helper_functions import running_in_queueserver
 from apsbits.utils.logging_setup import configure_logging
+
 
 # Configuration block
 # Get the path to the instrument package
