@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from pytest_mock.plugin import MockerFixture
 
 from apsbits.api.create_new_instrument import copy_instrument
-from apsbits.api.create_new_instrument import create_qserver_script
+from apsbits.api.create_new_instrument import create_scripts
 from apsbits.api.create_new_instrument import main as create_main
 from apsbits.api.delete_instrument import delete_instrument
 from apsbits.api.delete_instrument import get_instrument_paths
@@ -357,38 +357,41 @@ def test_copy_instrument(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> N
     )
 
 
-def test_create_qserver(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> None:
+def test_create_scripts(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> None:
     """
-    Test the create_qserver function.
+    Test the create_scripts function.
 
     :param tmp_path: Pytest fixture providing a temporary directory.
     :param mock_demo_dirs: Fixture providing mock demo directories.
     """
     _, demo_qserver_dir = mock_demo_dirs
-    qserver_dir = tmp_path / "new_qserver"
+    scripts_dir = tmp_path / "new_scripts"
     name = "new_instrument"
 
     # Create the directory first
-    qserver_dir.mkdir(parents=True, exist_ok=True)
+    scripts_dir.mkdir(parents=True, exist_ok=True)
 
     # Create the qserver
-    create_qserver_script(qserver_dir, name)
+    create_scripts(scripts_dir, name)
 
     # Verify the directory was created
-    assert qserver_dir.exists()
+    assert scripts_dir.exists()
 
     # Verify the files were copied from demo_scripts
-    assert (qserver_dir / f"{name}_qs_host.sh").exists()
+    assert (scripts_dir / f"{name}_qs_host.sh").exists()
 
     # Verify the script was updated
-    script_content = (qserver_dir / f"{name}_qs_host.sh").read_text()
-    assert "#!/bin/bash" in script_content
-    assert "start-re-manager" in script_content
-    assert "CONFIGS_DIR=$(readlink -f" in script_content
-    assert "new_instrument/configs" in script_content
+    qserver_script_content = (scripts_dir / f"{name}_qs_host.sh").read_text()
+    tiled_script_content = (scripts_dir / f"{name}_start_tiled.sh").read_text()
+
+    assert "#!/bin/bash" in qserver_script_content
+    assert "start-re-manager" in qserver_script_content
+    assert "CONFIGS_DIR=$(readlink -f" in qserver_script_content
+    assert "new_instrument/configs" in qserver_script_content
+    assert "new_instrument/configs" in tiled_script_content
 
     # Verify the script is executable
-    assert (qserver_dir / f"{name}_qs_host.sh").stat().st_mode & 0o755 == 0o755
+    assert (scripts_dir / f"{name}_qs_host.sh").stat().st_mode & 0o755 == 0o755
 
 
 def test_create_main_invalid_name(capsys: "CaptureFixture[str]") -> None:
@@ -472,18 +475,16 @@ def test_create_main_successful_creation(
         lambda _: type("Args", (), {"name": "new_instrument"})(),
     )
 
-    # Mock the copy_instrument, create_qserver_script, and edit_qserver_folder functions
+    # Mock the copy_instrument, create_scripts, and edit_qserver_folder functions
     mock_copy = mocker.patch("apsbits.api.create_new_instrument.copy_instrument")
-    mock_qserver = mocker.patch(
-        "apsbits.api.create_new_instrument.create_qserver_script"
-    )
+    mock_scripts = mocker.patch("apsbits.api.create_new_instrument.create_scripts")
     mock_edit = mocker.patch("apsbits.api.create_new_instrument.edit_qserver_folder")
 
     create_main()
 
     # Verify the functions were called with the correct arguments
     mock_copy.assert_called_once_with(tmp_path / "src" / "new_instrument")
-    mock_qserver.assert_called_once_with(scripts_dir, "new_instrument")
+    mock_scripts.assert_called_once_with(scripts_dir, "new_instrument")
     mock_edit.assert_called_once_with(
         tmp_path / "src" / "new_instrument" / "qserver", "new_instrument"
     )
