@@ -12,7 +12,6 @@ Generic utility helper functions
 
 import collections.abc
 import logging
-import os
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
@@ -42,15 +41,9 @@ def running_in_queueserver() -> bool:
     Returns:
         True if running in a queueserver, False otherwise.
     """
-    keys = """
-    QS_CONFIG_YML
-    _QSERVER_RE_WORKER_ACTIVE
-    _QSERVER_RUNNING_IPYTHON_KERNEL
-    """.split()
-    for key in keys:
-        if os.environ.get(key) is not None:
-            return True
-    return False
+    from bluesky_queueserver import is_re_worker_active
+
+    return is_re_worker_active()
 
 
 def get_xmode_level() -> str:
