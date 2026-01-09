@@ -50,7 +50,7 @@ jobs:
       run: echo "TZ=America/Chicago" >> "$GITHUB_ENV"
 
     - name: Checkout
-      uses: actions/checkout@v5
+      uses: actions/checkout@v6
       with:
         fetch-depth: 0 # required for push to dest repo
 
