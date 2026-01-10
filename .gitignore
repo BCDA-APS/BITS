@@ -171,6 +171,7 @@ dev_*
 existing_plans_and_devices.yaml
 .vscode/
 .logs/
+.loglogin
 *.dat
 *.hdf
 
