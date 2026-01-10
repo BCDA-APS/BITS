@@ -5,8 +5,12 @@ ICONFIG_VERSION: 2.0.1
 
 # Add additional configuration for use with your instrument.
 
-### The short name for the databroker catalog.
+### The databroker catalog name. (legacy use only)
 DATABROKER_CATALOG: temp
+### Tiled server profile and path name: (overrides DATABROKER_CATALOG key)
+#TILED_PROFILE_NAME: raw
+# Use TILED_PATH_NAME according to local tiled server configuration
+#TILED_PATH_NAME: /raw
 
 ### RunEngine configuration
 RUN_ENGINE:
