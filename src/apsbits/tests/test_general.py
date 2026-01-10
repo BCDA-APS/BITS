@@ -82,14 +82,15 @@ def test_iconfig() -> None:
     """
     iconfig = get_config()
 
-    version: str = iconfig.get(
-        "ICONFIG_VERSION", "0.0.0"
-    )  # TODO: Will anyone ever have a wrong catalog version?
+    # test the version of the iconfig file (identify if too old for BITS)
+    version: str = iconfig.get("ICONFIG_VERSION", "0.0.0")
     assert version >= "2.0.0"
 
+    # Check that bluesky run documents will be saved.
+    # Configure for databroker catalog and/or tiled profile.
     cat_name: str = iconfig.get("DATABROKER_CATALOG")
-    assert cat_name is not None
-    assert cat_name == cat.name
+    profile_name: str = iconfig.get("TILED_PROFILE_NAME")
+    assert (cat_name or profile_name) is not None
 
     assert "RUN_ENGINE" in iconfig
     assert "DEFAULT_METADATA" in iconfig["RUN_ENGINE"]
