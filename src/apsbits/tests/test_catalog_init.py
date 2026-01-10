@@ -7,7 +7,7 @@ import pytest
 from tiled.profiles import ProfileNotFound
 
 # Run these tests without running startup.py.
-with patch('logging.Logger.bsdev'):
+with patch("logging.Logger.bsdev"):
     # from apsbits.core.catalog_init import _tiled_temporary_catalog
     from apsbits.core.catalog_init import _databroker_named_catalog
     from apsbits.core.catalog_init import _databroker_temporary_catalog
@@ -63,9 +63,10 @@ with patch('logging.Logger.bsdev'):
             ),
             id="no such tiled profile name",
         ),
-        # TODO: _tiled_profile_client with valid TILED_PROFILE_NAME
-        # TODO: _tiled_profile_client with valid TILED_PROFILE_NAME & valid TILED_PATH_NAME
-        # TODO: _tiled_profile_client with valid TILED_PROFILE_NAME & invalid TILED_PATH_NAME
+        # TODO: _tiled_profile_client with:
+        #    valid TILED_PROFILE_NAME
+        #    valid TILED_PROFILE_NAME & valid TILED_PATH_NAME
+        #    valid TILED_PROFILE_NAME & invalid TILED_PATH_NAME
         # TODO: pytest.param(
         #     {},
         #     _tiled_temporary_catalog,
@@ -75,6 +76,7 @@ with patch('logging.Logger.bsdev'):
     ],
 )
 def test_handlers(iconfig, handler, cat_type, context):
+    """Test the handlers that create 'cat' onbjects."""
     with context:
         cat = handler(iconfig)
         assert type(cat).__name__ == cat_type
