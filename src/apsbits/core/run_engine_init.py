@@ -126,7 +126,7 @@ def init_RE(
             # Check if it's a tiled client
             if isinstance(instance, tiled.client.container.Container):
                 try:
-                    tiled_writer = TiledWriter(instance)
+                    tiled_writer = TiledWriter(instance, batch_size=1)
                     RE.subscribe(tiled_writer)
                 except Exception:
                     logger.exception(
