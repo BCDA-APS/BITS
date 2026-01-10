@@ -59,7 +59,8 @@ def _databroker_named_catalog(iconfig: dict[str, Any]) -> Any:
     if catalog_name is not None:
         cat = databroker.catalog[catalog_name].v2
     logger.debug("%s: cat=%s", type(cat).__name__, str(cat))
-    logger.info("Databroker catalog initialized: %s", cat.name)
+    if cat is not None:
+        logger.info("Databroker catalog initialized: %s", cat.name)
     return cat
 
 
