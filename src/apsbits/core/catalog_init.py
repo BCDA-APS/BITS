@@ -7,6 +7,7 @@ Databroker catalog
 """
 
 import logging
+import weakref
 from typing import Any
 from typing import Union
 
@@ -47,7 +48,7 @@ def init_catalog(iconfig: dict[str, Any]) -> ANY_CATALOG_TYPE:
         _databroker_named_catalog,
         # fallbacks
         _databroker_temporary_catalog,
-        # _tiled_temporary_catalog,  # TODO: see below
+        _tiled_temporary_catalog,
     ]
     for handler in handlers:
         try:
@@ -109,40 +110,33 @@ def _tiled_profile_client(iconfig: dict[str, Any]) -> Union[None, TILED_CATALOG_
     return cat
 
 
-# To run a temporary tiled server, the SimpleTiledWriter is used. This server
-# must remain running after it is created (such as in a context), yet must
-# delete it\self when the client disconnects (so the process will terminate
-# gracefully).  This needs to be worked out for BITS instrument sessions
-# that use a temporary tiled server, such as CI workflows.
-# The concerns to be addressed are described in this GitHub issue:
-# See https://github.com/bluesky/tiled/issues/1246 for more details.
-
-# def run_server(save_path: Optional[str] = None) -> Iterator[Container]:
-#     """Run a SimpleTiledServer and return a client."""
-#     from tiled.client import from_uri
-#     from tiled.server import SimpleTiledServer
-
-#     kwargs = {}
-#     if save_path is not None:
-#         kwargs["readable_storage"] = [save_path]
-
-#     with SimpleTiledServer(**kwargs) as server:
-#         client = from_uri(server.uri)
-#         yield client
-
-
-# FIXME: Does not terminate gracefully when session exits.
-_tiled_temporary_server = None  # must persist
-
 def _tiled_temporary_catalog(iconfig: dict[str, Any]) -> Container:
-    """Connect with a temporary tiled catalog."""
-    global _tiled_temporary_server
+    """Connect with a temporary tiled catalog.
 
-    if not isinstance(_tiled_temporary_server, SimpleTiledServer):
-        # SimpleTiledServer("my_data/")  kwarg not supported in this code.
-        _tiled_temporary_server = SimpleTiledServer()
-    client = from_uri(_tiled_temporary_server.uri)
-    logger.debug("%s: client=%s", type(client).__name__, str(client))
-    logger.info("Tiled server (temporary catalog) connected")
+    WARNING: The SimpleTiledServer creates background threads that may prevent
+    clean process exit. For interactive use, explicitly delete the returned
+    client when done: `del client`
+    """
+    save_path = iconfig.get("TILED_SAVE_PATH")  # testing only?
+    server = SimpleTiledServer(save_path)
 
-    return client
+    try:
+        client = from_uri(server.uri)
+        logger.info("Tiled server (temporary catalog) connected")
+
+        # Store server reference for cleanup when client is deleted
+        client._tiled_server = server
+
+        # Cleanup when client is garbage collected
+        def cleanup():
+            try:
+                server.close()
+            except Exception:
+                pass
+
+        weakref.finalize(client, cleanup)
+
+        return client
+    except Exception:
+        server.close()
+        raise

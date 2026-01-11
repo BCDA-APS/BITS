@@ -74,10 +74,38 @@ with patch("logging.Logger.bsdev"):
             does_not_raise(),
             id="temporary tiled catalog",
         ),
+        # TODO: _tiled_temporary_catalog & valid TILED_SAVE_PATH
+        # TODO: _tiled_temporary_catalog & invalid TILED_SAVE_PATH
     ],
 )
 def test_handlers(iconfig, handler, cat_type, context):
-    """Test the handlers that create 'cat' onbjects."""
+    """Test the handlers that create 'cat' objects."""
     with context:
         cat = handler(iconfig)
         assert type(cat).__name__ == cat_type
+
+
+def test_use_temporary_tiled_catalog():
+    """Typical use of the tiled temporary catalog."""
+    import bluesky
+    from bluesky_tiled_plugins import TiledWriter
+    from ophyd.sim import noisy_det
+
+    cat = _tiled_temporary_catalog({})
+    tw = TiledWriter(cat, batch_size=1)
+    RE = bluesky.RunEngine()
+    RE.subscribe(tw)
+
+    delay = 0.1
+    npts = 15
+    nruns = len(cat)
+    (uid,) = RE(bluesky.plans.count([noisy_det], num=npts, delay=delay))
+    assert isinstance(uid, str)
+    assert len(cat) == 1 + nruns
+    run = cat[uid]
+    assert run.stop["num_events"]["primary"] == npts
+    assert (run.stop["time"] - run.start["time"]) >= delay * npts
+
+    data = run.primary.read()
+    assert "noisy_det" in data
+    assert len(data["noisy_det"]) == npts
