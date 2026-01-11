@@ -15,7 +15,9 @@ from bluesky_tiled_plugins.clients.catalog_of_bluesky_runs import CatalogOfBlues
 from databroker._drivers.mongo_normalized import BlueskyMongoCatalog
 from databroker._drivers.msgpack import BlueskyMsgpackCatalog
 from tiled.client import from_profile
+from tiled.client import from_uri
 from tiled.client.container import Container
+from tiled.server import SimpleTiledServer
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
@@ -114,19 +116,33 @@ def _tiled_profile_client(iconfig: dict[str, Any]) -> Union[None, TILED_CATALOG_
 # that use a temporary tiled server, such as CI workflows.
 # The concerns to be addressed are described in this GitHub issue:
 # See https://github.com/bluesky/tiled/issues/1246 for more details.
-#
-# FIXME: this instance does not terminate gracefully when session exits.
-#
-# _tiled_temporary_server = None  # must persist
-#
-# def _tiled_temporary_catalog(iconfig: dict[str, Any]) -> Container:
-#     """Connect with a temporary tiled catalog."""
-#     global _tiled_temporary_server
-#
-#     # SimpleTiledServer("my_data/"), default is temporary storage
-#     _tiled_temporary_server = SimpleTiledServer()  # api_key="secret"
-#     client = from_uri(_tiled_temporary_server.uri)
-#     logger.debug("%s: client=%s", type(client).__name__, str(client))
-#     logger.info("Tiled server (temporary catalog) connected")
-#
-#     return client
+
+# def run_server(save_path: Optional[str] = None) -> Iterator[Container]:
+#     """Run a SimpleTiledServer and return a client."""
+#     from tiled.client import from_uri
+#     from tiled.server import SimpleTiledServer
+
+#     kwargs = {}
+#     if save_path is not None:
+#         kwargs["readable_storage"] = [save_path]
+
+#     with SimpleTiledServer(**kwargs) as server:
+#         client = from_uri(server.uri)
+#         yield client
+
+
+# FIXME: Does not terminate gracefully when session exits.
+_tiled_temporary_server = None  # must persist
+
+def _tiled_temporary_catalog(iconfig: dict[str, Any]) -> Container:
+    """Connect with a temporary tiled catalog."""
+    global _tiled_temporary_server
+
+    if not isinstance(_tiled_temporary_server, SimpleTiledServer):
+        # SimpleTiledServer("my_data/")  kwarg not supported in this code.
+        _tiled_temporary_server = SimpleTiledServer()
+    client = from_uri(_tiled_temporary_server.uri)
+    logger.debug("%s: client=%s", type(client).__name__, str(client))
+    logger.info("Tiled server (temporary catalog) connected")
+
+    return client
