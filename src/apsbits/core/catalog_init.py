@@ -48,6 +48,7 @@ def init_catalog(iconfig: dict[str, Any]) -> ANY_CATALOG_TYPE:
         _databroker_named_catalog,
         # fallbacks
         _databroker_temporary_catalog,
+        # TODO: promote once `del client` is not needed for exit
         _tiled_temporary_catalog,
     ]
     for handler in handlers:
