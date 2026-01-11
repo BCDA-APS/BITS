@@ -8,6 +8,14 @@ Databroker catalog
 
 import logging
 from typing import Any
+from typing import Union
+
+import databroker
+from bluesky_tiled_plugins.clients.catalog_of_bluesky_runs import CatalogOfBlueskyRuns
+from databroker._drivers.mongo_normalized import BlueskyMongoCatalog
+from databroker._drivers.msgpack import BlueskyMsgpackCatalog
+from tiled.client import from_profile
+from tiled.client.container import Container
 
 logger = logging.getLogger(__name__)
 logger.bsdev(__file__)
@@ -15,8 +23,12 @@ logger.bsdev(__file__)
 # The httpx (via tiled) logger is set too noisy.  Make it quieter.
 logging.getLogger("httpx").setLevel(logging.WARNING)
 
+DATABROKER_CATALOG_TYPE = Union[BlueskyMongoCatalog, BlueskyMsgpackCatalog]
+TILED_CATALOG_TYPE = Union[CatalogOfBlueskyRuns, Container]
+ANY_CATALOG_TYPE = Union[DATABROKER_CATALOG_TYPE, TILED_CATALOG_TYPE]
 
-def init_catalog(iconfig: dict[str, Any]) -> Any:
+
+def init_catalog(iconfig: dict[str, Any]) -> ANY_CATALOG_TYPE:
     """
     Setup for a catalog to record bluesky run documents.
 
@@ -50,10 +62,13 @@ def init_catalog(iconfig: dict[str, Any]) -> Any:
     raise RuntimeError("Could not create a catalog for Bluesky run documents.")
 
 
-def _databroker_named_catalog(iconfig: dict[str, Any]) -> Any:
+def _databroker_named_catalog(
+    iconfig: dict[str, Any],
+) -> Union[
+    DATABROKER_CATALOG_TYPE,
+    None,
+]:
     """Connect with a named databroker catalog."""
-    import databroker
-
     cat = None
     catalog_name = iconfig.get("DATABROKER_CATALOG")
     if catalog_name is not None:
@@ -64,20 +79,16 @@ def _databroker_named_catalog(iconfig: dict[str, Any]) -> Any:
     return cat
 
 
-def _databroker_temporary_catalog(iconfig: dict[str, Any]) -> Any:
+def _databroker_temporary_catalog(iconfig: dict[str, Any]) -> BlueskyMsgpackCatalog:
     """Connect with a temporary databroker catalog."""
-    import databroker
-
     cat = databroker.temp().v2
     logger.debug("%s: cat=%s", type(cat).__name__, str(cat))
     logger.info("Databroker temporary catalog initialized")
     return cat
 
 
-def _tiled_profile_client(iconfig: dict[str, Any]) -> Any:
+def _tiled_profile_client(iconfig: dict[str, Any]) -> Union[None, TILED_CATALOG_TYPE]:
     """Connect with a tiled server using a profile."""
-    from tiled.client import from_profile
-
     cat = None
     profile = iconfig.get("TILED_PROFILE_NAME")
     path = iconfig.get("TILED_PATH_NAME")
@@ -86,7 +97,12 @@ def _tiled_profile_client(iconfig: dict[str, Any]) -> Any:
         cat = client if path is None else client[path]
 
     logger.debug("%s: cat=%s", type(cat).__name__, str(cat))
-    logger.info("Tiled server (catalog) connected, profile=%r, path=%r", profile, path)
+    if cat is not None:
+        logger.info(
+            "Tiled server (catalog) connected, profile=%r, path=%r",
+            profile,
+            path,
+        )
 
     return cat
 
@@ -99,20 +115,18 @@ def _tiled_profile_client(iconfig: dict[str, Any]) -> Any:
 # The concerns to be addressed are described in this GitHub issue:
 # See https://github.com/bluesky/tiled/issues/1246 for more details.
 #
-# FIXME: this instance does not terminate gracefull when session exits
+# FIXME: this instance does not terminate gracefully when session exits.
+#
 # _tiled_temporary_server = None  # must persist
 #
-# def _tiled_temporary_catalog(iconfig: dict[str, Any]) -> Any:
+# def _tiled_temporary_catalog(iconfig: dict[str, Any]) -> Container:
 #     """Connect with a temporary tiled catalog."""
-#     from tiled.client import from_uri
-#     from tiled.server import SimpleTiledServer
-#
 #     global _tiled_temporary_server
 #
 #     # SimpleTiledServer("my_data/"), default is temporary storage
 #     _tiled_temporary_server = SimpleTiledServer()  # api_key="secret"
 #     client = from_uri(_tiled_temporary_server.uri)
 #     logger.debug("%s: client=%s", type(client).__name__, str(client))
-#     logger.info("Tiled server (temporary catalog) connectedr")
+#     logger.info("Tiled server (temporary catalog) connected")
 #
 #     return client
