@@ -33,6 +33,16 @@ with patch("logging.Logger.bsdev"):
             id="default to temporary databroker catalog",
         ),
         pytest.param(
+            dict(
+                DATABROKER_CATALOG="no_such_catalog",
+                TILED_PROFILE_NAME="no_such_profile",
+            ),
+            init_catalog,
+            "BlueskyMsgpackCatalog",
+            does_not_raise(),
+            id="invalid catalog & profile: fallback to temporary catalog",
+        ),
+        pytest.param(
             {},
             _databroker_named_catalog,
             "NoneType",
