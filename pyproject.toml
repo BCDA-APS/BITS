@@ -36,6 +36,7 @@ dependencies = [
     "apstools",
     "bluesky-queueserver >=0.0.22",
     "bluesky-queueserver-api",
+    "bluesky-tiled-plugins",
     "bluesky-widgets",
     "bluesky",
     "caproto",

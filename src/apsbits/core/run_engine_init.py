@@ -19,8 +19,8 @@ import bluesky
 import databroker._drivers.mongo_normalized
 import databroker._drivers.msgpack
 import tiled
-from bluesky.callbacks.tiled_writer import TiledWriter
 from bluesky.utils import ProgressBarManager
+from bluesky_tiled_plugins import TiledWriter
 
 from apsbits.utils.controls_setup import connect_scan_id_pv
 from apsbits.utils.controls_setup import set_control_layer
@@ -126,7 +126,7 @@ def init_RE(
             # Check if it's a tiled client
             if isinstance(instance, tiled.client.container.Container):
                 try:
-                    tiled_writer = TiledWriter(instance)
+                    tiled_writer = TiledWriter(instance, batch_size=1)
                     RE.subscribe(tiled_writer)
                 except Exception:
                     logger.exception(
