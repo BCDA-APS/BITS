@@ -30,7 +30,7 @@ describe future plans.
 .. Coming release content can be gathered here.
     Some people object to publishing unreleased changes.
 
-    1.1.0
+    2.0.1
     #####
 
     release expected ?
@@ -45,6 +45,14 @@ describe future plans.
 
     * Bump iconfig version to 2.0.1 for the baseline addition.
     * Remove run_engine section from QS config.yml file and pin QS to 0.0.22+.
+
+2.0.0 (PyPI) and 1.0.6 (repository)
+###################################
+
+released 2025-10-21
+
+Note that PyPI version (2.0.0) is different than repository (1.0.6).
+They share the same source code hash (``484b02f1537301``).
 
 1.0.4
 #####
