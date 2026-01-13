@@ -30,7 +30,7 @@ describe future plans.
 .. Coming release content can be gathered here.
     Some people object to publishing unreleased changes.
 
-    2.0.1
+    2.0.2
     #####
 
     release expected ?
@@ -45,6 +45,16 @@ describe future plans.
 
     * Bump iconfig version to 2.0.1 for the baseline addition.
     * Remove run_engine section from QS config.yml file and pin QS to 0.0.22+.
+
+2.0.1
+#####
+
+released 2026-01-13
+
+Enhancements
+------------
+
+* add support for TILED_PROFILE_NAME & TILED_PATH_NAME
 
 2.0.0 (PyPI) and 1.0.6 (repository)
 ###################################
