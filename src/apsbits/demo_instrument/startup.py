@@ -63,10 +63,6 @@ register_bluesky_magics()
 
 # Bluesky initialization block
 
-if iconfig.get("TILED_PROFILE_NAME", {}):
-    profile_name = iconfig.get("TILED_PROFILE_NAME")
-    tiled_client = from_profile(profile_name)
-
 bec, peaks = init_bec_peaks(iconfig)
 cat = init_catalog(iconfig)
 RE, sd = init_RE(iconfig, subscribers=[bec, cat])
