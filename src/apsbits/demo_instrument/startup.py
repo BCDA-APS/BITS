@@ -14,8 +14,6 @@ import logging
 from pathlib import Path
 
 # Core Functions
-from tiled.client import from_profile
-
 from apsbits.core.best_effort_init import init_bec_peaks
 from apsbits.core.catalog_init import init_catalog
 from apsbits.core.instrument_init import init_instrument
