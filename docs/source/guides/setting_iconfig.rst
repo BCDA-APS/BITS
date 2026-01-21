@@ -1,9 +1,10 @@
 Setting up your instrument
 ================================
 
-The iconfig file is a YAML file that contains the configuration for your instrument.
-It is used to set up the instrument preferences and settings. The iconfig file is
-located in the ``configs`` directory of your instrument package. Below we go through the settings available in the iconfig file.
+The iconfig file is a YAML file that contains the configuration for your
+instrument. It is used to set up the instrument preferences and settings. The
+iconfig file is located in the ``configs`` directory of your instrument package.
+Below we go through the settings available in the iconfig file.
 
 CATALOG
 ----------------
