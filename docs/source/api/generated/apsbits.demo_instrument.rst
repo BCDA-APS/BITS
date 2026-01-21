@@ -3,7 +3,7 @@
 
 .. automodule:: apsbits.demo_instrument
 
-
+   
 .. rubric:: Modules
 
 .. autosummary::
@@ -15,3 +15,5 @@
    devices
    plans
    startup
+   suspenders
+   utils

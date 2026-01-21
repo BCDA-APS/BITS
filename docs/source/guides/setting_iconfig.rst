@@ -5,6 +5,71 @@ The iconfig file is a YAML file that contains the configuration for your instrum
 It is used to set up the instrument preferences and settings. The iconfig file is
 located in the ``configs`` directory of your instrument package. Below we go through the settings available in the iconfig file.
 
+CATALOG
+----------------
+
+A *catalog* is where the data from a bluesky *run* (documents published by the
+bluesky RunEngine) is saved.
+
+APS is in the process of changing catalogs at beamlines to use Tiled servers
+(backed by a PostgreSQL database) instead of Databroker (backed by a MongoDB
+database).  The Tiled server needs one or two parameters: ``TILED_PROFILE_NAME``
+(and optionally ``TILED_PATH_NAME``).  The older databroker needs one:
+``DATABROKER_CATALOG``.
+
+While the Tiled server configuration is preferred, it may not yet be available
+for your BITS installation.
+
+``TILED_PROFILE_NAME`` (preferred)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Name of the Tiled profile to use.
+
+If ``TILED_PROFILE_NAME`` is set, it takes precedence over ``DATABROKER_CATALOG``.
+
+The tiled profile is a special file (see ``tiled profile --help``).  It defines
+a simple shortcut to the full Tiled server URI and API key necessary for write
+access to the catalog.  A full list of the profile names available to you
+can be obtained with the command: ``tiled profile list``.
+
+``TILED_PATH_NAME`` (optional)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Optional *server-defined* path name provided by the Tiled server.
+
+Important notes:
+
+* ``TILED_PATH_NAME`` is a path provided by the tiled server. It is not a filesystem directory path.
+* If your server only defines the tiled catalog at ``/``, do not define ``TILED_PATH_NAME``.
+* Different Tiled server deployments may provide different path names.
+* If omitted, the Tiled server default path is used.
+* Setting ``TILED_PATH_NAME: "/"`` has been observed to cause a server error.
+  In that case, do **not** define ``TILED_PATH_NAME``.
+
+Example
+++++++++++++++
+
+Example excerpt from ``configs/iconfig.yml``:
+
+
+.. code-block:: yaml
+    :linenos:
+
+    # Preferred Tiled configuration
+    TILED_PROFILE_NAME: raw
+    # Only set this if your server requires a non-default path:
+    TILED_PATH_NAME: /raw
+
+Legacy configuration
++++++++++++++++++++++++++++++++++
+
+``DATABROKER_CATALOG`` (legacy)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``DATABROKER_CATALOG`` is supported for backward compatibility, but
+``TILED_PROFILE_NAME`` (and optionally ``TILED_PATH_NAME``) is preferred.
+
+If both are set, ``TILED_PROFILE_NAME`` is used.
 
 RUN_ENGINE
 -----------------------------
@@ -17,7 +82,6 @@ The ``RUN_ENGINE`` section contains the configuration for the run engine. The ru
             beamline_id: demo_instrument
             instrument_name: Most Glorious Scientific Instrument
             proposal_id: commissioning
-            databroker_catalog: *databroker_catalog
 
         ### EPICS PV to use for the `scan_id`.
         ### Default: `RE.md["scan_id"]` (not using an EPICS PV)
