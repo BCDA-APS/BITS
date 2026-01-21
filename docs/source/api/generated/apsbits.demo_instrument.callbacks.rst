@@ -3,7 +3,7 @@ apsbits.demo\_instrument.callbacks
 
 .. automodule:: apsbits.demo_instrument.callbacks
 
-   
+
 .. rubric:: Modules
 
 .. autosummary::
