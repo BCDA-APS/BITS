@@ -39,13 +39,18 @@ if [ -z "$STARTUP_DIR" ] ; then
     STARTUP_DIR="${SCRIPT_DIR}"
 fi
 
-if [ "${DATABROKER_CATALOG}" == "" ]; then
-    if [ -f "${ICONFIG_YML}" ]; then
-        DATABROKER_CATALOG=$(grep DATABROKER_CATALOG "${ICONFIG_YML}" | awk '{print $NF}')
-        # echo "Using catalog ${DATABROKER_CATALOG}"
-    fi
+# Prefer Tiled profile name if provided; otherwise fall back to the legacy
+# databroker catalog selection.
+#
+# - TILED_PROFILE_NAME: name of a Tiled profile (preferred)
+# - DATABROKER_CATALOG: legacy env var used by older scripts/configs
+if [[ -n "${TILED_PROFILE_NAME:-}" ]]; then
+  DEFAULT_SESSION_NAME="bluesky_queueserver-${TILED_PROFILE_NAME}"
+elif [[ -n "${DATABROKER_CATALOG:-}" ]]; then
+  DEFAULT_SESSION_NAME="bluesky_queueserver-${DATABROKER_CATALOG}"
+else
+  DEFAULT_SESSION_NAME="bluesky_queueserver-default"
 fi
-DEFAULT_SESSION_NAME="bluesky_queueserver-${DATABROKER_CATALOG}"
 
 #--------------------
 
