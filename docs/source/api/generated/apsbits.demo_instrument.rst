@@ -3,7 +3,7 @@
 
 .. automodule:: apsbits.demo_instrument
 
-
+   
 .. rubric:: Modules
 
 .. autosummary::

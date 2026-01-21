@@ -12,15 +12,6 @@ CATALOG
 A *catalog* is where the data from a bluesky *run* (documents published by the
 bluesky RunEngine) is saved.
 
-APS is in the process of changing catalogs at beamlines to use Tiled servers
-(backed by a PostgreSQL database) instead of Databroker (backed by a MongoDB
-database).  The Tiled server needs one or two parameters: ``TILED_PROFILE_NAME``
-(and optionally ``TILED_PATH_NAME``).  The older databroker needs one:
-``DATABROKER_CATALOG``.
-
-While the Tiled server configuration is preferred, it may not yet be available
-for your BITS installation.
-
 ``TILED_PROFILE_NAME`` (preferred)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
