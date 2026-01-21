@@ -10,4 +10,3 @@
 
       addLoggingLevel
       configure_logging
-

@@ -15,4 +15,3 @@ apsbits.demo\_instrument.callbacks.demo\_nexus\_callback
    .. autosummary::
 
       MyNXWriter
-

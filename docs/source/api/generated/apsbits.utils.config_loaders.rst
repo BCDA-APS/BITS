@@ -13,4 +13,3 @@
       load_config_yaml
       update_config
       validate_instrument_path
-

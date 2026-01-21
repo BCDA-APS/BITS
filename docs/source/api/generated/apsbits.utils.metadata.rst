@@ -10,4 +10,3 @@
 
       get_md_path
       re_metadata
-

@@ -12,4 +12,3 @@
       get_instrument_paths
       main
       validate_instrument_name
-

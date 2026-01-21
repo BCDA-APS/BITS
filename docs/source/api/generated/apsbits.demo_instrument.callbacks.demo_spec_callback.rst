@@ -17,4 +17,3 @@ apsbits.demo\_instrument.callbacks.demo\_spec\_callback
       init_specwriter_with_RE
       newSpecFile
       spec_comment
-

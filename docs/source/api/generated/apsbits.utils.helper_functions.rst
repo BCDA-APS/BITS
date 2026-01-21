@@ -15,4 +15,3 @@
       mpl_setup
       register_bluesky_magics
       running_in_queueserver
-

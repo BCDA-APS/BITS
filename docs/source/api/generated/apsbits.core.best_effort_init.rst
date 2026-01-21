@@ -9,4 +9,3 @@
    .. autosummary::
 
       init_bec_peaks
-
