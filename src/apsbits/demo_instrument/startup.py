@@ -14,8 +14,6 @@ import logging
 from pathlib import Path
 
 # Core Functions
-from tiled.client import from_profile
-
 from apsbits.core.best_effort_init import init_bec_peaks
 from apsbits.core.catalog_init import init_catalog
 from apsbits.core.instrument_init import init_instrument
@@ -62,10 +60,6 @@ oregistry.clear()
 register_bluesky_magics()
 
 # Bluesky initialization block
-
-if iconfig.get("TILED_PROFILE_NAME", {}):
-    profile_name = iconfig.get("TILED_PROFILE_NAME")
-    tiled_client = from_profile(profile_name)
 
 bec, peaks = init_bec_peaks(iconfig)
 cat = init_catalog(iconfig)
