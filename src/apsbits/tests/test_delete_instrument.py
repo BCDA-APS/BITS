@@ -79,9 +79,11 @@ def mock_demo_dirs(
     # Patch the paths in the create_new_instrument module
     monkeypatch.setattr(
         "apsbits.api.create_new_instrument.Path",
-        lambda *args: Path(*args)
-        if args[0] != __file__
-        else tmp_path / "create_new_instrument.py",
+        lambda *args: (
+            Path(*args)
+            if args[0] != __file__
+            else tmp_path / "create_new_instrument.py"
+        ),
     )
 
     yield demo_instrument_dir, demo_qserver_dir

@@ -9,21 +9,12 @@ Includes:
 * Bluesky queueserver
 """
 
-# ruff: noqa: E402
-
 # Standard Library Imports
 import logging
 from pathlib import Path
 
-# Needs to run before import other apsbits modules
 from apsbits.utils.logging_setup import configure_logging  # isort:skip
-
-configure_logging()
-
-# ruff: disable[E402]
 from apsbits.core import prepare_bits  # isort:skip
-
-prepare_bits()
 
 # Core Functions
 from apsbits.core.best_effort_init import init_bec_peaks
@@ -41,7 +32,9 @@ from apsbits.utils.config_loaders import load_config
 from apsbits.utils.helper_functions import register_bluesky_magics
 from apsbits.utils.helper_functions import running_in_queueserver
 
-# ruff: enable[E402]
+# Run first so we get better diagnostics about subsequent problems
+configure_logging()
+prepare_bits()
 
 # Configuration block
 # Get the path to the instrument package
