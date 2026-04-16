@@ -19,17 +19,19 @@ from typing import Optional
 import apstools.callbacks
 import apstools.utils
 
-from apsbits.utils.config_loaders import get_config
-
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
 
-iconfig = get_config()
-file_extension = iconfig.get("SPEC_DATA_FILES", {}).get("FILE_EXTENSION", "dat")
+# Initialized by init_specwriter_with_RE()
+specwriter = None
+file_extension = None
 
 
 def spec_comment(comment: str, doc: Optional[Any] = None) -> None:
     """Make it easy for user to add comments to the data file."""
+    if specwriter is None:
+        raise RuntimeError(
+            "specwriter not initialized — call init_specwriter_with_RE() first"
+        )
     apstools.callbacks.spec_comment(comment, doc, specwriter)
 
 
@@ -45,6 +47,10 @@ def newSpecFile(
     If the SPEC file already exists, then ``scan_id`` is ignored and
     ``RE.md["scan_id"]`` is set to the last scan number in the file.
     """
+    if specwriter is None or file_extension is None:
+        raise RuntimeError(
+            "specwriter not initialized — call init_specwriter_with_RE() first"
+        )
     kwargs = {}
     if RE is not None:
         kwargs["RE"] = RE
@@ -65,9 +71,20 @@ def newSpecFile(
     logger.info("File will be %s at end of next bluesky scan.", handled)
 
 
-# Add this function to specwriter.py
-def init_specwriter_with_RE(RE: Any) -> None:
-    """Initialize specwriter with the run engine."""
+def init_specwriter_with_RE(RE: Any, iconfig: dict[str, Any]) -> Any:
+    """Initialize specwriter with the run engine and return it."""
+    global specwriter
+    global file_extension
+
+    file_extension = iconfig.get("SPEC_DATA_FILES", {}).get("FILE_EXTENSION", "dat")
+
+    # write scans to SPEC data file
+    try:
+        # apstools >=1.6.21
+        specwriter = apstools.callbacks.SpecWriterCallback2()
+    except AttributeError:
+        # apstools <1.6.21
+        specwriter = apstools.callbacks.SpecWriterCallback()
 
     # make the SPEC file in current working directory (assumes is writable)
     specwriter.newfile(specwriter.spec_filename)
@@ -88,14 +105,4 @@ def init_specwriter_with_RE(RE: Any) -> None:
     except Exception:
         logger.warning("Could not load support to log motors positions.")
 
-
-# write scans to SPEC data file
-try:
-    # apstools >=1.6.21
-    _specwriter = apstools.callbacks.SpecWriterCallback2()
-except AttributeError:
-    # apstools <1.6.21
-    _specwriter = apstools.callbacks.SpecWriterCallback()
-
-specwriter = _specwriter
-"""The SPEC file writer object."""
+    return specwriter

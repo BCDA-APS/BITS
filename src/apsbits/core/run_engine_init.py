@@ -30,7 +30,6 @@ from apsbits.utils.metadata import re_metadata
 from apsbits.utils.stored_dict import StoredDict
 
 logger = logging.getLogger(__name__)
-getattr(logger, "bsdev", logger.debug)(__file__)
 
 
 def init_RE(

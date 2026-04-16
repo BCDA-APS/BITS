@@ -21,10 +21,6 @@ from tiled.client.container import Container
 from tiled.server import SimpleTiledServer
 
 logger = logging.getLogger(__name__)
-getattr(logger, "bsdev", logger.debug)(__file__)
-
-# The httpx (via tiled) logger is set too noisy.  Make it quieter.
-logging.getLogger("httpx").setLevel(logging.WARNING)
 
 DATABROKER_CATALOG_TYPE = Union[BlueskyMongoCatalog, BlueskyMsgpackCatalog]
 TILED_CATALOG_TYPE = Union[CatalogOfBlueskyRuns, Container]
@@ -43,6 +39,9 @@ def init_catalog(iconfig: dict[str, Any]) -> ANY_CATALOG_TYPE:
     * temporary databroker catalog: fallback is the above are not successful
     * (TODO) temporary tiled catalog: replaces temporary databroker fallback
     """
+    # The httpx (via tiled) logger is too noisy. Make it quieter.
+    logging.getLogger("httpx").setLevel(logging.WARNING)
+
     handlers = [  # try these, in order
         _tiled_profile_client,
         _databroker_named_catalog,

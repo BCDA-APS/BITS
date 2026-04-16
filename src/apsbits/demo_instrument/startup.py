@@ -76,7 +76,7 @@ RE, sd = init_RE(iconfig, subscribers=[bec, cat])
 if iconfig.get("NEXUS_DATA_FILES", {}).get("ENABLE", False):
     from .callbacks.demo_nexus_callback import nxwriter_init
 
-    nxwriter = nxwriter_init(RE)
+    nxwriter = nxwriter_init(RE, iconfig)
 
 # Optional SPEC callback block
 # delete this block if not using SPEC
@@ -84,9 +84,8 @@ if iconfig.get("SPEC_DATA_FILES", {}).get("ENABLE", False):
     from .callbacks.demo_spec_callback import init_specwriter_with_RE
     from .callbacks.demo_spec_callback import newSpecFile  # noqa: F401
     from .callbacks.demo_spec_callback import spec_comment  # noqa: F401
-    from .callbacks.demo_spec_callback import specwriter  # noqa: F401
 
-    init_specwriter_with_RE(RE)
+    specwriter = init_specwriter_with_RE(RE, iconfig)  # noqa: F811
 
 # These imports must come after the above setup.
 # Queue server block

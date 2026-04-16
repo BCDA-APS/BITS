@@ -97,9 +97,6 @@ def addLoggingLevel(levelName, levelNum, methodName=None):
     setattr(logging, methodName, logToRoot)
 
 
-addLoggingLevel("BSDEV", logging.INFO - 5)
-
-
 def configure_logging(extra_logging_configs_path=None):
     """
     Configure logging as described in file.
@@ -115,6 +112,10 @@ def configure_logging(extra_logging_configs_path=None):
         ValueError: If the configuration file is invalid or empty.
     """
     from apsbits.utils.config_loaders import load_config_yaml
+
+    # Register custom BSDEV logging level (idempotent — safe to call multiple times)
+    if not hasattr(logging, "BSDEV"):
+        addLoggingLevel("BSDEV", logging.INFO - 5)
 
     # (Re)configure the root logger.
     logger = logging.getLogger(__name__).root

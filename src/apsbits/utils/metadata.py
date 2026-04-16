@@ -8,53 +8,72 @@ RunEngine Metadata
 """
 
 import collections
-import getpass
 import logging
 import os
 import pathlib
-import socket
 import sys
 from typing import Any
-
-import bluesky
-import databroker
-import epics
-import h5py
-import matplotlib
-import numpy
-import ophyd
-import pyRestTable
-import pysumreg
-
-try:
-    import apstools
-
-    APSTOOLS_VERSION = apstools.__version__
-except ImportError:
-    APSTOOLS_VERSION = "(not installed)"
-
-import apsbits
 
 logger = logging.getLogger(__name__)
 
 
 DEFAULT_MD_PATH = pathlib.Path.home() / ".config" / "Bluesky_RunEngine_md"
-HOSTNAME = socket.gethostname() or "localhost"
-USERNAME = getpass.getuser() or "Bluesky user"
-VERSIONS = dict(
-    apsbits=apsbits.__version__,
-    apstools=APSTOOLS_VERSION,
-    bluesky=bluesky.__version__,
-    databroker=databroker.__version__,
-    epics=epics.__version__,
-    h5py=h5py.__version__,
-    matplotlib=matplotlib.__version__,
-    numpy=numpy.__version__,
-    ophyd=ophyd.__version__,
-    pyRestTable=pyRestTable.__version__,
-    pysumreg=pysumreg.__version__,
-    python=sys.version.split(" ")[0],
-)
+
+# Cached metadata, computed lazily on first call to _collect_metadata()
+_cached_metadata = None
+
+
+def _collect_metadata():
+    """Collect version and host metadata. Cached after first call."""
+    global _cached_metadata
+    if _cached_metadata is not None:
+        return _cached_metadata
+
+    import getpass
+    import socket
+
+    import bluesky
+    import databroker
+    import epics
+    import h5py
+    import matplotlib
+    import numpy
+    import ophyd
+    import pyRestTable
+    import pysumreg
+
+    import apsbits
+
+    try:
+        import apstools
+
+        apstools_version = apstools.__version__
+    except ImportError:
+        apstools_version = "(not installed)"
+
+    hostname = socket.gethostname() or "localhost"
+    username = getpass.getuser() or "Bluesky user"
+    versions = dict(
+        apsbits=apsbits.__version__,
+        apstools=apstools_version,
+        bluesky=bluesky.__version__,
+        databroker=databroker.__version__,
+        epics=epics.__version__,
+        h5py=h5py.__version__,
+        matplotlib=matplotlib.__version__,
+        numpy=numpy.__version__,
+        ophyd=ophyd.__version__,
+        pyRestTable=pyRestTable.__version__,
+        pysumreg=pysumreg.__version__,
+        python=sys.version.split(" ")[0],
+    )
+
+    _cached_metadata = {
+        "hostname": hostname,
+        "username": username,
+        "versions": versions,
+    }
+    return _cached_metadata
 
 
 def get_md_path(iconfig: collections.abc.Mapping[str, Any] | None = None) -> str | None:
@@ -83,9 +102,10 @@ def get_md_path(iconfig: collections.abc.Mapping[str, Any] | None = None) -> str
 
 def re_metadata(iconfig: collections.abc.Mapping[str, Any] = {}) -> dict[str, Any]:
     """Programmatic metadata for the RunEngine."""
+    meta = _collect_metadata()
     md = {
-        "login_id": f"{USERNAME}@{HOSTNAME}",
-        "versions": VERSIONS,
+        "login_id": f"{meta['username']}@{meta['hostname']}",
+        "versions": meta["versions"],
         "pid": os.getpid(),
         "iconfig": iconfig,
     }
