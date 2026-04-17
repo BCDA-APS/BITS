@@ -7,13 +7,13 @@ This module provides callbacks for writing data to Nexus data files.
 import logging
 from typing import Any
 
-from apstools.utils import host_on_aps_subnet
-
 logger = logging.getLogger(__name__)
 
 
 def nxwriter_init(RE: Any, iconfig: dict[str, Any]) -> Any:
     """Initialize the Nexus data file writer callback."""
+    from apstools.utils import host_on_aps_subnet
+
     if host_on_aps_subnet():
         from apstools.callbacks import NXWriterAPS as NXWriter
     else:
