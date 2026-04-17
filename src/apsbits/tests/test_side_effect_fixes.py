@@ -66,10 +66,9 @@ class TestMetadataCaching:
 
     def test_collect_metadata_returns_same_object(self):
         """Second call to _collect_metadata() returns the cached object."""
-        from apsbits.utils.metadata import _collect_metadata
-
         # Reset cache
         import apsbits.utils.metadata as mod
+        from apsbits.utils.metadata import _collect_metadata
 
         mod._cached_metadata = None
 
@@ -79,9 +78,8 @@ class TestMetadataCaching:
 
     def test_collect_metadata_has_expected_keys(self):
         """_collect_metadata() returns dict with hostname, username, versions."""
-        from apsbits.utils.metadata import _collect_metadata
-
         import apsbits.utils.metadata as mod
+        from apsbits.utils.metadata import _collect_metadata
 
         mod._cached_metadata = None
 
