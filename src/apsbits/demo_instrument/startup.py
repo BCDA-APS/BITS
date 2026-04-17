@@ -13,15 +13,13 @@ Includes:
 import logging
 from pathlib import Path
 
-from apsbits.utils.logging_setup import configure_logging  # isort:skip
-from apsbits.core import prepare_bits  # isort:skip
-
 # Core Functions
 from apsbits.core.best_effort_init import init_bec_peaks
 from apsbits.core.catalog_init import init_catalog
 from apsbits.core.instrument_init import init_instrument
 from apsbits.core.instrument_init import make_devices
 from apsbits.core.run_engine_init import init_RE
+from apsbits.core.session_setup import prepare_bits
 
 # Utility functions
 from apsbits.utils.aps_functions import host_on_aps_subnet
@@ -31,6 +29,7 @@ from apsbits.utils.baseline_setup import setup_baseline_stream
 from apsbits.utils.config_loaders import load_config
 from apsbits.utils.helper_functions import register_bluesky_magics
 from apsbits.utils.helper_functions import running_in_queueserver
+from apsbits.utils.logging_setup import configure_logging
 
 # Run first so we get better diagnostics about subsequent problems
 configure_logging()
