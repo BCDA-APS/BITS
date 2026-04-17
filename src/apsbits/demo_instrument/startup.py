@@ -19,6 +19,7 @@ from apsbits.core.catalog_init import init_catalog
 from apsbits.core.instrument_init import init_instrument
 from apsbits.core.instrument_init import make_devices
 from apsbits.core.run_engine_init import init_RE
+from apsbits.core.session_setup import prepare_bits
 
 # Utility functions
 from apsbits.utils.aps_functions import host_on_aps_subnet
@@ -29,6 +30,10 @@ from apsbits.utils.config_loaders import load_config
 from apsbits.utils.helper_functions import register_bluesky_magics
 from apsbits.utils.helper_functions import running_in_queueserver
 from apsbits.utils.logging_setup import configure_logging
+
+# Run first so we get better diagnostics about subsequent problems
+configure_logging()
+prepare_bits()
 
 # Configuration block
 # Get the path to the instrument package
@@ -70,7 +75,7 @@ RE, sd = init_RE(iconfig, subscribers=[bec, cat])
 if iconfig.get("NEXUS_DATA_FILES", {}).get("ENABLE", False):
     from .callbacks.demo_nexus_callback import nxwriter_init
 
-    nxwriter = nxwriter_init(RE)
+    nxwriter = nxwriter_init(RE, iconfig)
 
 # Optional SPEC callback block
 # delete this block if not using SPEC
@@ -78,9 +83,8 @@ if iconfig.get("SPEC_DATA_FILES", {}).get("ENABLE", False):
     from .callbacks.demo_spec_callback import init_specwriter_with_RE
     from .callbacks.demo_spec_callback import newSpecFile  # noqa: F401
     from .callbacks.demo_spec_callback import spec_comment  # noqa: F401
-    from .callbacks.demo_spec_callback import specwriter  # noqa: F401
 
-    init_specwriter_with_RE(RE)
+    specwriter = init_specwriter_with_RE(RE, iconfig)  # noqa: F811
 
 # These imports must come after the above setup.
 # Queue server block

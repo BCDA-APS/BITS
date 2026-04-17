@@ -13,7 +13,6 @@ import guarneri
 from apsbits.utils.config_loaders import get_config
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
 
 
 def setup_baseline_stream(

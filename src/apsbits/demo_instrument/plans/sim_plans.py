@@ -18,7 +18,6 @@ from bluesky import plans as bp
 from apsbits.core.instrument_init import with_registry
 
 logger = logging.getLogger(__name__)
-logger.bsdev(__file__)
 
 DEFAULT_MD = {"title": "test run with simulator(s)"}
 
