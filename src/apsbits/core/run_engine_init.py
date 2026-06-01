@@ -96,7 +96,7 @@ def init_RE(
     MD_PATH = get_md_path(iconfig)
     # Save/restore RE.md dictionary in the specified order.
     if MD_PATH is not None:
-        handler_name = StoredDict
+        handler_name = "StoredDict"
         logger.debug(
             "Selected %r to store 'RE.md' dictionary in %s.",
             handler_name,
