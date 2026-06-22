@@ -69,7 +69,6 @@ graph LR
     subgraph api["apsbits.api"]
         create_new_instrument
         delete_instrument
-        run_instrument --> instrument_init
     end
 
     apsbits_init["apsbits/__init__"]

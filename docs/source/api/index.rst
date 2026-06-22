@@ -102,4 +102,3 @@ The API module provides command-line interfaces for instrument management:
 
    apsbits.api.create_new_instrument
    apsbits.api.delete_instrument
-   apsbits.api.run_instrument
