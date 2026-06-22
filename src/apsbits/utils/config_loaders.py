@@ -12,7 +12,7 @@ from pathlib import Path
 from typing import Any
 from typing import Optional
 
-import tomli  # type: ignore
+import tomllib
 import yaml
 
 logger = logging.getLogger(__name__)
@@ -48,7 +48,7 @@ def load_config(config_path: Optional[Path] = None) -> dict[str, Any]:
             if config_path.suffix.lower() == ".yml":
                 config = yaml.safe_load(f)
             elif config_path.suffix.lower() == ".toml":
-                config = tomli.load(f)
+                config = tomllib.load(f)
             else:
                 raise ValueError(
                     f"Unsupported configuration file format: {config_path.suffix}. "
@@ -80,7 +80,7 @@ def load_config(config_path: Optional[Path] = None) -> dict[str, Any]:
             "YAML parsing error in configuration file %s: %s", config_path, str(e)
         )
         raise
-    except tomli.TOMLDecodeError as e:
+    except tomllib.TOMLDecodeError as e:
         logger.error(
             "TOML parsing error in configuration file %s: %s", config_path, str(e)
         )

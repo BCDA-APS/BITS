@@ -53,12 +53,10 @@ dependencies = [
     "pysumreg",
     "qtpy",
     "tiled[all]",
-    "tomli-w",
-    "tomli",
 ]
 
 [project.optional-dependencies]
-dev = ["build", "isort", "mypy", "pre-commit", "pytest", "pytest-mock", "ruff"]
+dev = ["build", "mypy", "pre-commit", "pytest", "pytest-mock", "ruff", "tomli-w"]
 
 # doc: conda install conda-forge::pandoc
 doc = [
@@ -75,8 +73,6 @@ doc = [
     "sphinx-tabs",
     "sphinx",
     "graphviz",
-    "dot",
-    "tomli-w",
 ]
 
 all = ["apsbits[dev,doc]"]
@@ -85,50 +81,6 @@ all = ["apsbits[dev,doc]"]
 "Homepage" = "https://BCDA-APS.github.io/BITS/"
 "Bug Tracker" = "https://github.com/BCDA-APS/BITS/issues"
 
-
-[tool.black]
-line-length = 115
-target-version = ['py311']
-include = '\.pyi?$'
-exclude = '''
-
-(
-  /(
-      \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | \.pytest_cache
-    | _build
-    | build
-    | dist
-    | docs
-  )/
-)
-'''
-
-
-[tool.flake8]
-max-line-length = 115
-extend-ignore = [
-    "E203", # See https://github.com/PyCQA/pycodestyle/issues/373
-    "E402", # module level import not at top of file (for cansas.py)
-    "E501",
-    "F401", # imported but unused
-    "F405", # symbol may be undefined, or defined from star imports
-    "F722", # allow Annotated[typ, some_func("some string")]
-    "F811", # support typing.overload decorator
-    "W503",
-    "W504",
-]
-
-[tool.isort]
-force_single_line = true
-# multi_line_output = 1
-line_length = 88
-include_trailing_comma = true
 
 [tool.pytest.ini_options]
 # https://docs.pytest.org/en/stable/customize.html
