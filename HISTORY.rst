@@ -24,7 +24,7 @@ Releases
 
 Brief notes describing each release and what's new.
 
-Project `milestones <https://github.com/prjemian/hklpy2/milestones>`_
+Project `milestones <https://github.com/BCDA-APS/BITS/milestones>`_
 describe future plans.
 
 .. Coming release content can be gathered here.
@@ -34,6 +34,12 @@ describe future plans.
     #####
 
     release expected ?
+
+    Breaking Changes
+    ----------------
+
+    * Removed the ``create-bits`` console script (back-compat alias for ``bits-create``);
+      use ``bits-create`` instead.
 
     New Features
     ---------------
@@ -98,7 +104,7 @@ Maintenance
 ---------------
 
 * Add a release history file
-* Documentation overhaul1
+* Documentation overhaul
 * adding install docs given new workflow
 * Feature/API_functionalities and Makedevices
 

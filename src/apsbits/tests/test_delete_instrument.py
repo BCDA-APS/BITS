@@ -202,24 +202,28 @@ def test_delete_main_nonexistent_instrument(
     """
     Test the main function with a nonexistent instrument.
 
+    A missing instrument is fatal: main() must exit(1) and must not
+    report a successful move.
+
     :param monkeypatch: Pytest fixture for patching.
     :param capsys: Pytest fixture for capturing stdout and stderr.
     """
-    # Mock argparse to return a valid name
+    # Mock argparse to return a valid name for an instrument that does not exist
     monkeypatch.setattr(
         "argparse.ArgumentParser.parse_args",
         lambda _: type("Args", (), {"name": "nonexistent", "force": False})(),
     )
 
-    # Mock input to return 'n' to avoid stdin issues
+    # Mock input so a regression to the confirmation prompt fails cleanly
     monkeypatch.setattr("builtins.input", lambda _: "n")
 
     with pytest.raises(SystemExit) as excinfo:
         delete_main()
 
-    assert excinfo.value.code == 0  # Should exit with 0 when user cancels
+    assert excinfo.value.code == 1  # missing instrument is fatal
     captured = capsys.readouterr()
-    assert "Operation cancelled" in captured.out
+    assert "does not exist" in captured.err
+    assert "have been moved" not in captured.out
 
 
 def test_delete_main_successful_deletion(

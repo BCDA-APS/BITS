@@ -3,7 +3,7 @@
 Queue Server
 ============
 
-The Queue Server provides a way to run Bluesky plans remotely. We assume you have created used the create-bits command to create an instrument named ``new_instrument``.
+The Queue Server provides a way to run Bluesky plans remotely. We assume you have created used the bits-create command to create an instrument named ``new_instrument``.
 
 Configuration
 --------------------

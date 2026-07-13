@@ -11,7 +11,7 @@ Inside the root folder inside of the templated repository run create
 .. code-block:: bash
 
     export YOUR_INSTRUMENT_NAME=new_instrument
-    create-bits $YOUR_INSTRUMENT_NAME
+    bits-create $YOUR_INSTRUMENT_NAME
     pip install -e .
 
 

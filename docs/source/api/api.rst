@@ -24,13 +24,13 @@ Create a new instrument:
 
 .. code-block:: bash
 
-   create-bits --name my_instrument --path /path/to/instrument
+   bits-create my_instrument
 
 Delete an instrument:
 
 .. code-block:: bash
 
-   delete-bits --name my_instrument --path /path/to/instrument
+   bits-delete my_instrument
 
 API Reference
 -------------
