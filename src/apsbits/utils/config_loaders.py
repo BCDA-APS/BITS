@@ -8,11 +8,11 @@ access to the configuration throughout the application.
 
 import logging
 import pathlib
+import tomllib
 from pathlib import Path
 from typing import Any
 from typing import Optional
 
-import tomllib
 import yaml
 
 logger = logging.getLogger(__name__)

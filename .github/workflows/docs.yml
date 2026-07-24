@@ -20,6 +20,13 @@ on:
         required: true
         default: false
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 defaults:
   run:
     shell: bash -l {0}
@@ -29,6 +36,9 @@ jobs:
   pages:
     name: Publish documentation
     runs-on: ubuntu-latest
+    # The gh-pages deploy step (peaceiris) pushes to the gh-pages branch.
+    permissions:
+      contents: write
 
     steps:
 
