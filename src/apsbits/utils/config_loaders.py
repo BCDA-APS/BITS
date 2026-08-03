@@ -9,7 +9,9 @@ access to the configuration throughout the application.
 import logging
 import pathlib
 import tomllib
+from collections.abc import Mapping
 from pathlib import Path
+from types import MappingProxyType
 from typing import Any
 from typing import Optional
 
@@ -43,66 +45,46 @@ def load_config(config_path: Optional[Path] = None) -> dict[str, Any]:
     if not config_path.exists():
         raise FileNotFoundError(f"Configuration file not found at {config_path}")
 
-    try:
-        with open(config_path, "rb") as f:
-            if config_path.suffix.lower() == ".yml":
-                config = yaml.safe_load(f)
-            elif config_path.suffix.lower() == ".toml":
+    suffix = config_path.suffix.lower()
+    if suffix == ".yml":
+        config = load_config_yaml(config_path)
+    elif suffix == ".toml":
+        try:
+            with open(config_path, "rb") as f:
                 config = tomllib.load(f)
-            else:
-                raise ValueError(
-                    f"Unsupported configuration file format: {config_path.suffix}. "
-                    "Supported formats: .yml, .toml"
-                )
-
-            if config is None:
-                logger.warning(
-                    "Configuration file %s is empty, using empty configuration",
-                    config_path,
-                )
-                config = {}
-
-            _iconfig.update(config)
-
-            _iconfig["ICONFIG_PATH"] = str(config_path)
-            _iconfig["INSTRUMENT_PATH"] = str(config_path.parent)
-            _iconfig["INSTRUMENT_FOLDER"] = str(config_path.parent.name)
-
-            return _iconfig
-    except FileNotFoundError:
-        logger.error("Configuration file not found: %s", config_path)
-        raise
-    except PermissionError:
-        logger.error("Permission denied reading configuration file: %s", config_path)
-        raise
-    except yaml.YAMLError as e:
-        logger.error(
-            "YAML parsing error in configuration file %s: %s", config_path, str(e)
+        except tomllib.TOMLDecodeError as e:
+            logger.error(
+                "TOML parsing error in configuration file %s: %s", config_path, str(e)
+            )
+            raise
+    else:
+        raise ValueError(
+            f"Unsupported configuration file format: {config_path.suffix}. "
+            "Supported formats: .yml, .toml"
         )
-        raise
-    except tomllib.TOMLDecodeError as e:
-        logger.error(
-            "TOML parsing error in configuration file %s: %s", config_path, str(e)
-        )
-        raise
-    except Exception as e:
-        logger.error(
-            "Unexpected error loading configuration from %s: %s (type: %s)",
-            config_path,
-            str(e),
-            type(e).__name__,
-        )
-        raise
+
+    # Replace global state (not merge) so keys from a previous load don't leak.
+    _iconfig.clear()
+    _iconfig.update(config)
+
+    _iconfig["ICONFIG_PATH"] = str(config_path)
+    _iconfig["INSTRUMENT_PATH"] = str(config_path.parent)
+    _iconfig["INSTRUMENT_FOLDER"] = str(config_path.parent.name)
+
+    return _iconfig
 
 
-def get_config() -> dict[str, Any]:
+def get_config() -> Mapping[str, Any]:
     """
     Get the current configuration.
 
+    Returns a read-only view of the global configuration; use ``load_config`` or
+    ``update_config`` to modify it.
+
     Returns:
-        The current configuration dictionary.
+        A read-only view of the current configuration dictionary.
     """
-    return _iconfig
+    return MappingProxyType(_iconfig)
 
 
 def update_config(updates: dict[str, Any]) -> None:
@@ -113,6 +95,11 @@ def update_config(updates: dict[str, Any]) -> None:
         updates: Dictionary of configuration updates.
     """
     _iconfig.update(updates)
+
+
+def reset_config() -> None:
+    """Clear the global configuration (primarily for test isolation)."""
+    _iconfig.clear()
 
 
 def load_config_yaml(config_obj) -> dict:
@@ -150,7 +137,7 @@ def load_config_yaml(config_obj) -> dict:
             logger.warning("YAML configuration is empty")
             return {}
 
-        iconfig = yaml.load(content, yaml.Loader)
+        iconfig = yaml.safe_load(content)
         return iconfig if iconfig is not None else {}
     except FileNotFoundError:
         logger.error("YAML configuration file not found: %s", config_obj)
@@ -168,72 +155,3 @@ def load_config_yaml(config_obj) -> dict:
             type(e).__name__,
         )
         raise
-
-
-def validate_instrument_path(
-    instrument_path: Optional[Path] = None,
-    expected_files: Optional[list[str]] = None,
-    expected_dirs: Optional[list[str]] = None,
-) -> tuple[bool, str]:
-    """
-    Validate if the provided instrument path is correct by checking for expected files
-    and directories.
-
-    Args:
-        instrument_path: Path to the instrument directory. If None, uses the path from
-            the current config.
-        expected_files: List of files that should exist in the instrument directory.
-        expected_dirs: List of directories that should exist in the instrument
-            directory.
-
-    Returns:
-        A tuple containing (is_valid, message) where is_valid is a boolean indicating if
-        the path is valid, and message is a description of the validation result.
-    """
-    if instrument_path is None:
-        if "INSTRUMENT_PATH" not in _iconfig:
-            return False, "No instrument path found in configuration"
-        instrument_path = Path(_iconfig["INSTRUMENT_PATH"])
-
-    # Default expected files and directories if none provided
-    if expected_files is None:
-        expected_files = ["iconfig.yml", "iconfig.toml"]
-    if expected_dirs is None:
-        expected_dirs = ["src", "tests"]
-
-    # Check if the path exists and is a directory
-    if not instrument_path.exists():
-        return False, f"Instrument path does not exist: {instrument_path}"
-
-    if not instrument_path.is_dir():
-        return False, f"Instrument path is not a directory: {instrument_path}"
-
-    # Check for expected files
-    missing_files = []
-    for file in expected_files:
-        if not (instrument_path / file).exists():
-            missing_files.append(file)
-
-    if missing_files:
-        return (
-            False,
-            f"Missing expected files in instrument path: {', '.join(missing_files)}",
-        )
-
-    # Check for expected directories
-    missing_dirs = []
-    for directory in expected_dirs:
-        if (
-            not (instrument_path / directory).exists()
-            or not (instrument_path / directory).is_dir()
-        ):
-            missing_dirs.append(directory)
-
-    if missing_dirs:
-        return (
-            False,
-            f"Missing expected directories in instrument path: "
-            f"{', '.join(missing_dirs)}",
-        )
-
-    return True, f"Instrument path is valid: {instrument_path}"

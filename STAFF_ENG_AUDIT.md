@@ -23,12 +23,12 @@ end). IDs in brackets trace back to the audit.
 | Bucket | Done & verified | Still open | New (§5) |
 |---|---|---|---|
 | BAD (B) | B2, B3, B5, B8, B11, B12, B14 | B4, B6, B7, B9, B13 | — |
-| REDUNDANT (R) | R1, R2, R3, R4, R5, R6, R11, R12, R13 | R7, R8, R9, R10 | — |
-| NEEDS IMPROVEMENT (N) | N1, N2, N3, N7, N14, N17, N18, N19, N20, N21 | N5, N6, N8–N13, N15, N16, N22, N23, N24 (no N4) | — |
+| REDUNDANT (R) | R1, R2, R3, R4, R5, R6, R7, R8, R11, R12, R13 | R9, R10 | — |
+| NEEDS IMPROVEMENT (N) | N1, N2, N3, N7, N11, N14, N17, N18, N19, N20, N21 | N5, N6, N8, N9, N10, N12, N13, N15, N16, N22, N23, N24 (no N4) | — |
 | DOES WELL (W) | W1–W15 *(verified still present)* | — | — |
-| **New findings (§5)** | S1, S2, S3, S10, S11, S12, S19 | S4–S9, S13–S18 | — |
+| **New findings (§5)** | S1, S2, S3, S6, S10, S11, S12, S13, S19 | S4, S5, S7, S8, S9, S14–S18 | — |
 
-**Totals (B/R/N/S): 33 done · 34 open · 15 strengths preserved (W1–W15).** §6 Batches 0–3 executed & verified 2026-07-24 (suite 95→**105** passed, +10 new tests; startup smoke OK).
+**Totals (B/R/N/S): 38 done · 29 open · 15 strengths preserved (W1–W15).** §6 Batches 0–3 executed & verified 2026-07-24 (suite 95→**105** passed, +10 new tests; startup smoke OK); Batch 4 executed & verified 2026-08-03 (R8, N11, R7, S6, S13; +5 new tests → **108 passed, 2 failed** locally — both pre-existing APS-subnet EPICS timeouts unrelated to the change; 110 on an off-subnet host like CI; ruff + startup smoke OK).
 
 ## Fix-first priority (highest impact, refreshed 2026-07-24)
 
@@ -123,15 +123,17 @@ end). IDs in brackets trace back to the audit.
 
 - [x] **R6 — Recategorize `tomli-w` as a test-only dep** — **Done & verified (2026-07-24):** `tomli-w` appears only in the `dev` extra (`pyproject.toml:59`); absent from `dependencies` and `doc`.
 
-- [ ] **R7 — Delete dead `validate_instrument_path`** `src/apsbits/utils/config_loaders.py:173-239`.
+- [x] **R7 — Delete dead `validate_instrument_path`** `src/apsbits/utils/config_loaders.py:173-239`.
   No callers; also buggy (requires *both* `iconfig.yml` AND `iconfig.toml`).
   **Verified still open (2026-07-24):** function present; repo-wide grep shows zero functional callers (only the def + auto-generated `config_loaders.rst`); still requires both files (`expected_files = ["iconfig.yml", "iconfig.toml"]`).
   **Action:** Delete the function. (If kept instead, change the file check to require *either* format.)
+  **Done (2026-08-03):** function deleted; re-confirmed zero functional callers before removal; no imports orphaned (`Path`/`Optional`/`pathlib` still used). Note: the auto-generated `docs/source/api/generated/apsbits.utils.config_loaders.rst` still lists it — it regenerates on `make docs` (cleared with Batch 9).
 
-- [ ] **R8 — Consolidate the two YAML loaders** `src/apsbits/utils/config_loaders.py:24-95` & `118-170`.
+- [x] **R8 — Consolidate the two YAML loaders** `src/apsbits/utils/config_loaders.py:24-95` & `118-170`.
   `load_config` and `load_config_yaml` duplicate the open/empty-check/except ladder and diverge on safety: `load_config_yaml` uses unsafe `yaml.load(content, yaml.Loader)`.
   **Verified still open (2026-07-24):** unsafe `yaml.load(content, yaml.Loader)` at line ~153; `load_config` uses `yaml.safe_load`. Note `StoredDict.load` and `configure_logging` call `load_config_yaml`.
   **Action (do regardless):** change line 153 to `yaml.safe_load(content)`. Then have one helper delegate to the other to remove duplication.
+  **Done (2026-08-03):** `load_config_yaml` now uses `yaml.safe_load`. Safe because `StoredDict.__setitem__` enforces `json.dumps` and `dump` uses plain `yaml.dump`, so persisted files carry no `!!python/*` tags; logging configs are plain data too — both round-trip under `safe_load` (confirmed by `test_stored_dict` + startup smoke). `load_config` now delegates its `.yml` read to `load_config_yaml`; TOML stays inline because `tomllib.load` requires a binary handle and can't share the text-mode helper. **Behavior drift:** consolidating the except ladders changed some log wording, and the TOML path no longer emits bespoke `PermissionError`/generic `logger.error` lines (the exceptions still propagate unchanged).
 
 - [ ] **R9 — Remove dead duplicate kwargs in `motors()`** `src/apsbits/utils/sim_creator.py:185-186`.
   Both assignments are immediately overwritten by the following `kwargs.update({...})`.
@@ -184,9 +186,10 @@ end). IDs in brackets trace back to the audit.
   **Action:** Add an `else` branch logging a warning.
 
 ### Correctness hazards (latent)
-- [ ] **N11 — `load_config` must replace, not merge, global state** `src/apsbits/utils/config_loaders.py:65`.
+- [x] **N11 — `load_config` must replace, not merge, global state** `src/apsbits/utils/config_loaders.py:65`.
   `_iconfig.update(config)` leaks stale keys across loads and between tests.
   **Action:** `_iconfig.clear(); _iconfig.update(config)`. Add a `reset_config()` helper for a conftest fixture. (Coordinate with **S6**.)
+  **Done (2026-08-03):** `load_config` now does `_iconfig.clear(); _iconfig.update(config)`; added public `reset_config()`. Verified the `clear()` doesn't regress `test_general::test_iconfig` (which reads demo-config keys from the global) — the session fixture reloads demo config before those assertions, so ordering stays benign. Genuine fixture determinism is still **N24** (Batch 8).
 - [ ] **N12 — Guard `logger.bsdev` calls** `src/apsbits/utils/helper_functions.py:77,117` (also `logging_setup.py:230,231,284`).
   `bsdev` only exists after `configure_logging()`; calling these utilities first raises `AttributeError`. *(Masked in the shipped flow because `startup.py:35` configures logging first.)*
   **Action:** Use `getattr(logger, "bsdev", logger.debug)(...)`, or register the level eagerly at `logging_setup` import.
@@ -276,9 +279,10 @@ New issues the first pass did not catalogue. Same format: file:line → problem 
 - [ ] **S5 — `StoredDict` uses non-daemon busy-wait threads** `src/apsbits/utils/stored_dict.py:73,140-152`.
   Each idle `__setitem__` spawns a `threading.Thread` **without `daemon=True`** that busy-polls `time.sleep(0.005)`. Non-daemon threads can delay interpreter shutdown; the spin wastes CPU.
   **Action:** Use `daemon=True` and a `threading.Event`/`Timer` instead of a poll loop. *(Medium priority — working code; refactor carefully with tests.)*
-- [ ] **S6 — `get_config()` returns the live mutable global** `src/apsbits/utils/config_loaders.py:98-105`.
+- [x] **S6 — `get_config()` returns the live mutable global** `src/apsbits/utils/config_loaders.py:98-105`.
   Any caller can do `get_config()["X"] = ...` and silently corrupt the single-source-of-truth for the whole session (compounds N11).
   **Action:** Return `types.MappingProxyType(_iconfig)` (or a copy). **Pre-check:** grep for `get_config()[...] =` mutations first (none found in a quick scan, but confirm before applying).
+  **Done (2026-08-03):** `get_config()` returns `types.MappingProxyType(_iconfig)`; return annotation relaxed to `Mapping[str, Any]`. **Pre-check confirmed:** all 5 callers (`instrument_init`, `helper_functions`, `baseline_setup`, `test_general` ×2) only read — no `get_config()[...] =`, no aliased `iconfig[...] =`/`.update`/`.pop`/`del`, no `isinstance(...,dict)`/`dict(get_config())` — so no caller migration was needed. `load_config`'s return is intentionally left mutable (the write path), per this item's scope.
 
 ### api/
 - [ ] **S7 — Stale/false docstrings** `src/apsbits/api/create_new_instrument.py:5` and `src/apsbits/api/__init__.py:4-5`.
@@ -303,9 +307,10 @@ New issues the first pass did not catalogue. Same format: file:line → problem 
   **Action:** Add `permissions: {contents: read}` at workflow level (docs' gh-pages step can elevate locally).
 
 ### testing
-- [ ] **S13 — Config path-injection + `get_config()` round-trip untested** `tests/test_config.py`.
+- [x] **S13 — Config path-injection + `get_config()` round-trip untested** `tests/test_config.py`.
   `load_config()` is documented to inject `ICONFIG_PATH`/`INSTRUMENT_PATH`/`INSTRUMENT_FOLDER`, and `get_config()` should return the same populated dict — the core config contract, entirely untested.
   **Action:** Assert the injected keys and the `load_config → get_config` round-trip.
+  **Done (2026-08-03):** added 5 tests to `test_config.py` — path-key injection, `load_config → get_config` round-trip, `get_config()` read-only view raises `TypeError` on write (S6), replace-not-merge (N11), and `reset_config()` clears.
 - [ ] **S14 — NeXus writer enable-branch untested** `tests/test_general.py` (or new).
   Tests assert `specwriter` but never `nxwriter`; the `NEXUS_DATA_FILES.ENABLE` toggle has zero coverage.
   **Action:** Add a test that enables it and asserts the `nxwriter` global/callback appears (mirror the specwriter path).
@@ -384,13 +389,14 @@ File `src/apsbits/core/instrument_init.py`:
 - [ ] S1: `run_engine_init.py:99,106` — remove the dead `PersistentDict` branch (or drive `handler_name` from `iconfig` if it's meant to be configurable; confirm intent from `iconfig.yml` before choosing).
 - **Verify:** `pytest ./src`; startup smoke; add/adjust an `init_RE` unit test (N22) that asserts the StoredDict handler path is taken.
 
-### Batch 4 — utils/config_loaders.py — R8, N11, R7, S6, S13
+### Batch 4 — utils/config_loaders.py — R8, N11, R7, S6, S13 — ✅ DONE & VERIFIED 2026-08-03
+> Executed 2026-08-03: all items applied. R8 delegates `load_config`'s YAML read to `load_config_yaml` (now `safe_load`) and keeps TOML inline (`tomllib` needs a binary handle) — this narrows some error logs (see R8 note). N11 adds `clear()` + a public `reset_config()`. S6 pre-check confirmed all 5 `get_config()` callers are read-only. Added 5 tests to `test_config.py`. Verified: full suite **108 passed, 2 failed** — the 2 failures (`test_general::test_sim_plans`) are pre-existing `S-DCCT:CurrentM` EPICS timeouts (this host resolves as on-APS-subnet, so `devices_aps_only.yml` loads; proven identical on the stashed baseline), unrelated to this batch. `ruff`/`ruff-format` clean on changed files; IPython startup smoke OK.
 File `src/apsbits/utils/config_loaders.py`:
-- [ ] R8: line ~153 `yaml.load(content, yaml.Loader)` → `yaml.safe_load(content)`; then make one loader delegate to the other to kill the duplicated open/empty/except ladder.
-- [ ] N11: line ~65 `_iconfig.update(config)` → `_iconfig.clear(); _iconfig.update(config)`; add a `reset_config()` helper.
-- [ ] R7: delete `validate_instrument_path` (173-239) — **first** `grep -rn validate_instrument_path src/` to confirm zero functional callers.
-- [ ] S6: `get_config()` (98-105) → return `types.MappingProxyType(_iconfig)`. **Pre-check** `grep -rn "get_config()\[" src/` for write-mutations; if any exist, fix those callers first.
-- [ ] S13: add tests in `tests/test_config.py` — injected `ICONFIG_PATH`/`INSTRUMENT_PATH`/`INSTRUMENT_FOLDER` present after `load_config`; `load_config → get_config` round-trip; `reset_config()` clears.
+- [x] R8: line ~153 `yaml.load(content, yaml.Loader)` → `yaml.safe_load(content)`; then make one loader delegate to the other to kill the duplicated open/empty/except ladder.
+- [x] N11: line ~65 `_iconfig.update(config)` → `_iconfig.clear(); _iconfig.update(config)`; add a `reset_config()` helper.
+- [x] R7: delete `validate_instrument_path` (173-239) — **first** `grep -rn validate_instrument_path src/` to confirm zero functional callers.
+- [x] S6: `get_config()` (98-105) → return `types.MappingProxyType(_iconfig)`. **Pre-check** `grep -rn "get_config()\[" src/` for write-mutations; if any exist, fix those callers first.
+- [x] S13: add tests in `tests/test_config.py` — injected `ICONFIG_PATH`/`INSTRUMENT_PATH`/`INSTRUMENT_FOLDER` present after `load_config`; `load_config → get_config` round-trip; `reset_config()` clears.
 - **Verify:** `conda run -n bits_dev python -m pytest src/apsbits/tests/test_config.py -vvv`; confirm `StoredDict.load` + `configure_logging` still load YAML (they call `load_config_yaml`); startup smoke.
 
 ### Batch 5 — utils/stored_dict.py durability — B9, S4, S5
