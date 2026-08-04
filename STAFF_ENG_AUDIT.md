@@ -22,13 +22,13 @@ end). IDs in brackets trace back to the audit.
 
 | Bucket | Done & verified | Still open | New (§5) |
 |---|---|---|---|
-| BAD (B) | B2, B3, B5, B8, B11, B12, B14 | B4, B6, B7, B9, B13 | — |
+| BAD (B) | B2, B3, B5, B8, B9, B11, B12, B14 | B4, B6, B7, B13 | — |
 | REDUNDANT (R) | R1, R2, R3, R4, R5, R6, R7, R8, R11, R12, R13 | R9, R10 | — |
 | NEEDS IMPROVEMENT (N) | N1, N2, N3, N7, N11, N14, N17, N18, N19, N20, N21 | N5, N6, N8, N9, N10, N12, N13, N15, N16, N22, N23, N24 (no N4) | — |
 | DOES WELL (W) | W1–W15 *(verified still present)* | — | — |
-| **New findings (§5)** | S1, S2, S3, S6, S10, S11, S12, S13, S19 | S4, S5, S7, S8, S9, S14–S18 | — |
+| **New findings (§5)** | S1, S2, S3, S4, S5, S6, S10, S11, S12, S13, S19 | S7, S8, S9, S14–S18 | — |
 
-**Totals (B/R/N/S): 38 done · 29 open · 15 strengths preserved (W1–W15).** §6 Batches 0–3 executed & verified 2026-07-24 (suite 95→**105** passed, +10 new tests; startup smoke OK); Batch 4 executed & verified 2026-08-03 (R8, N11, R7, S6, S13; +5 new tests → **108 passed, 2 failed** locally — both pre-existing APS-subnet EPICS timeouts unrelated to the change; 110 on an off-subnet host like CI; ruff + startup smoke OK).
+**Totals (B/R/N/S): 41 done · 26 open · 15 strengths preserved (W1–W15).** §6 Batches 0–3 executed & verified 2026-07-24 (suite 95→**105** passed, +10 new tests; startup smoke OK); Batch 4 executed & verified 2026-08-03 (R8, N11, R7, S6, S13; +5 new tests → **108 passed, 2 failed** locally — both pre-existing APS-subnet EPICS timeouts unrelated to the change; 110 on an off-subnet host like CI; ruff + startup smoke OK); Batch 5 executed & verified 2026-08-03 (B9, S4, S5; +2 new tests → `test_stored_dict.py` **15 passed**; ruff + startup smoke OK). Full-suite failures are pre-existing and unrelated to Batch 5 — the two `test_delete_instrument` "invalid name './src'" failures reproduce identically with the Batch 5 changes stashed (an `os.chdir`-leak order-dependence), and the two `test_sim_plans` failures are the same flaky APS-subnet `S-DCCT` EPICS timeouts.
 
 ## Fix-first priority (highest impact, refreshed 2026-07-24)
 
@@ -40,6 +40,7 @@ end). IDs in brackets trace back to the audit.
    and `init_RE`'s unreachable `PersistentDict` branch (S1). `instrument_init.py:171`, `run_engine_init.py:99-106`.
 3. **`StoredDict` data loss** — `flush()` is not durable while a background sync is in flight
    (B9) and `__delitem__`/`popitem` never persist deletions (S4). `stored_dict.py`.
+   **(RESOLVED — Batch 5, 2026-08-03: B9/S4/S5 done.)**
 4. **Test suite ERRORs without EPICS** — the `ioc` fixture hard-fails instead of skipping when
    `softIoc` is absent (B7). `tests/conftest.py`.
 5. **Docs describe removed code** — `dm.rst` documents deleted `aps_dm_setup`/`dm_plans` (B4);
@@ -87,10 +88,11 @@ end). IDs in brackets trace back to the audit.
 - [x] **B8 — Fix misleading `with_registry` error message** `src/apsbits/core/instrument_init.py:198-200`.
   **Done & verified (2026-07-24):** message now reads `'Instrument not set. Call init_instrument("guarneri") first.'`.
 
-- [ ] **B9 — Make `StoredDict.flush()` durable** `src/apsbits/utils/stored_dict.py:154-160`.
+- [x] **B9 — Make `StoredDict.flush()` durable** `src/apsbits/utils/stored_dict.py:154-160`.
   When a background sync is in progress, `flush()` returns without writing, risking data loss on shutdown.
   **Verified still open (2026-07-24):** `flush()` short-circuits on `if not self.sync_in_progress:` and there is **no lock primitive** in the class.
   **Action:** Add `self._lock = threading.RLock()` in `__init__`; in `flush()` acquire the lock, unconditionally `StoredDict.dump(self._file, self._cache, title=self._title)`, then set `_sync_deadline=time.time()` and `sync_in_progress=False`. Remove the `if not sync_in_progress` short-circuit. (See also **S4** — deletions are never persisted.)
+  **Done (2026-08-03):** added `self._lock = threading.RLock()`; `flush()` now cancels any pending debounce timer, unconditionally `StoredDict.dump(...)` under the lock, then resets `_sync_deadline`/`sync_in_progress` (short-circuit removed). The background writer (`_sync_to_storage`) also holds the lock, so flush and the timer can't write the file concurrently. Regression test `test_flush_durable_during_sync` in `test_stored_dict.py`.
 
 - [x] **B11 — Fix wrong-project milestones link** `HISTORY.rst:27`.
   **Done & verified (2026-07-24):** now `https://github.com/BCDA-APS/BITS/milestones`.
@@ -273,12 +275,14 @@ New issues the first pass did not catalogue. Same format: file:line → problem 
   **Action:** Add a final `else: logger.error("Unrecognized device_manager: %r", device_manager); raise ValueError(...)`. Coordinate with N7.
 
 ### utils/
-- [ ] **S4 — `StoredDict` deletions are never persisted** `src/apsbits/utils/stored_dict.py:78-88` (`__delitem__`) and `162-169` (`popitem`).
+- [x] **S4 — `StoredDict` deletions are never persisted** `src/apsbits/utils/stored_dict.py:78-88` (`__delitem__`) and `162-169` (`popitem`).
   Both mutate `self._cache` but (unlike `__setitem__`) never reset `_sync_deadline` / start `_delayed_sync_to_storage()`, so deleted keys silently persist on disk until the next `__setitem__` or `flush()`.
   **Action:** After mutating, schedule a sync exactly as `__setitem__` does. Fix alongside B9.
-- [ ] **S5 — `StoredDict` uses non-daemon busy-wait threads** `src/apsbits/utils/stored_dict.py:73,140-152`.
+  **Done (2026-08-03):** `__delitem__` and `popitem` now call the shared `_schedule_sync()` after mutating `_cache`, so removals persist on the same debounce as writes (no explicit `flush()` needed). `popitem` schedules only after `_cache.popitem()` succeeds, so the empty-dict `KeyError` path is unchanged. Regression test `test_deletion_persisted`.
+- [x] **S5 — `StoredDict` uses non-daemon busy-wait threads** `src/apsbits/utils/stored_dict.py:73,140-152`.
   Each idle `__setitem__` spawns a `threading.Thread` **without `daemon=True`** that busy-polls `time.sleep(0.005)`. Non-daemon threads can delay interpreter shutdown; the spin wastes CPU.
   **Action:** Use `daemon=True` and a `threading.Event`/`Timer` instead of a poll loop. *(Medium priority — working code; refactor carefully with tests.)*
+  **Done (2026-08-03):** replaced the busy-poll (`_delayed_sync_to_storage` + the now-orphaned `_sync_loop_period`, both removed) with a debounced daemon `threading.Timer`: `_schedule_sync()` restarts the timer on each write/deletion; `_sync_to_storage()` performs the locked write when it fires. `_schedule_sync()` now sets `sync_in_progress=True` synchronously (previously set inside the thread), which also makes the pre-existing `assert sdict.sync_in_progress` in `test_StoredDict` deterministic. `_sync_key` left in place per the REJECTED-list caution. Added `sdict.flush()` after the trailing `del` in `test_StoredDict` to cancel the timer that the S4 fix now schedules (prevents a post-test daemon write to the unlinked temp file).
 - [x] **S6 — `get_config()` returns the live mutable global** `src/apsbits/utils/config_loaders.py:98-105`.
   Any caller can do `get_config()["X"] = ...` and silently corrupt the single-source-of-truth for the whole session (compounds N11).
   **Action:** Return `types.MappingProxyType(_iconfig)` (or a copy). **Pre-check:** grep for `get_config()[...] =` mutations first (none found in a quick scan, but confirm before applying).
@@ -399,13 +403,14 @@ File `src/apsbits/utils/config_loaders.py`:
 - [x] S13: add tests in `tests/test_config.py` — injected `ICONFIG_PATH`/`INSTRUMENT_PATH`/`INSTRUMENT_FOLDER` present after `load_config`; `load_config → get_config` round-trip; `reset_config()` clears.
 - **Verify:** `conda run -n bits_dev python -m pytest src/apsbits/tests/test_config.py -vvv`; confirm `StoredDict.load` + `configure_logging` still load YAML (they call `load_config_yaml`); startup smoke.
 
-### Batch 5 — utils/stored_dict.py durability — B9, S4, S5
+### Batch 5 — utils/stored_dict.py durability — B9, S4, S5 — ✅ DONE & VERIFIED 2026-08-03
+> Executed 2026-08-03: all three items applied together (they share the sync machinery). S5's Timer redesign is what makes B9's "unconditional flush" safe — flush and the timer both write under the shared `_lock`, so there's no concurrent-write race. `_sync_loop_period` was removed (orphaned by dropping the poll loop); `_sync_key` kept (REJECTED-list caution). Added 2 tests → `test_stored_dict.py` **15 passed** (was 13); ruff clean; IPython startup smoke OK. Full-suite deltas are pre-existing/flaky, not from this batch (see the scoreboard totals note).
 File `src/apsbits/utils/stored_dict.py`:
-- [ ] B9: add `self._lock = threading.RLock()` in `__init__`; rewrite `flush()` (154-160) to acquire the lock and unconditionally `StoredDict.dump(...)`, then reset `_sync_deadline`/`sync_in_progress`. Remove the `if not sync_in_progress` short-circuit.
-- [ ] S4: `__delitem__` (78-88) and `popitem` (162-169) — after mutating `_cache`, schedule a sync like `__setitem__`.
-- [ ] S5: make the sync thread `daemon=True` and replace the 5 ms poll with an `Event`/`Timer`. *(Medium priority — keep if time-boxed; guard with tests.)*
-- [ ] Tests: extend `tests/test_stored_dict.py` — a durability test that mutates, calls `flush()` while a sync is "in progress", reloads from disk, and asserts the value; a deletion-persistence test for S4.
-- **Verify:** `conda run -n bits_dev python -m pytest src/apsbits/tests/test_stored_dict.py -vvv`.
+- [x] B9: add `self._lock = threading.RLock()` in `__init__`; rewrite `flush()` (154-160) to acquire the lock and unconditionally `StoredDict.dump(...)`, then reset `_sync_deadline`/`sync_in_progress`. Remove the `if not sync_in_progress` short-circuit.
+- [x] S4: `__delitem__` (78-88) and `popitem` (162-169) — after mutating `_cache`, schedule a sync like `__setitem__` (both now call `_schedule_sync()`).
+- [x] S5: make the sync thread `daemon=True` and replace the 5 ms poll with an `Event`/`Timer` (done via a debounced daemon `threading.Timer` in `_schedule_sync`/`_sync_to_storage`).
+- [x] Tests: extended `tests/test_stored_dict.py` — `test_flush_durable_during_sync` (B9: mutate, flush while `sync_in_progress`, reload from disk, assert the value) and `test_deletion_persisted` (S4: `__delitem__`/`popitem` persist without an explicit flush).
+- **Verify:** `conda run -n bits_dev python -m pytest src/apsbits/tests/test_stored_dict.py -vvv` → **15 passed**.
 
 ### Batch 6 — utils small robustness fixes — R9, N8, N9, N10, N12, N13, N16
 - [ ] R9: `sim_creator.py:185-186` — delete the two dead kwargs assignments.

@@ -97,6 +97,7 @@ def test_StoredDict(md_file):
 
     del sdict["bee"]  # __delitem__
     assert "bee" not in sdict  # __getitem__
+    sdict.flush()  # cancel the debounce timer scheduled by the deletion (S4)
 
 
 @pytest.mark.parametrize(
@@ -129,6 +130,40 @@ def test_popitem(md_file):
     with pytest.raises(KeyError) as reason:
         sdict.popitem()
     assert "dictionary is empty" in str(reason), f"{reason=}"
+
+
+def test_flush_durable_during_sync(md_file):
+    """flush() must write even while a debounce sync is still pending (B9)."""
+    # A long delay guarantees the debounce timer will not fire on its own
+    # during the test, so the only path to disk is flush().
+    sdict = StoredDict(md_file, delay=30, title="unit testing")
+    sdict["a"] = 1
+    assert sdict.sync_in_progress  # timer scheduled, not yet fired
+    assert open(md_file).read().strip() == ""  # nothing on disk yet
+
+    sdict.flush()
+
+    assert not sdict.sync_in_progress
+    # Before B9, flush() short-circuited while sync_in_progress and lost this.
+    assert load_config_yaml(md_file) == {"a": 1}
+
+
+def test_deletion_persisted(md_file):
+    """__delitem__ and popitem schedule a durable write (S4)."""
+    sdict = StoredDict(md_file, delay=0.1, title="unit testing")
+    sdict.update({"a": 1, "bee": 2})
+    sdict.flush()
+    assert load_config_yaml(md_file) == {"a": 1, "bee": 2}
+
+    # __delitem__ persists the removal with no explicit flush.
+    del sdict["a"]
+    luftpause(0.3)  # let the debounce timer (delay=0.1) fire
+    assert load_config_yaml(md_file) == {"bee": 2}
+
+    # popitem persists the removal too.
+    sdict.popitem()
+    luftpause(0.3)
+    assert load_config_yaml(md_file) == {}
 
 
 def test_repr(md_file):
