@@ -113,6 +113,27 @@ class StoredDict(collections.abc.MutableMapping):
         """representation of this object."""
         return f"<{self.__class__.__name__} {dict(self)!r}>"
 
+    def __getstate__(self):
+        """
+        Return picklable state, excluding the unpicklable sync primitives.
+
+        ``RE.md`` is a ``StoredDict`` and bluesky deep-copies the RunEngine
+        metadata during a run, so the instance must survive ``copy.deepcopy``
+        (and pickling). The lock and debounce timer are transient and are
+        recreated fresh by ``__setstate__``.
+        """
+        state = self.__dict__.copy()
+        state.pop("_lock", None)
+        state.pop("_sync_timer", None)
+        return state
+
+    def __setstate__(self, state):
+        """Restore state and recreate the transient sync primitives."""
+        self.__dict__.update(state)
+        self._lock = threading.RLock()
+        self._sync_timer = None
+        self.sync_in_progress = False
+
     def __setitem__(self, key, value):
         """Write to the dictionary."""
         outermost_frame = inspect.getouterframes(inspect.currentframe())[-1]

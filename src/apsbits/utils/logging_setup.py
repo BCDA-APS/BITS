@@ -184,8 +184,9 @@ def _setup_console_logger(logger, cfg):
         datefmt=cfg["date_format"],
         force=True,  # replace any previous setup
     )
-    h = logger.handlers[0]
-    h.setLevel(cfg["level"].upper())
+    for handler in logger.handlers:
+        if isinstance(handler, logging.StreamHandler):
+            handler.setLevel(cfg["level"].upper())
 
 
 def _setup_file_logger(logger, cfg):
@@ -227,8 +228,8 @@ def _setup_file_logger(logger, cfg):
         handler.doRollover()
     logger.addHandler(handler)
     logger.info("%s Bluesky Startup", "*" * 40)
-    logger.bsdev(__file__)
-    logger.bsdev("Log file: %s", file_name)
+    getattr(logger, "bsdev", logger.debug)(__file__)
+    getattr(logger, "bsdev", logger.debug)("Log file: %s", file_name)
 
 
 def _setup_ipython_logger(logger, cfg):
@@ -281,7 +282,9 @@ def _setup_ipython_logger(logger, cfg):
         )
         _ipython.run_line_magic("logstart", f"{options} {log_file} {log_mode}")
         if logger is not None:
-            logger.bsdev("Console logging started: %s", log_file)
+            getattr(logger, "bsdev", logger.debug)(
+                "Console logging started: %s", log_file
+            )
     except Exception as exc:
         if logger is None:
             print(f"Could not setup console logging: {exc}")

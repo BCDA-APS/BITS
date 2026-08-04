@@ -74,7 +74,9 @@ def debug_python(xmode_level: str = "Plain") -> None:
         current_xmode_level: str = get_xmode_level()
         ipython.run_line_magic("xmode", current_xmode_level)
         print("\nEnd of IPython settings\n")
-        logger.bsdev("xmode exception level: '%s'", current_xmode_level)
+        getattr(logger, "bsdev", logger.debug)(
+            "xmode exception level: '%s'", current_xmode_level
+        )
 
 
 def is_notebook() -> bool:
@@ -114,7 +116,9 @@ def mpl_setup() -> None:
             try:
                 mpl.use("qtAgg")
                 plt.ion()
-                logger.bsdev("Using qtAgg backend for matplotlib.")
+                getattr(logger, "bsdev", logger.debug)(
+                    "Using qtAgg backend for matplotlib."
+                )
             except Exception as exc:
                 logger.error(
                     "qtAgg backend is not available, falling back to Agg backend. \

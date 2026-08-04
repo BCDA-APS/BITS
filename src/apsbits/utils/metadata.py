@@ -96,12 +96,15 @@ def get_md_path(iconfig: collections.abc.Mapping[str, Any] | None = None) -> str
     RE_CONFIG = iconfig.get("RUN_ENGINE", {})
     md_path_name = RE_CONFIG.get("MD_PATH", DEFAULT_MD_PATH)
     path = pathlib.Path(md_path_name)
-    logger.info("RunEngine metadata saved to: %s", str(path))
+    logger.debug("RunEngine metadata path: %s", str(path))
     return str(path)
 
 
-def re_metadata(iconfig: collections.abc.Mapping[str, Any] = {}) -> dict[str, Any]:
+def re_metadata(
+    iconfig: collections.abc.Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     """Programmatic metadata for the RunEngine."""
+    iconfig = iconfig or {}
     meta = _collect_metadata()
     md = {
         "login_id": f"{meta['username']}@{meta['hostname']}",

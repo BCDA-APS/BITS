@@ -23,12 +23,14 @@ end). IDs in brackets trace back to the audit.
 | Bucket | Done & verified | Still open | New (§5) |
 |---|---|---|---|
 | BAD (B) | B2, B3, B5, B8, B9, B11, B12, B14 | B4, B6, B7, B13 | — |
-| REDUNDANT (R) | R1, R2, R3, R4, R5, R6, R7, R8, R11, R12, R13 | R9, R10 | — |
-| NEEDS IMPROVEMENT (N) | N1, N2, N3, N7, N11, N14, N17, N18, N19, N20, N21 | N5, N6, N8, N9, N10, N12, N13, N15, N16, N22, N23, N24 (no N4) | — |
+| REDUNDANT (R) | R1, R2, R3, R4, R5, R6, R7, R8, R9, R11, R12, R13 | R10 | — |
+| NEEDS IMPROVEMENT (N) | N1, N2, N3, N7, N8, N9, N10, N11, N12, N13, N14, N16, N17, N18, N19, N20, N21 | N5, N6, N15, N22, N23, N24 (no N4) | — |
 | DOES WELL (W) | W1–W15 *(verified still present)* | — | — |
 | **New findings (§5)** | S1, S2, S3, S4, S5, S6, S10, S11, S12, S13, S19 | S7, S8, S9, S14–S18 | — |
 
-**Totals (B/R/N/S): 41 done · 26 open · 15 strengths preserved (W1–W15).** §6 Batches 0–3 executed & verified 2026-07-24 (suite 95→**105** passed, +10 new tests; startup smoke OK); Batch 4 executed & verified 2026-08-03 (R8, N11, R7, S6, S13; +5 new tests → **108 passed, 2 failed** locally — both pre-existing APS-subnet EPICS timeouts unrelated to the change; 110 on an off-subnet host like CI; ruff + startup smoke OK); Batch 5 executed & verified 2026-08-03 (B9, S4, S5; +2 new tests → `test_stored_dict.py` **15 passed**; ruff + startup smoke OK). Full-suite failures are pre-existing and unrelated to Batch 5 — the two `test_delete_instrument` "invalid name './src'" failures reproduce identically with the Batch 5 changes stashed (an `os.chdir`-leak order-dependence), and the two `test_sim_plans` failures are the same flaky APS-subnet `S-DCCT` EPICS timeouts.
+**Totals (B/R/N/S): 48 done · 19 open · 15 strengths preserved (W1–W15).** §6 Batches 0–3 executed & verified 2026-07-24 (suite 95→**105** passed, +10 new tests; startup smoke OK); Batch 4 (R8, N11, R7, S6, S13; +5 tests) and Batch 5 (B9, S4, S5; +2 tests) executed & verified 2026-08-03; Batch 6 executed & verified 2026-08-03 (R9, N8, N9, N10, N12, N13, N16; +1 test → full suite **111 passed, 2 failed**; ruff + startup smoke OK).
+
+> **⚠ Correction (2026-08-03, Batch 6).** The Batch 5 note attributed two `test_sim_plans` failures to flaky APS-subnet `S-DCCT` EPICS timeouts. **That was wrong** — those tests use *simulated* devices. The failures were a **regression from B9/S5**: adding `self._lock`/`self._sync_timer` to `StoredDict` made `RE.md` un-deep-copyable (`TypeError: cannot pickle '_thread.RLock'`), and bluesky deep-copies RunEngine metadata during a run. The Batch 5 stash test had actually shown `test_sim_plans` *passing* on the clean baseline — that was the tell, misread as flakiness. **Fixed in Batch 6** via `StoredDict.__getstate__`/`__setstate__` (excludes the transient lock/timer; recreates them fresh on the copy) + regression `test_deepcopy`; `test_sim_plans` now passes. The only remaining full-suite failures are the genuinely pre-existing `test_delete_instrument` order-dependence (`os.chdir` leak → "invalid name './src'"; passes in isolation — see **N24**).
 
 ## Fix-first priority (highest impact, refreshed 2026-07-24)
 
@@ -93,6 +95,7 @@ end). IDs in brackets trace back to the audit.
   **Verified still open (2026-07-24):** `flush()` short-circuits on `if not self.sync_in_progress:` and there is **no lock primitive** in the class.
   **Action:** Add `self._lock = threading.RLock()` in `__init__`; in `flush()` acquire the lock, unconditionally `StoredDict.dump(self._file, self._cache, title=self._title)`, then set `_sync_deadline=time.time()` and `sync_in_progress=False`. Remove the `if not sync_in_progress` short-circuit. (See also **S4** — deletions are never persisted.)
   **Done (2026-08-03):** added `self._lock = threading.RLock()`; `flush()` now cancels any pending debounce timer, unconditionally `StoredDict.dump(...)` under the lock, then resets `_sync_deadline`/`sync_in_progress` (short-circuit removed). The background writer (`_sync_to_storage`) also holds the lock, so flush and the timer can't write the file concurrently. Regression test `test_flush_durable_during_sync` in `test_stored_dict.py`.
+  **⚠ Follow-up (Batch 6, 2026-08-03):** the `_lock`/`_sync_timer` added here (and in S5) made `StoredDict` un-deep-copyable, breaking `RE.md` deepcopy during runs (`test_sim_plans`). Fixed with `StoredDict.__getstate__`/`__setstate__` + `test_deepcopy` — see the correction block under the scoreboard.
 
 - [x] **B11 — Fix wrong-project milestones link** `HISTORY.rst:27`.
   **Done & verified (2026-07-24):** now `https://github.com/BCDA-APS/BITS/milestones`.
@@ -137,10 +140,11 @@ end). IDs in brackets trace back to the audit.
   **Action (do regardless):** change line 153 to `yaml.safe_load(content)`. Then have one helper delegate to the other to remove duplication.
   **Done (2026-08-03):** `load_config_yaml` now uses `yaml.safe_load`. Safe because `StoredDict.__setitem__` enforces `json.dumps` and `dump` uses plain `yaml.dump`, so persisted files carry no `!!python/*` tags; logging configs are plain data too — both round-trip under `safe_load` (confirmed by `test_stored_dict` + startup smoke). `load_config` now delegates its `.yml` read to `load_config_yaml`; TOML stays inline because `tomllib.load` requires a binary handle and can't share the text-mode helper. **Behavior drift:** consolidating the except ladders changed some log wording, and the TOML path no longer emits bespoke `PermissionError`/generic `logger.error` lines (the exceptions still propagate unchanged).
 
-- [ ] **R9 — Remove dead duplicate kwargs in `motors()`** `src/apsbits/utils/sim_creator.py:185-186`.
+- [x] **R9 — Remove dead duplicate kwargs in `motors()`** `src/apsbits/utils/sim_creator.py:185-186`.
   Both assignments are immediately overwritten by the following `kwargs.update({...})`.
   **Verified still open (2026-07-24).**
   **Action:** Delete lines 185-186.
+  **Done (2026-08-03, Batch 6):** deleted the two `kwargs["names"]`/`kwargs["prefix"]` assignments that the immediately-following `kwargs.update({...})` overwrote.
 
 - [ ] **R10 — Remove empty `TYPE_CHECKING` blocks** `tests/test_config.py:7,15-16` and `tests/test_general.py:8,12-13`.
   **Verified still open (2026-07-24):** both are dead. **Do not touch** `test_make_devices.py` / `test_delete_instrument.py` — their `TYPE_CHECKING` blocks are *live*.
@@ -177,27 +181,32 @@ end). IDs in brackets trace back to the audit.
 - [x] **N7 — Warn when `clear=True` is ignored** `instrument_init.py:86`.
   Silently skipped unless `device_manager` is a `guarneri.Instrument`.
   **Action:** Add a `logger.warning` in the else case. (Related to **S3**.)
-- [ ] **N8 — Guard `_setup_console_logger` handler indexing** `src/apsbits/utils/logging_setup.py:187-188`.
+- [x] **N8 — Guard `_setup_console_logger` handler indexing** `src/apsbits/utils/logging_setup.py:187-188`.
   `logger.handlers[0]` can `IndexError` / target the wrong handler. *(Currently masked by call order — `basicConfig(force=True)` installs one StreamHandler immediately before — but fragile.)*
   **Action:** Iterate handlers and set level on `logging.StreamHandler` instances.
-- [ ] **N9 — Log the fallback in `host_on_aps_subnet`** `src/apsbits/utils/aps_functions.py:23-24`.
+  **Done (2026-08-03, Batch 6):** replaced `handlers[0]` with a loop that sets the level on `logging.StreamHandler` instances. Behavior-equivalent in the real flow — `logger` is the root logger and `basicConfig(force=True)` (line 180) has just cleared all handlers and installed exactly one `StreamHandler`, so only that one matches at this point; the loop just removes the `IndexError` foot-gun.
+- [x] **N9 — Log the fallback in `host_on_aps_subnet`** `src/apsbits/utils/aps_functions.py:23-24`.
   Broad `except` makes a misconfig indistinguishable from "off subnet"; module has no logger.
   **Action:** Add a module logger and `logger.debug(...)` inside the except.
-- [ ] **N10 — Warn on no-op `set_timeouts`** `src/apsbits/utils/controls_setup.py:128-135`.
+  **Done (2026-08-03, Batch 6):** added `import logging` + `logger = logging.getLogger(__name__)` and a `logger.debug("Could not determine host IP (assuming off subnet): %s", exc)` in the except. Logic unchanged (still falls back to loopback → off-subnet); import-purity preserved (the socket call stays inside the function). Verified `host_on_aps_subnet()` still returns a value.
+- [x] **N10 — Warn on no-op `set_timeouts`** `src/apsbits/utils/controls_setup.py:128-135`.
   Silently does nothing if an `EpicsSignalBase` already exists.
   **Action:** Add an `else` branch logging a warning.
+  **Done (2026-08-03, Batch 6):** added an `else: logger.warning(...)` noting `set_timeouts()` had no effect because an `EpicsSignalBase` was already instantiated.
 
 ### Correctness hazards (latent)
 - [x] **N11 — `load_config` must replace, not merge, global state** `src/apsbits/utils/config_loaders.py:65`.
   `_iconfig.update(config)` leaks stale keys across loads and between tests.
   **Action:** `_iconfig.clear(); _iconfig.update(config)`. Add a `reset_config()` helper for a conftest fixture. (Coordinate with **S6**.)
   **Done (2026-08-03):** `load_config` now does `_iconfig.clear(); _iconfig.update(config)`; added public `reset_config()`. Verified the `clear()` doesn't regress `test_general::test_iconfig` (which reads demo-config keys from the global) — the session fixture reloads demo config before those assertions, so ordering stays benign. Genuine fixture determinism is still **N24** (Batch 8).
-- [ ] **N12 — Guard `logger.bsdev` calls** `src/apsbits/utils/helper_functions.py:77,117` (also `logging_setup.py:230,231,284`).
+- [x] **N12 — Guard `logger.bsdev` calls** `src/apsbits/utils/helper_functions.py:77,117` (also `logging_setup.py:230,231,284`).
   `bsdev` only exists after `configure_logging()`; calling these utilities first raises `AttributeError`. *(Masked in the shipped flow because `startup.py:35` configures logging first.)*
   **Action:** Use `getattr(logger, "bsdev", logger.debug)(...)`, or register the level eagerly at `logging_setup` import.
-- [ ] **N13 — Replace mutable default arg** `src/apsbits/utils/metadata.py:103`.
+  **Done (2026-08-03, Batch 6):** all 5 call sites (`helper_functions.py:77,117`; `logging_setup.py:230,231,284`) now use `getattr(logger, "bsdev", logger.debug)(...)`, falling back to `debug` if BSDEV isn't registered yet. Chose the getattr guard over eager registration (surgical; no import-purity impact).
+- [x] **N13 — Replace mutable default arg** `src/apsbits/utils/metadata.py:103`.
   `def re_metadata(iconfig = {})` (B006). *(Sibling `get_md_path` was already fixed to `= None`.)*
   **Action:** Default to `None` and assign `{}` inside.
+  **Done (2026-08-03, Batch 6):** signature is now `iconfig: collections.abc.Mapping[str, Any] | None = None` (matching `get_md_path`) with `iconfig = iconfig or {}` as the first body line. Ruff B006 clears.
 - [x] **N14 — Reconcile `make_devices` `file` param + example** `instrument_init.py:39,49-51,59-67`.
   Docstring claims `file=None` defaults to `iconfig.yml`, but the signature makes `file` required (`file: str`) and the body errors+returns on `None`. The docstring param order (`device_manager` before `path`) is also inverted, and the `EXAMPLE` block shows `RE(make_devices(...))` — but `make_devices` returns `None` (not a plan), so `RE(make_devices(...))` is wrong (same bug as **B6**).
   **Action:** State `file` is required (no `iconfig.yml` fallback), fix the type annotation, reorder params (`path` before `device_manager`), and correct the EXAMPLE to `make_devices(file="custom_devices.yml")`.
@@ -206,9 +215,10 @@ end). IDs in brackets trace back to the audit.
 - [ ] **N15 — Fix stray backslash in create message** `create_new_instrument.py:111-114`.
   Line-continuation embeds a backslash + indentation into the printed path.
   **Action:** Collapse to one line: `print(f"Creating instrument '{args.name}' from demo_instrument into '{new_instrument_dir}'.")`.
-- [ ] **N16 — Quiet/relocate `get_md_path` log** `src/apsbits/utils/metadata.py:99`.
+- [x] **N16 — Quiet/relocate `get_md_path` log** `src/apsbits/utils/metadata.py:99`.
   Logs "RunEngine metadata saved to:" at info level though it only computes a path.
   **Action:** Downgrade to `logger.debug` and reword; emit any "saved" message where the StoredDict is actually created.
+  **Done (2026-08-03, Batch 6):** now `logger.debug("RunEngine metadata path: %s", str(path))`. Scope kept surgical — did not add a separate "saved" message at the StoredDict creation site (out of Batch 6 scope; the misleading wording/level is what N16 targets).
 
 ### Packaging / tooling
 - [x] **N17 — Document the load-bearing `databroker==1.2.5` pin (do NOT relax to 2.x)** `pyproject.toml:43`.
@@ -412,15 +422,17 @@ File `src/apsbits/utils/stored_dict.py`:
 - [x] Tests: extended `tests/test_stored_dict.py` — `test_flush_durable_during_sync` (B9: mutate, flush while `sync_in_progress`, reload from disk, assert the value) and `test_deletion_persisted` (S4: `__delitem__`/`popitem` persist without an explicit flush).
 - **Verify:** `conda run -n bits_dev python -m pytest src/apsbits/tests/test_stored_dict.py -vvv` → **15 passed**.
 
-### Batch 6 — utils small robustness fixes — R9, N8, N9, N10, N12, N13, N16
-- [ ] R9: `sim_creator.py:185-186` — delete the two dead kwargs assignments.
-- [ ] N8: `logging_setup.py:187-188` — iterate handlers, set level on `logging.StreamHandler` instances (drop `handlers[0]`).
-- [ ] N9: `aps_functions.py` — add `logger = logging.getLogger(__name__)` and `logger.debug(...)` in the `except` (23-24).
-- [ ] N10: `controls_setup.py:128-135` — add `else: logger.warning(...)` when `EpicsSignalBase` already instantiated.
-- [ ] N12: `helper_functions.py:77,117` + `logging_setup.py:230,231,284` — `getattr(logger, "bsdev", logger.debug)(...)` (or register BSDEV at import).
-- [ ] N13: `metadata.py:103` — `re_metadata(iconfig=None)` + `iconfig = iconfig or {}`.
-- [ ] N16: `metadata.py:99` — downgrade to `logger.debug` and reword ("RunEngine metadata path: %s").
-- **Verify:** `pytest ./src`; startup smoke; `ruff` clean (B006 for N13).
+### Batch 6 — utils small robustness fixes — R9, N8, N9, N10, N12, N13, N16 — ✅ DONE & VERIFIED 2026-08-03
+> Executed 2026-08-03: all 7 items applied (each isolated to one function). **During verification, a Batch 5 regression surfaced:** the `_lock`/`_sync_timer` that B9/S5 added to `StoredDict` made `RE.md` un-deep-copyable, so bluesky's per-run metadata deepcopy raised `TypeError: cannot pickle '_thread.RLock'` — this, not "flaky EPICS", was the real cause of the `test_sim_plans` failures logged in Batches 4/5. Fixed by adding `StoredDict.__getstate__`/`__setstate__` (excludes the transient lock/timer; recreates them fresh) + regression `test_deepcopy`. Verified: full suite **111 passed, 2 failed** (the 2 = pre-existing `test_delete_instrument` order-dependence, passes in isolation — N24); `test_sim_plans` now green; ruff + startup smoke OK.
+- [x] R9: `sim_creator.py:185-186` — delete the two dead kwargs assignments.
+- [x] N8: `logging_setup.py:187-188` — iterate handlers, set level on `logging.StreamHandler` instances (drop `handlers[0]`).
+- [x] N9: `aps_functions.py` — add `logger = logging.getLogger(__name__)` and `logger.debug(...)` in the `except` (23-24).
+- [x] N10: `controls_setup.py:128-135` — add `else: logger.warning(...)` when `EpicsSignalBase` already instantiated.
+- [x] N12: `helper_functions.py:77,117` + `logging_setup.py:230,231,284` — `getattr(logger, "bsdev", logger.debug)(...)` (or register BSDEV at import).
+- [x] N13: `metadata.py:103` — `re_metadata(iconfig=None)` + `iconfig = iconfig or {}`.
+- [x] N16: `metadata.py:99` — downgrade to `logger.debug` and reword ("RunEngine metadata path: %s").
+- [x] **Regression fix (not in original Batch 6 scope):** `StoredDict.__getstate__`/`__setstate__` + `test_deepcopy` — restores `RE.md` deep-copyability broken by B9/S5.
+- **Verify:** `pytest ./src`; startup smoke; `ruff` clean (B006 for N13). ✅
 
 ### Batch 7 — api/create_new_instrument.py — N15, N6, N5, S7, S8, (S9)
 File `src/apsbits/api/create_new_instrument.py` (+ `api/__init__.py`):

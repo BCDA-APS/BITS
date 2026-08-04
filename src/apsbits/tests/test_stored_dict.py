@@ -2,6 +2,7 @@
 Test the utils.stored_dict module.
 """
 
+import copy
 import pathlib
 import tempfile
 import time
@@ -164,6 +165,27 @@ def test_deletion_persisted(md_file):
     sdict.popitem()
     luftpause(0.3)
     assert load_config_yaml(md_file) == {}
+
+
+def test_deepcopy(md_file):
+    """StoredDict must survive copy.deepcopy.
+
+    ``RE.md`` is a StoredDict and bluesky deep-copies the RunEngine metadata
+    during a run; the transient lock/timer would otherwise raise
+    ``TypeError: cannot pickle '_thread.RLock'``.
+    """
+    sdict = StoredDict(md_file, delay=0.2, title="unit testing")
+    sdict["a"] = 1
+    sdict["b"] = {"nested": [1, 2, 3]}
+
+    clone = copy.deepcopy(sdict)
+
+    assert dict(clone) == {"a": 1, "b": {"nested": [1, 2, 3]}}
+    assert clone._cache is not sdict._cache  # deep copy, not shared
+    assert clone._cache["b"] is not sdict._cache["b"]
+    assert clone._lock is not sdict._lock  # fresh transient primitives
+    assert clone._sync_timer is None
+    assert not clone.sync_in_progress
 
 
 def test_repr(md_file):
