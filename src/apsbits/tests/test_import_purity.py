@@ -78,6 +78,6 @@ def test_module_imports_cleanly(module_name):
         capture_output=True,
         timeout=30,
     )
-    assert result.returncode == 0, (
-        f"{module_name} failed to import cleanly:\n{result.stderr.decode()}"
-    )
+    assert (
+        result.returncode == 0
+    ), f"{module_name} failed to import cleanly:\n{result.stderr.decode()}"
