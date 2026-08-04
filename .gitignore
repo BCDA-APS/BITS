@@ -111,6 +111,11 @@ ipython_config.py
 .pdm-python
 .pdm-build/
 
+# uv
+#   apsbits is a distributed library, so uv.lock is not committed — pyproject.toml's flexible
+#   ranges govern what consumers resolve. Run `uv lock` locally if you want a lockfile.
+uv.lock
+
 # PEP 582; used by e.g. github.com/David-OConnor/pyflow and github.com/pdm-project/pdm
 __pypackages__/
 
