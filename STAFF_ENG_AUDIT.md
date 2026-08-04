@@ -22,13 +22,17 @@ end). IDs in brackets trace back to the audit.
 
 | Bucket | Done & verified | Still open | New (§5) |
 |---|---|---|---|
-| BAD (B) | B2, B3, B5, B8, B9, B11, B12, B14 | B4, B6, B7, B13 | — |
-| REDUNDANT (R) | R1, R2, R3, R4, R5, R6, R7, R8, R9, R11, R12, R13 | R10 | — |
-| NEEDS IMPROVEMENT (N) | N1, N2, N3, N7, N8, N9, N10, N11, N12, N13, N14, N16, N17, N18, N19, N20, N21 | N5, N6, N15, N22, N23, N24 (no N4) | — |
+| BAD (B) | B2, B3, B5, B7, B8, B9, B11, B12, B13, B14 | B4, B6 | — |
+| REDUNDANT (R) | R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11, R12, R13 | — | — |
+| NEEDS IMPROVEMENT (N) | N1, N2, N3, N5, N6, N7, N8, N9, N10, N11, N12, N13, N14, N15, N16, N17, N18, N19, N20, N21, N22, N23, N24 | — (no N4) | — |
 | DOES WELL (W) | W1–W15 *(verified still present)* | — | — |
-| **New findings (§5)** | S1, S2, S3, S4, S5, S6, S10, S11, S12, S13, S19 | S7, S8, S9, S14–S18 | — |
+| **New findings (§5)** | S1, S2, S3, S4, S5, S6, S7, S8, S10, S11, S12, S13, S14, S15, S19 | S9, S16, S17, S18 | — |
 
-**Totals (B/R/N/S): 48 done · 19 open · 15 strengths preserved (W1–W15).** §6 Batches 0–3 executed & verified 2026-07-24 (suite 95→**105** passed, +10 new tests; startup smoke OK); Batch 4 (R8, N11, R7, S6, S13; +5 tests) and Batch 5 (B9, S4, S5; +2 tests) executed & verified 2026-08-03; Batch 6 executed & verified 2026-08-03 (R9, N8, N9, N10, N12, N13, N16; +1 test → full suite **111 passed, 2 failed**; ruff + startup smoke OK).
+**Totals (B/R/N/S): 61 done · 6 open · 15 strengths preserved (W1–W15).** §6 Batches 0–3 executed & verified 2026-07-24 (suite 95→**105** passed, +10 new tests; startup smoke OK); Batch 4 (R8, N11, R7, S6, S13; +5 tests) and Batch 5 (B9, S4, S5; +2 tests) executed & verified 2026-08-03; Batch 6 executed & verified 2026-08-03 (R9, N8, N9, N10, N12, N13, N16; +1 test); Batches 7 & 8 executed & verified 2026-08-03 (Batch 7: N15, N6, N5, S7, S8; Batch 8: B7, B13, R10, N24, N22, N23, S14, S15, W14-TODO) → **+27 new tests**, full suite **134 passed, 0 failed**; ruff + startup smoke OK. **Remaining open: B4, B6, S16, S17, S18 (all docs → Batch 9) and S9 (optional CLI-sentinel behavior change, intentionally deferred pending maintainer confirmation).**
+
+> **⚠ Two latent bugs surfaced & fixed during Batch 7/8 (2026-08-03):**
+> 1. **`nxwriter_init` was dead** (`demo_instrument/callbacks/demo_nexus_callback.py`). It did `from apstools.utils import host_on_aps_subnet`, which no longer exists in installed apstools → the entire `NEXUS_DATA_FILES.ENABLE` branch raised `ImportError`. Nobody noticed because NeXus is disabled by default (this is exactly the gap **S14** targets). Fixed to use apsbits's own `apsbits.utils.aps_functions.host_on_aps_subnet` (consistent with `startup.py`); covered by the new S14 tests.
+> 2. **The recurring `test_(create|delete)_main_invalid_name` failures were `sys.argv`-dependent, not order-dependent.** Those tests called `main()` with no args, so argparse parsed the *ambient pytest argv*; a `./src` arg was read as the instrument name → "Invalid instrument name './src'" (exit 1) instead of the expected argparse exit 2. **This corrects the earlier Batch 5 note that blamed an `os.chdir` leak** — the mechanism was argv, not cwd. Fixed by monkeypatching `sys.argv` in both tests (a determinism fix in N24's spirit). N24 additionally adds an autouse `_preserve_global_config` fixture so global-iconfig mutations (e.g. `test_config`'s `reset_config`) can no longer leak into a later test's `make_devices` — the suite is now order-independent (verified: `test_config` → `test_make_devices` passes in isolation, which it did not before).
 
 > **⚠ Correction (2026-08-03, Batch 6).** The Batch 5 note attributed two `test_sim_plans` failures to flaky APS-subnet `S-DCCT` EPICS timeouts. **That was wrong** — those tests use *simulated* devices. The failures were a **regression from B9/S5**: adding `self._lock`/`self._sync_timer` to `StoredDict` made `RE.md` un-deep-copyable (`TypeError: cannot pickle '_thread.RLock'`), and bluesky deep-copies RunEngine metadata during a run. The Batch 5 stash test had actually shown `test_sim_plans` *passing* on the clean baseline — that was the tell, misread as flakiness. **Fixed in Batch 6** via `StoredDict.__getstate__`/`__setstate__` (excludes the transient lock/timer; recreates them fresh on the copy) + regression `test_deepcopy`; `test_sim_plans` now passes. The only remaining full-suite failures are the genuinely pre-existing `test_delete_instrument` order-dependence (`os.chdir` leak → "invalid name './src'"; passes in isolation — see **N24**).
 
@@ -44,7 +48,7 @@ end). IDs in brackets trace back to the audit.
    (B9) and `__delitem__`/`popitem` never persist deletions (S4). `stored_dict.py`.
    **(RESOLVED — Batch 5, 2026-08-03: B9/S4/S5 done.)**
 4. **Test suite ERRORs without EPICS** — the `ioc` fixture hard-fails instead of skipping when
-   `softIoc` is absent (B7). `tests/conftest.py`.
+   `softIoc` is absent (B7). `tests/conftest.py`. **(RESOLVED — Batch 8, 2026-08-03.)**
 5. **Docs describe removed code** — `dm.rst` documents deleted `aps_dm_setup`/`dm_plans` (B4);
    `startup.rst` shows `RE(make_devices(...))` and wrong callback paths (B6).
 
@@ -82,10 +86,11 @@ end). IDs in brackets trace back to the audit.
   **Verified still open (2026-07-24), three concrete divergences:** (a) `startup.rst:60` shows `aps_dm_setup(...)` as an active step; real `startup.py:62` has it commented out. (b) `startup.rst:127-129` shows `RE(make_devices(clear=False, file="devices.yml"))` and a typo'd `device_aps_only.yml`; real `startup.py:105` is `make_devices(clear=False, file="devices.yml", device_manager=instrument)` (not wrapped in `RE()`) and the APS file is `devices_aps_only.yml`. (c) `startup.rst:89,102` import from `.callbacks.nexus_data_file_writer` / `.callbacks.spec_data_file_writer`; real `startup.py:76-83` uses `.callbacks.demo_nexus_callback` / `.callbacks.demo_spec_callback` and calls `nxwriter_init(RE, iconfig)`.
   **Action:** Rewrite to mirror current `startup.py` on all three points.
 
-- [ ] **B7 — Skip EPICS tests when `softIoc` is absent** `src/apsbits/tests/conftest.py:74-111`.
+- [x] **B7 — Skip EPICS tests when `softIoc` is absent** `src/apsbits/tests/conftest.py:74-111`.
   The `ioc` fixture `subprocess.Popen(["softIoc", ...])` inside a `try/finally` with **no `except`**; without EPICS base it raises `FileNotFoundError` and dependent tests ERROR instead of skipping.
   **Verified still open (2026-07-24):** no `shutil.which("softIoc")` guard anywhere.
   **Action:** At the top of the fixture: `import shutil; if shutil.which("softIoc") is None: pytest.skip("softIoc (EPICS base) not available")`, and wrap the `Popen` in `try/except FileNotFoundError: pytest.skip(...)`.
+  **Done (2026-08-03, Batch 8):** added the `shutil.which("softIoc")` guard at the top of the fixture plus a `try/except FileNotFoundError: pytest.skip(...)` around `Popen`; initialized `proc = None` and guarded the `finally` teardown with `if proc is not None` so a skip before launch can't `NameError`.
 
 - [x] **B8 — Fix misleading `with_registry` error message** `src/apsbits/core/instrument_init.py:198-200`.
   **Done & verified (2026-07-24):** message now reads `'Instrument not set. Call init_instrument("guarneri") first.'`.
@@ -103,10 +108,11 @@ end). IDs in brackets trace back to the audit.
 - [x] **B12 — Fix release-note typo** `HISTORY.rst:107`: `Documentation overhaul1` → `Documentation overhaul`.
   **Done & verified (2026-07-24).**
 
-- [ ] **B13 — Fix `ioc` fixture prefix mismatch** `src/apsbits/tests/conftest.py:109`.
+- [x] **B13 — Fix `ioc` fixture prefix mismatch** `src/apsbits/tests/conftest.py:109`.
   Yields `prefix="test1:"` but the record is `test:scan_id`.
   **Verified still open (2026-07-24) — but inert:** no test reads `ioc["prefix"]` (consumers hardcode `"test:scan_id"`), so this is cosmetic. Still worth fixing to avoid a future foot-gun.
   **Action:** Change to `prefix="test:"` so `prefix + "scan_id"` reconstructs the PV (or drop the unused key).
+  **Done (2026-08-03, Batch 8):** changed to `prefix="test:"`.
 
 - [x] **B14 — Drop false "TestPyPI" claim** `.github/workflows/pypi.yml:1,17`.
   Names said "PyPI and TestPyPI" but no TestPyPI step exists.
@@ -146,9 +152,10 @@ end). IDs in brackets trace back to the audit.
   **Action:** Delete lines 185-186.
   **Done (2026-08-03, Batch 6):** deleted the two `kwargs["names"]`/`kwargs["prefix"]` assignments that the immediately-following `kwargs.update({...})` overwrote.
 
-- [ ] **R10 — Remove empty `TYPE_CHECKING` blocks** `tests/test_config.py:7,15-16` and `tests/test_general.py:8,12-13`.
+- [x] **R10 — Remove empty `TYPE_CHECKING` blocks** `tests/test_config.py:7,15-16` and `tests/test_general.py:8,12-13`.
   **Verified still open (2026-07-24):** both are dead. **Do not touch** `test_make_devices.py` / `test_delete_instrument.py` — their `TYPE_CHECKING` blocks are *live*.
   **Action:** Delete the `from typing import TYPE_CHECKING` import and the `if TYPE_CHECKING: pass` blocks in those two files only (preserve the trailing comment in `test_general.py`).
+  **Done (2026-08-03, Batch 8):** removed the dead import + `if TYPE_CHECKING: pass` from `test_config.py` and `test_general.py` (kept the trailing comment). Note: `test_make_devices.py`'s `TYPE_CHECKING`/`LogCaptureFixture` was *made* dead by the N23 rewrite (which dropped `caplog`), so it was removed there too as cleanup of that change — not a violation of the "don't touch" note, which applied while it was still live.
 
 - [x] **R11 — Remove commented future entry points** — **Done & verified (2026-07-24):** `[project.scripts]` (`pyproject.toml:190-192`) has no `# bits-device-*`/`# bits-plan-*` placeholders.
 
@@ -172,12 +179,14 @@ end). IDs in brackets trace back to the audit.
 - [x] **N3 — `make_devices` should not "succeed" on a missing file** `instrument_init.py:103-104`.
   On missing `device_path` it logs an error, then still `time.sleep(pause)` and returns normally.
   **Action:** `return` (or raise `FileNotFoundError`) right after the not-found log.
-- [ ] **N5 — Add rollback to `create_new_instrument`** `src/apsbits/api/create_new_instrument.py:124-142`.
+- [x] **N5 — Add rollback to `create_new_instrument`** `src/apsbits/api/create_new_instrument.py:124-142`.
   Partial failure leaves an un-rerunnable half-created `src/<name>`.
   **Action:** Wrap the three steps; on exception `shutil.rmtree(new_instrument_dir, ignore_errors=True)` and unlink the created `{name}_qs_host.sh` before `sys.exit(1)`.
-- [ ] **N6 — Guard `create_qserver_script` assumptions** `create_new_instrument.py:27-31`.
+  **Done (2026-08-03, Batch 7):** the three steps now share one `try`; on exception it prints the error, `shutil.rmtree(new_instrument_dir, ignore_errors=True)`, and unlinks the qserver script **only if we created it** (a `created_qserver_script` flag), then `sys.exit(1)`. The flag prevents deleting a pre-existing script that N6 refused to overwrite. Covered by `test_create_new_instrument.py::test_create_rollback_on_failure`.
+- [x] **N6 — Guard `create_qserver_script` assumptions** `create_new_instrument.py:27-31`.
   Assumes `qs_host.sh` exists before `os.rename`; on POSIX `os.rename` silently overwrites an existing `{name}_qs_host.sh`.
   **Action:** Assert the source exists with a clear error; copy the specific expected file rather than `glob('*')`; warn instead of overwriting an existing `{name}_qs_host.sh`.
+  **Done (2026-08-03, Batch 7):** raises `FileNotFoundError` if the template `qs_host.sh` is missing; copies that specific file straight to `{name}_qs_host.sh` (dropped the `glob('*')` + `os.rename` — `demo_scripts/` contains only `qs_host.sh`, verified, so no files lost); **refuses** (raises `FileExistsError`) rather than clobbering an existing target. Covered by `test_create_qserver_script_missing_template` and `test_create_qserver_script_refuses_overwrite`.
 - [x] **N7 — Warn when `clear=True` is ignored** `instrument_init.py:86`.
   Silently skipped unless `device_manager` is a `guarneri.Instrument`.
   **Action:** Add a `logger.warning` in the else case. (Related to **S3**.)
@@ -212,9 +221,10 @@ end). IDs in brackets trace back to the audit.
   **Action:** State `file` is required (no `iconfig.yml` fallback), fix the type annotation, reorder params (`path` before `device_manager`), and correct the EXAMPLE to `make_devices(file="custom_devices.yml")`.
 
 ### API/UX polish
-- [ ] **N15 — Fix stray backslash in create message** `create_new_instrument.py:111-114`.
+- [x] **N15 — Fix stray backslash in create message** `create_new_instrument.py:111-114`.
   Line-continuation embeds a backslash + indentation into the printed path.
   **Action:** Collapse to one line: `print(f"Creating instrument '{args.name}' from demo_instrument into '{new_instrument_dir}'.")`.
+  **Done (2026-08-03, Batch 7):** replaced the backslash line-continuation with implicit string concatenation across two lines (the full one-liner exceeds the 88-char limit), so no backslash/indentation leaks into the message.
 - [x] **N16 — Quiet/relocate `get_md_path` log** `src/apsbits/utils/metadata.py:99`.
   Logs "RunEngine metadata saved to:" at info level though it only computes a path.
   **Action:** Downgrade to `logger.debug` and reword; emit any "saved" message where the StoredDict is actually created.
@@ -239,11 +249,14 @@ end). IDs in brackets trace back to the audit.
   **Action:** Add `pytest-cov` and `pytest-qt` to the dev extra (note `pytest-xvfb` is Linux-CI-only).
 
 ### Test coverage
-- [ ] **N22 — Add direct unit tests for untested modules**: `run_engine_init.init_RE`, `baseline_setup.setup_baseline_stream`, `aps_functions.host_on_aps_subnet`, `session_setup.prepare_bits`, `helper_functions.dynamic_import`. **Verified (2026-07-24):** none of the five has a dedicated test. Start with `dynamic_import` happy-path + the two documented `ValueError`s.
-- [ ] **N23 — Assert real post-startup invariants** (not just "import didn't throw"): `RE` is a `RunEngine`, `cat` is a catalog, `sd` subscribed, `oregistry` has `sim_motor`/`sim_det`. **Verified partial (2026-07-24):** `test_general.py::test_startup` only does non-None checks; behavioral coverage exists indirectly (`test_sim_plans` asserts catalog growth) but the explicit invariants and the `oregistry` membership check (currently done via brittle log-text in `test_make_devices.py`) are missing.
-- [ ] **N24 — Make `runengine_with_devices` deterministic** `tests/conftest.py:23-45`.
+- [x] **N22 — Add direct unit tests for untested modules**: `run_engine_init.init_RE`, `baseline_setup.setup_baseline_stream`, `aps_functions.host_on_aps_subnet`, `session_setup.prepare_bits`, `helper_functions.dynamic_import`. **Verified (2026-07-24):** none of the five has a dedicated test. Start with `dynamic_import` happy-path + the two documented `ValueError`s.
+  **Done (2026-08-03, Batch 8):** new `tests/test_units.py` (10 tests) covers all five — `dynamic_import` happy + both `ValueError`s; `host_on_aps_subnet` returns bool + monkeypatched socket-failure fallback; `prepare_bits` smoke; `setup_baseline_stream` no-config / disabled / adds-candidates branches; `init_RE` returns a `RunEngine`+`SupplementalData` with a `StoredDict` md.
+- [x] **N23 — Assert real post-startup invariants** (not just "import didn't throw"): `RE` is a `RunEngine`, `cat` is a catalog, `sd` subscribed, `oregistry` has `sim_motor`/`sim_det`. **Verified partial (2026-07-24):** `test_general.py::test_startup` only does non-None checks; behavioral coverage exists indirectly (`test_sim_plans` asserts catalog growth) but the explicit invariants and the `oregistry` membership check (currently done via brittle log-text in `test_make_devices.py`) are missing.
+  **Done (2026-08-03, Batch 8):** `test_startup` now asserts `isinstance(RE, RunEngine)`, the catalog type of `cat`, `sd in RE.preprocessors`, and `oregistry["sim_motor"]`/`["sim_det"]` resolve. The brittle log-text check in `test_make_devices.py` was replaced with a real `oregistry[name]` membership assertion.
+- [x] **N24 — Make `runengine_with_devices` deterministic** `tests/conftest.py:23-45`.
   Session-scoped fixture mutates module globals + `__main__`, creating order-dependence.
   **Action:** Use `scope="function"`, or call `make_devices(clear=True)` and document the shared-state contract.
+  **Done (2026-08-03, Batch 8):** fixture is now `scope="function"` with `make_devices(clear=True)` and a documented shared-state contract. **Went further:** added an autouse `_preserve_global_config` fixture that snapshots/restores the global iconfig around every test — the real order-dependence was that `make_devices` reads the global iconfig for its configs path, and `test_config` (via `reset_config`/`load_config`) was leaking a mutated/empty config to later tests. With this, `test_config` → `test_make_devices` now passes in isolation (previously `Path(None)` `TypeError`). Also fixed the `sys.argv`-dependent `test_(create|delete)_main_invalid_name` (see the correction block under the scoreboard).
 
 ---
 
@@ -264,7 +277,7 @@ end). IDs in brackets trace back to the audit.
 - [x] **W11 — `delete_instrument` is a reversible soft-delete** (timestamped move to `.deleted/`, `[y/N]` gate unless `--force`).
 - [x] **W12 — Deprecated docs are excluded from the Sphinx build** (`conf.py:47`, `deprecated/**`).
 - [x] **W13 — README mermaid diagrams accurately mirror `startup.py`** — keep them in sync on future changes. *(Notably the diagram already shows the correct `nxwriter_init(RE, iconfig)` signature that `startup.rst` gets wrong — see B6.)*
-- [x] **W14 — Parametrized happy/error coverage** in `test_catalog_init.py` and `test_controls_setup.py`. **Open TODO:** the `TILED_PROFILE_NAME` / `TILED_PATH_NAME` / `TILED_SAVE_PATH` parametrize cases in `test_catalog_init.py:76-88` are still stubbed — fill them.
+- [x] **W14 — Parametrized happy/error coverage** in `test_catalog_init.py` and `test_controls_setup.py`. **~~Open TODO~~ DONE (2026-08-03, Batch 8):** the `TILED_PROFILE_NAME`/`TILED_PATH_NAME`/`TILED_SAVE_PATH` cases are now covered by 5 dedicated tests using a `tiled_profile` fixture (live `SimpleTiledServer` + a temporary registered profile, with `load_profiles` cache cleared): valid profile → Container, valid+valid path → sub-container, valid+invalid path → `KeyError`, valid `TILED_SAVE_PATH` → Container, invalid `TILED_SAVE_PATH` → `NotADirectoryError`. They live as functions (not parametrize params) because they need a live-server fixture, not just an iconfig dict.
 - [x] **W15 — README ipython snippet is correct** — `sim_*_plan()` work zero-arg via `@with_registry`. Do not "fix" it.
 
 ---
@@ -299,15 +312,18 @@ New issues the first pass did not catalogue. Same format: file:line → problem 
   **Done (2026-08-03):** `get_config()` returns `types.MappingProxyType(_iconfig)`; return annotation relaxed to `Mapping[str, Any]`. **Pre-check confirmed:** all 5 callers (`instrument_init`, `helper_functions`, `baseline_setup`, `test_general` ×2) only read — no `get_config()[...] =`, no aliased `iconfig[...] =`/`.update`/`.pop`/`del`, no `isinstance(...,dict)`/`dict(get_config())` — so no caller migration was needed. `load_config`'s return is intentionally left mutable (the write path), per this item's scope.
 
 ### api/
-- [ ] **S7 — Stale/false docstrings** `src/apsbits/api/create_new_instrument.py:5` and `src/apsbits/api/__init__.py:4-5`.
+- [x] **S7 — Stale/false docstrings** `src/apsbits/api/create_new_instrument.py:5` and `src/apsbits/api/__init__.py:4-5`.
   Module docstring claims it "updates pyproject.toml and .templatesyncignore" — `main()` does neither. `api/__init__.py` still advertises CLIs for "creating, deleting, and **running** instruments" after `bits-run` was deleted.
   **Action:** Correct both docstrings to describe actual behavior.
-- [ ] **S8 — No test coverage for the create path** (`src/apsbits/tests/`).
+  **Done (2026-08-03, Batch 7):** create_new_instrument's module docstring now describes what `main()` actually does (copies `demo_instrument` → `src/<name>/`, writes `scripts/<name>_qs_host.sh`, rewrites the qserver `startup_module`); `api/__init__.py` now says "creating and deleting instruments" (dropped "running").
+- [x] **S8 — No test coverage for the create path** (`src/apsbits/tests/`).
   `test_delete_instrument.py` is robust, but there is **no `test_create_new_instrument.py`** — so the N5 (no rollback) and N6 (`os.rename`) defects are uncatchable in CI.
   **Action:** Add `test_create_new_instrument.py` covering the happy path + N5/N6 failure/rollback. *(Note: `test_delete_instrument.py` already exercises `create_new_instrument` indirectly; a dedicated file makes the failure modes first-class.)*
+  **Done (2026-08-03, Batch 7):** added `tests/test_create_new_instrument.py` (4 tests) — real end-to-end happy path in a tmp cwd, N5 rollback (forced failure after copy → asserts `src/<name>` + script removed), and the two N6 guards (missing template → `FileNotFoundError`; existing target → `FileExistsError`, file untouched).
 - [ ] **S9 — CLIs trust `os.getcwd()` as the workspace root with no validation** `create_new_instrument.py:103`, `delete_instrument.py:40,55`.
   Running from the wrong directory silently creates/deletes under an arbitrary path.
   **Action (optional / discuss):** require a workspace sentinel (`pyproject.toml` + `src/` in cwd) before any FS mutation. Behavior change — confirm with maintainers first.
+  **Deferred (2026-08-03, Batch 7):** intentionally **not** implemented. It is a user-facing behavior change (would make `bits-create`/`bits-delete` refuse to run outside a recognized workspace) and the audit itself flags it "optional / confirm with maintainers first." Left open for a maintainer decision.
 
 ### packaging / CI
 - [x] **S10 — `setuptools_scm` uses deprecated `write_to`** `pyproject.toml:188`.
@@ -325,12 +341,14 @@ New issues the first pass did not catalogue. Same format: file:line → problem 
   `load_config()` is documented to inject `ICONFIG_PATH`/`INSTRUMENT_PATH`/`INSTRUMENT_FOLDER`, and `get_config()` should return the same populated dict — the core config contract, entirely untested.
   **Action:** Assert the injected keys and the `load_config → get_config` round-trip.
   **Done (2026-08-03):** added 5 tests to `test_config.py` — path-key injection, `load_config → get_config` round-trip, `get_config()` read-only view raises `TypeError` on write (S6), replace-not-merge (N11), and `reset_config()` clears.
-- [ ] **S14 — NeXus writer enable-branch untested** `tests/test_general.py` (or new).
+- [x] **S14 — NeXus writer enable-branch untested** `tests/test_general.py` (or new).
   Tests assert `specwriter` but never `nxwriter`; the `NEXUS_DATA_FILES.ENABLE` toggle has zero coverage.
   **Action:** Add a test that enables it and asserts the `nxwriter` global/callback appears (mirror the specwriter path).
-- [ ] **S15 — Harden import-purity beyond TCP `connect`** `tests/test_import_purity.py`.
+  **Done (2026-08-03, Batch 8):** added `test_nxwriter_enabled_subscribes` / `test_nxwriter_disabled_does_not_subscribe` to `test_general.py`, driving `nxwriter_init(RE, iconfig)` with a mock RE. **This surfaced a real bug** — the enable-branch was dead (`nxwriter_init` imported a `host_on_aps_subnet` that no longer exists in apstools); fixed (see the bug-fix note under the scoreboard).
+- [x] **S15 — Harden import-purity beyond TCP `connect`** `tests/test_import_purity.py`.
   The guard blocks only `socket.socket.connect`; EPICS CA uses UDP broadcast (`bind`/`sendto`), and purity also forbids fs writes/object construction at import.
   **Action:** Extend the subprocess script to also trip on UDP socket ops and stray file writes.
+  **Done (2026-08-03, Batch 8):** the subprocess guard now also blocks `socket.socket.bind`/`sendto` (UDP) and wraps `builtins.open` to raise on any write-mode (`w`/`a`/`x`/`+`) open during import. Verified no false positives — all 30 modules still import cleanly under the stricter guard.
 
 ### docs
 - [ ] **S16 — Remove/deprecate the dead `DM_SETUP_FILE` iconfig key** `docs/source/guides/setting_iconfig.rst:132-138`.
@@ -434,30 +452,32 @@ File `src/apsbits/utils/stored_dict.py`:
 - [x] **Regression fix (not in original Batch 6 scope):** `StoredDict.__getstate__`/`__setstate__` + `test_deepcopy` — restores `RE.md` deep-copyability broken by B9/S5.
 - **Verify:** `pytest ./src`; startup smoke; `ruff` clean (B006 for N13). ✅
 
-### Batch 7 — api/create_new_instrument.py — N15, N6, N5, S7, S8, (S9)
+### Batch 7 — api/create_new_instrument.py — N15, N6, N5, S7, S8, (S9) — ✅ DONE & VERIFIED 2026-08-03
+> Executed 2026-08-03. N6 drops the `glob('*')`+`os.rename` for a direct copy of the one template file (`demo_scripts/` holds only `qs_host.sh`, verified) and **refuses** (not warns) on an existing target; N5 wraps the 3 steps in one try with a `created_qserver_script` flag so rollback never deletes a pre-existing script. S9 intentionally deferred (behavior change). Added `test_create_new_instrument.py` (4 tests). Verified: `test_create_new_instrument.py` + `test_delete_instrument.py` = **17 passed**; ruff clean.
 File `src/apsbits/api/create_new_instrument.py` (+ `api/__init__.py`):
-- [ ] N15: 111-114 — collapse the backslash-continued `print` to one line.
-- [ ] N6: 27-31 — assert `qs_host.sh` exists before `os.rename`; copy the specific file instead of `glob('*')`; refuse/warn if `{name}_qs_host.sh` already exists.
-- [ ] N5: 124-142 — wrap the create steps; on exception `shutil.rmtree(new_instrument_dir, ignore_errors=True)` + unlink the created `{name}_qs_host.sh`, then `sys.exit(1)`.
-- [ ] S7: fix the module docstring (drop the false pyproject/.templatesyncignore claim) and `api/__init__.py` ("running instruments" → remove).
-- [ ] S8: add `tests/test_create_new_instrument.py` — happy path in a tmp cwd, then N5 rollback (force a failure after copy → assert `src/<name>` removed) and N6 (missing `qs_host.sh` → clear error).
-- [ ] S9 *(optional, behavior change — confirm first)*: validate a workspace sentinel before FS mutation in both CLIs.
-- **Verify:** `conda run -n bits_dev python -m pytest src/apsbits/tests/test_create_new_instrument.py src/apsbits/tests/test_delete_instrument.py -vvv`; manual smoke in a scratch dir: `bits-create tmp_probe` then `bits-delete tmp_probe --force`.
+- [x] N15: 111-114 — collapse the backslash-continued `print` (implicit concatenation; the one-liner exceeds 88 chars).
+- [x] N6: assert `qs_host.sh` exists (clear `FileNotFoundError`); copy the specific file instead of `glob('*')`; refuse (`FileExistsError`) rather than overwrite `{name}_qs_host.sh`.
+- [x] N5: wrap the create steps; on exception `shutil.rmtree(new_instrument_dir, ignore_errors=True)` + unlink the created `{name}_qs_host.sh` (guarded by a flag), then `sys.exit(1)`.
+- [x] S7: fixed the module docstring (dropped the false pyproject/.templatesyncignore claim) and `api/__init__.py` ("running instruments" removed).
+- [x] S8: added `tests/test_create_new_instrument.py` — happy path in a tmp cwd, N5 rollback, and both N6 guards.
+- [ ] S9 *(optional, behavior change)*: **deferred** — needs maintainer confirmation (see the S9 entry in §5).
+- **Verify:** `conda run -n bits_dev python -m pytest src/apsbits/tests/test_create_new_instrument.py src/apsbits/tests/test_delete_instrument.py -vvv` → **17 passed**.
 
-### Batch 8 — tests — B7, B13, R10, N24, N22, N23, S14, S15, W14-TODO
+### Batch 8 — tests — B7, B13, R10, N24, N22, N23, S14, S15, W14-TODO — ✅ DONE & VERIFIED 2026-08-03
+> Executed 2026-08-03. N24 grew beyond the fixture: an autouse `_preserve_global_config` fixture isolates global-iconfig mutations (the real order-dependence), and the two `sys.argv`-dependent invalid-name tests were made deterministic. S14 caught+fixed a dead `nxwriter_init` import. W14 tiled cases needed a live-server fixture (with `load_profiles.cache_clear()`), not parametrize params. Added **+27 tests** total across Batches 7-8. Verified: full suite **134 passed, 0 failed**; slow import-purity 30 passed under the stricter guard; ruff + startup smoke OK.
 File `src/apsbits/tests/conftest.py`:
-- [ ] B7: `ioc` fixture — `import shutil; if shutil.which("softIoc") is None: pytest.skip(...)` and wrap `Popen` in `try/except FileNotFoundError: pytest.skip(...)`.
-- [ ] B13: line 109 `prefix="test1:"` → `prefix="test:"`.
-- [ ] N24: `runengine_with_devices` (23-45) — `scope="function"` (or reset `_iconfig`/`__main__` between tests using the new `reset_config()` from Batch 4) and document the shared-state contract.
+- [x] B7: `ioc` fixture — `shutil.which("softIoc")` guard + `try/except FileNotFoundError: pytest.skip(...)` (with `proc=None`/guarded teardown).
+- [x] B13: `prefix="test1:"` → `prefix="test:"`.
+- [x] N24: `runengine_with_devices` now `scope="function"` + `make_devices(clear=True)` + documented contract; **plus** the autouse `_preserve_global_config` fixture (uses Batch 4's `reset_config`/`update_config`).
 
 Other test files:
-- [ ] R10: delete dead `TYPE_CHECKING` import + `if TYPE_CHECKING: pass` in `test_config.py` and `test_general.py` **only**.
-- [ ] N22: add direct unit tests for `init_RE`, `setup_baseline_stream`, `host_on_aps_subnet`, `prepare_bits`, `dynamic_import` (start with `dynamic_import` happy + two `ValueError`s).
-- [ ] N23: strengthen `test_general.py::test_startup` — `isinstance(RE, RunEngine)`, catalog type on `cat`, `sd` present in `RE`'s subscriptions, `oregistry["sim_motor"]`/`["sim_det"]` resolve (replace the log-text check in `test_make_devices.py`).
-- [ ] S14: add a `nxwriter` enable-branch test (mirror the specwriter path).
-- [ ] S15: extend `test_import_purity.py` to also trip on UDP socket ops + stray file writes at import.
-- [ ] W14-TODO: fill the `TILED_PROFILE_NAME`/`TILED_PATH_NAME`/`TILED_SAVE_PATH` parametrize cases in `test_catalog_init.py:76-88`.
-- **Verify:** full suite green in `bits_dev` including `-m slow` and the `ioc` tests; confirm the suite also *skips* cleanly where `softIoc` is absent (temporarily rename it / test on a non-EPICS env if available).
+- [x] R10: deleted dead `TYPE_CHECKING` import + block in `test_config.py` and `test_general.py` (and in `test_make_devices.py` once N23 made it dead).
+- [x] N22: added `tests/test_units.py` (10 tests) for `init_RE`, `setup_baseline_stream`, `host_on_aps_subnet`, `prepare_bits`, `dynamic_import`.
+- [x] N23: strengthened `test_startup` (RunEngine/catalog/sd/oregistry invariants); replaced the log-text check in `test_make_devices.py` with a real `oregistry[name]` membership assertion.
+- [x] S14: added `nxwriter` enable/disable-branch tests (mirroring specwriter) — **and fixed** the broken `nxwriter_init` import it exposed.
+- [x] S15: `test_import_purity.py` now also trips on UDP `bind`/`sendto` and write-mode `open` at import.
+- [x] W14-TODO: filled all five `TILED_*` cases via a live-server `tiled_profile` fixture in `test_catalog_init.py`.
+- **Verify:** full suite **134 passed** in `bits_dev` (incl. `-m slow` and `ioc` tests). *(softIoc IS present on this host, so the B7 skip path was verified by code inspection + the `proc=None` guard; on a non-EPICS host the `ioc`-dependent tests now skip instead of ERROR.)*
 
 ### Batch 9 — docs — B4, B6, S16, S17, S18
 - [ ] B4: delete `docs/source/guides/dm.rst`; remove `dm` from `guides/index.rst:21`; delete the `# aps_dm_setup(...)` comment at `startup.py:62`.

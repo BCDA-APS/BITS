@@ -4,7 +4,6 @@ Test the configuration management module.
 
 import pathlib
 import tempfile
-from typing import TYPE_CHECKING
 
 import pytest
 import tomli_w
@@ -14,9 +13,6 @@ from apsbits.utils.config_loaders import get_config
 from apsbits.utils.config_loaders import load_config
 from apsbits.utils.config_loaders import reset_config
 from apsbits.utils.config_loaders import update_config
-
-if TYPE_CHECKING:
-    pass
 
 ICONFIG_VERSION_NOW: str = "2.0.1"
 

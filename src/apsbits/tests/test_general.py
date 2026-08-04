@@ -5,19 +5,21 @@ Here is just enough testing to get a CI workflow started. More are possible.
 """
 
 import time
-from typing import TYPE_CHECKING
+from unittest.mock import MagicMock
 
 import pytest
+from bluesky import RunEngine
 
-if TYPE_CHECKING:
-    pass
+from apsbits.demo_instrument.callbacks.demo_nexus_callback import nxwriter_init
 
 # Import required modules from demo_instrument.startup
 from apsbits.demo_instrument.plans.sim_plans import sim_count_plan
 from apsbits.demo_instrument.plans.sim_plans import sim_print_plan
 from apsbits.demo_instrument.plans.sim_plans import sim_rel_scan_plan
+from apsbits.demo_instrument.startup import RE
 from apsbits.demo_instrument.startup import bec
 from apsbits.demo_instrument.startup import cat
+from apsbits.demo_instrument.startup import oregistry
 from apsbits.demo_instrument.startup import peaks
 from apsbits.demo_instrument.startup import sd
 from apsbits.demo_instrument.startup import specwriter
@@ -40,6 +42,18 @@ def test_startup(runengine_with_devices: object) -> None:
     assert peaks is not None
     assert sd is not None
     assert specwriter is not None
+
+    # Behavioral invariants, not just "not None".
+    assert isinstance(RE, RunEngine)
+    assert type(cat).__name__ in {
+        "BlueskyMsgpackCatalog",
+        "BlueskyMongoCatalog",
+        "Container",
+        "CatalogOfBlueskyRuns",
+    }
+    assert sd in RE.preprocessors  # SupplementalData is attached to the RunEngine
+    assert oregistry["sim_motor"] is not None  # devices resolve by name
+    assert oregistry["sim_det"] is not None
 
     iconfig = get_config()
     if iconfig.get("DATABROKER_CATALOG", "temp") == "temp":
@@ -103,3 +117,25 @@ def test_iconfig() -> None:
 
     xmode = iconfig.get("XMODE_DEBUG_LEVEL")
     assert xmode is not None
+
+
+def test_nxwriter_enabled_subscribes() -> None:
+    """When NEXUS_DATA_FILES.ENABLE is true, nxwriter is created and subscribed."""
+    RE = MagicMock()
+    iconfig = {"NEXUS_DATA_FILES": {"ENABLE": True, "FILE_EXTENSION": "hdf"}}
+
+    nxwriter = nxwriter_init(RE, iconfig)
+
+    assert nxwriter is not None
+    RE.subscribe.assert_called_once_with(nxwriter.receiver)
+
+
+def test_nxwriter_disabled_does_not_subscribe() -> None:
+    """When NEXUS_DATA_FILES.ENABLE is false, nxwriter is created but not subscribed."""
+    RE = MagicMock()
+    iconfig = {"NEXUS_DATA_FILES": {"ENABLE": False}}
+
+    nxwriter = nxwriter_init(RE, iconfig)
+
+    assert nxwriter is not None
+    RE.subscribe.assert_not_called()

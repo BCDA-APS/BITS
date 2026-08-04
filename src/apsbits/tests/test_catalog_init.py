@@ -4,7 +4,9 @@ from contextlib import nullcontext as does_not_raise
 from unittest.mock import patch
 
 import pytest
+import yaml
 from tiled.profiles import ProfileNotFound
+from tiled.server import SimpleTiledServer
 
 # Run these tests without running startup.py.
 with patch("logging.Logger.bsdev"):
@@ -73,10 +75,9 @@ with patch("logging.Logger.bsdev"):
             ),
             id="no such tiled profile name",
         ),
-        # TODO: _tiled_profile_client with:
-        #    valid TILED_PROFILE_NAME
-        #    valid TILED_PROFILE_NAME & valid TILED_PATH_NAME
-        #    valid TILED_PROFILE_NAME & invalid TILED_PATH_NAME
+        # Cases needing a live tiled server / profile (valid TILED_PROFILE_NAME,
+        # TILED_PATH_NAME, TILED_SAVE_PATH) are covered by the dedicated tests
+        # below — they need fixtures, not just an iconfig dict.
         pytest.param(
             {},
             _tiled_temporary_catalog,
@@ -84,8 +85,6 @@ with patch("logging.Logger.bsdev"):
             does_not_raise(),
             id="temporary tiled catalog",
         ),
-        # TODO: _tiled_temporary_catalog & valid TILED_SAVE_PATH
-        # TODO: _tiled_temporary_catalog & invalid TILED_SAVE_PATH
     ],
 )
 def test_handlers(iconfig, handler, cat_type, context):
@@ -119,3 +118,70 @@ def test_use_temporary_tiled_catalog():
     data = run.primary.read()
     assert "noisy_det" in data
     assert len(data["noisy_det"]) == npts
+
+
+PROFILE_NAME = "apsbits_unit_test_profile"
+
+
+@pytest.fixture
+def tiled_profile(tmp_path):
+    """A live temporary tiled server exposed as a named profile.
+
+    Registers a profile pointing at a SimpleTiledServer and creates a ``sub``
+    container so both the valid and invalid TILED_PATH_NAME cases are testable.
+    """
+    import tiled.profiles
+    from tiled.client import from_uri
+
+    server = SimpleTiledServer()
+    profile_dir = tmp_path / "profiles"
+    profile_dir.mkdir()
+    (profile_dir / "unit_test.yml").write_text(
+        yaml.dump({PROFILE_NAME: {"uri": server.uri}})
+    )
+    tiled.profiles.paths.insert(0, profile_dir)
+    tiled.profiles.load_profiles.cache_clear()  # load_profiles is lru_cached
+    from_uri(server.uri).create_container("sub")  # a valid TILED_PATH_NAME
+    try:
+        yield PROFILE_NAME
+    finally:
+        server.close()
+        tiled.profiles.paths.remove(profile_dir)
+        tiled.profiles.load_profiles.cache_clear()  # drop the now-stale profile
+
+
+def test_tiled_profile_client_valid_profile(tiled_profile):
+    """Valid TILED_PROFILE_NAME connects and returns a tiled container."""
+    cat = _tiled_profile_client({"TILED_PROFILE_NAME": tiled_profile})
+    assert type(cat).__name__ == "Container"
+
+
+def test_tiled_profile_client_valid_path(tiled_profile):
+    """Valid TILED_PROFILE_NAME + valid TILED_PATH_NAME returns the sub-node."""
+    cat = _tiled_profile_client(
+        {"TILED_PROFILE_NAME": tiled_profile, "TILED_PATH_NAME": "sub"}
+    )
+    assert type(cat).__name__ == "Container"
+
+
+def test_tiled_profile_client_invalid_path(tiled_profile):
+    """Valid TILED_PROFILE_NAME + invalid TILED_PATH_NAME raises KeyError."""
+    with pytest.raises(KeyError):
+        _tiled_profile_client(
+            {"TILED_PROFILE_NAME": tiled_profile, "TILED_PATH_NAME": "no_such_path"}
+        )
+
+
+def test_tiled_temporary_catalog_valid_save_path(tmp_path):
+    """A writable TILED_SAVE_PATH yields a tiled container."""
+    cat = _tiled_temporary_catalog({"TILED_SAVE_PATH": str(tmp_path)})
+    assert type(cat).__name__ == "Container"
+    del cat
+
+
+def test_tiled_temporary_catalog_invalid_save_path(tmp_path):
+    """A non-directory TILED_SAVE_PATH raises NotADirectoryError."""
+    bad = tmp_path / "not_a_dir"
+    bad.write_text("x")
+    with pytest.raises(NotADirectoryError):
+        _tiled_temporary_catalog({"TILED_SAVE_PATH": str(bad)})

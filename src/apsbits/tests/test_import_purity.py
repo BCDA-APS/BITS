@@ -49,13 +49,28 @@ def discover_all_modules():
 @pytest.mark.slow
 @pytest.mark.parametrize("module_name", discover_all_modules())
 def test_module_imports_cleanly(module_name):
-    """Every module must be importable without network I/O side effects."""
+    """Every module must import without network I/O or file-write side effects.
+
+    Blocks TCP connect and UDP ops (EPICS Channel Access uses UDP broadcast for
+    PV discovery) plus write-mode file opens, all of which are forbidden at
+    import time.
+    """
     script = (
         "import socket\n"
-        "_orig_connect = socket.socket.connect\n"
-        "def _block(*a, **kw):\n"
-        "    raise RuntimeError('Network I/O during import')\n"
-        "socket.socket.connect = _block\n"
+        "def _blocker(name):\n"
+        "    def _f(*a, **kw):\n"
+        "        raise RuntimeError('Network I/O during import via ' + name)\n"
+        "    return _f\n"
+        "socket.socket.connect = _blocker('connect')\n"
+        "socket.socket.bind = _blocker('bind')\n"
+        "socket.socket.sendto = _blocker('sendto')\n"
+        "import builtins\n"
+        "_orig_open = builtins.open\n"
+        "def _guarded_open(file, mode='r', *a, **kw):\n"
+        "    if any(m in str(mode) for m in ('w', 'a', 'x', '+')):\n"
+        "        raise RuntimeError('File write during import: ' + repr(file))\n"
+        "    return _orig_open(file, mode, *a, **kw)\n"
+        "builtins.open = _guarded_open\n"
         f"import {module_name}\n"
     )
     result = subprocess.run(
@@ -63,6 +78,6 @@ def test_module_imports_cleanly(module_name):
         capture_output=True,
         timeout=30,
     )
-    assert (
-        result.returncode == 0
-    ), f"{module_name} failed to import cleanly:\n{result.stderr.decode()}"
+    assert result.returncode == 0, (
+        f"{module_name} failed to import cleanly:\n{result.stderr.decode()}"
+    )
