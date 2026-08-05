@@ -128,7 +128,7 @@ def set_timeouts(timeouts: dict[str, float]) -> None:
     if not EpicsSignalBase._EpicsSignalBase__any_instantiated:
         # Only BEFORE any EpicsSignalBase (or subclass) are created!
         EpicsSignalBase.set_defaults(
-            auto_monitor=True,
+            auto_monitor=False,
             timeout=timeouts.get("PV_READ", DEFAULT_TIMEOUT),
             write_timeout=timeouts.get("PV_WRITE", DEFAULT_TIMEOUT),
             connection_timeout=timeouts.get("PV_CONNECTION", DEFAULT_TIMEOUT),
