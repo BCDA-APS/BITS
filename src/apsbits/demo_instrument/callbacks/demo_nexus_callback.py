@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 def nxwriter_init(RE: Any, iconfig: dict[str, Any]) -> Any:
     """Initialize the Nexus data file writer callback."""
-    from apstools.utils import host_on_aps_subnet
+    from apsbits.utils.aps_functions import host_on_aps_subnet
 
     if host_on_aps_subnet():
         from apstools.callbacks import NXWriterAPS as NXWriter

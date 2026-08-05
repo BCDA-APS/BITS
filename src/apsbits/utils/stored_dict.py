@@ -70,7 +70,8 @@ class StoredDict(collections.abc.MutableMapping):
         self.sync_in_progress: bool = False
         self._sync_deadline: float = time.time()
         self._sync_key: str = f"sync_agent_{id(self):x}"
-        self._sync_loop_period: float = 0.005
+        self._lock: threading.RLock = threading.RLock()
+        self._sync_timer: Optional[threading.Timer] = None
 
         self._cache: dict[Any, Any] = {}
         self.reload()
@@ -86,6 +87,7 @@ class StoredDict(collections.abc.MutableMapping):
             KeyError: If the key does not exist in the dictionary.
         """
         del self._cache[key]
+        self._schedule_sync()  # Persist the deletion (S4).
 
     def __getitem__(self, key: Any) -> Any:
         """
@@ -111,6 +113,27 @@ class StoredDict(collections.abc.MutableMapping):
         """representation of this object."""
         return f"<{self.__class__.__name__} {dict(self)!r}>"
 
+    def __getstate__(self):
+        """
+        Return picklable state, excluding the unpicklable sync primitives.
+
+        ``RE.md`` is a ``StoredDict`` and bluesky deep-copies the RunEngine
+        metadata during a run, so the instance must survive ``copy.deepcopy``
+        (and pickling). The lock and debounce timer are transient and are
+        recreated fresh by ``__setstate__``.
+        """
+        state = self.__dict__.copy()
+        state.pop("_lock", None)
+        state.pop("_sync_timer", None)
+        return state
+
+    def __setstate__(self, state):
+        """Restore state and recreate the transient sync primitives."""
+        self.__dict__.update(state)
+        self._lock = threading.RLock()
+        self._sync_timer = None
+        self.sync_in_progress = False
+
     def __setitem__(self, key, value):
         """Write to the dictionary."""
         outermost_frame = inspect.getouterframes(inspect.currentframe())[-1]
@@ -122,42 +145,43 @@ class StoredDict(collections.abc.MutableMapping):
         if self.test_serializable:
             json.dumps({key: value})
         self._cache[key] = value  # Store the new (or revised) content.
+        self._schedule_sync()
 
-        # Reset the deadline.
-        self._sync_deadline = time.time() + self._delay
-        logger.debug("new sync deadline in %f s.", self._delay)
-        if not self.sync_in_progress:
-            # Start the sync_agent (thread).
-            self._delayed_sync_to_storage()
-
-    def _delayed_sync_to_storage(self):
+    def _schedule_sync(self):
         """
-        Sync the metadata to storage.
-        Start a time-delay thread.  New writes to the metadata dictionary will
-        extend the deadline.  Sync once the deadline is reached.
-        """
+        Schedule a debounced write of the dictionary to storage.
 
-        def sync_agent():
-            """Threaded task."""
-            logger.debug("Starting sync_agent...")
+        Restart a ``delay``-second timer on every call, so a burst of writes
+        (or deletions) coalesces into a single write once activity settles.
+        The timer runs as a daemon thread, so it never blocks interpreter exit.
+        """
+        with self._lock:
+            self._sync_deadline = time.time() + self._delay
             self.sync_in_progress = True
-            while time.time() < self._sync_deadline:
-                time.sleep(self._sync_loop_period)
+            logger.debug("new sync deadline in %f s.", self._delay)
+            if self._sync_timer is not None:
+                self._sync_timer.cancel()
+            self._sync_timer = threading.Timer(self._delay, self._sync_to_storage)
+            self._sync_timer.daemon = True
+            self._sync_timer.start()
+
+    def _sync_to_storage(self):
+        """Write the cache to storage when the debounce timer fires."""
+        with self._lock:
             logger.debug("Sync waiting period ended")
-            self.sync_in_progress = False
-
             StoredDict.dump(self._file, self._cache, title=self._title)
-
-        thred = threading.Thread(target=sync_agent)
-        thred.start()
+            self.sync_in_progress = False
 
     def flush(self):
         """Force a write of the dictionary to disk"""
         logger.debug("flush()")
-        if not self.sync_in_progress:
+        with self._lock:
+            if self._sync_timer is not None:
+                self._sync_timer.cancel()
+                self._sync_timer = None
             StoredDict.dump(self._file, self._cache, title=self._title)
-        self._sync_deadline = time.time()
-        self.sync_in_progress = False
+            self._sync_deadline = time.time()
+            self.sync_in_progress = False
 
     def popitem(self):
         """
@@ -166,7 +190,9 @@ class StoredDict(collections.abc.MutableMapping):
         Raises:
             KeyError: If the dictionary is empty.
         """
-        return self._cache.popitem()
+        item = self._cache.popitem()
+        self._schedule_sync()  # Persist the deletion (S4).
+        return item
 
     def reload(self):
         """Read dictionary from storage."""

@@ -175,25 +175,25 @@ def test_delete_instrument_nonexistent(tmp_path: Path) -> None:
     delete_instrument(nonexistent_instrument, nonexistent_qserver)
 
 
-def test_delete_main_invalid_name(capsys: "CaptureFixture[str]") -> None:
+def test_delete_main_invalid_name(
+    monkeypatch: "MonkeyPatch", capsys: "CaptureFixture[str]"
+) -> None:
     """
-    Test the main function with an invalid instrument name.
+    Test the main function exits when no instrument name is given.
 
+    :param monkeypatch: Pytest fixture for patching.
     :param capsys: Pytest fixture for capturing stdout and stderr.
     """
+    # Deterministic argv with no positional 'name'. Without this, delete_main()
+    # parses the ambient pytest argv, so the outcome depends on how pytest was
+    # invoked (e.g. a './src' arg would be read as the name).
+    monkeypatch.setattr("sys.argv", ["bits-delete"])
     with pytest.raises(SystemExit) as excinfo:
         delete_main()
 
-    assert excinfo.value.code == 2  # argparse exits with code 2 for missing arguments
+    assert excinfo.value.code == 2  # argparse exits 2 when 'name' is missing
     captured = capsys.readouterr()
-    # Check for either the missing argument error or the unrecognized arguments error
-    assert any(
-        error in captured.err
-        for error in [
-            "error: the following arguments are required: name",
-            "error: unrecognized arguments:",
-        ]
-    )
+    assert "the following arguments are required: name" in captured.err
 
 
 def test_delete_main_nonexistent_instrument(
@@ -202,24 +202,28 @@ def test_delete_main_nonexistent_instrument(
     """
     Test the main function with a nonexistent instrument.
 
+    A missing instrument is fatal: main() must exit(1) and must not
+    report a successful move.
+
     :param monkeypatch: Pytest fixture for patching.
     :param capsys: Pytest fixture for capturing stdout and stderr.
     """
-    # Mock argparse to return a valid name
+    # Mock argparse to return a valid name for an instrument that does not exist
     monkeypatch.setattr(
         "argparse.ArgumentParser.parse_args",
         lambda _: type("Args", (), {"name": "nonexistent", "force": False})(),
     )
 
-    # Mock input to return 'n' to avoid stdin issues
+    # Mock input so a regression to the confirmation prompt fails cleanly
     monkeypatch.setattr("builtins.input", lambda _: "n")
 
     with pytest.raises(SystemExit) as excinfo:
         delete_main()
 
-    assert excinfo.value.code == 0  # Should exit with 0 when user cancels
+    assert excinfo.value.code == 1  # missing instrument is fatal
     captured = capsys.readouterr()
-    assert "Operation cancelled" in captured.out
+    assert "does not exist" in captured.err
+    assert "have been moved" not in captured.out
 
 
 def test_delete_main_successful_deletion(
@@ -393,25 +397,25 @@ def test_create_qserver(tmp_path: Path, mock_demo_dirs: tuple[Path, Path]) -> No
     assert (qserver_dir / f"{name}_qs_host.sh").stat().st_mode & 0o755 == 0o755
 
 
-def test_create_main_invalid_name(capsys: "CaptureFixture[str]") -> None:
+def test_create_main_invalid_name(
+    monkeypatch: "MonkeyPatch", capsys: "CaptureFixture[str]"
+) -> None:
     """
-    Test the main function with an invalid instrument name.
+    Test the main function exits when no instrument name is given.
 
+    :param monkeypatch: Pytest fixture for patching.
     :param capsys: Pytest fixture for capturing stdout and stderr.
     """
+    # Deterministic argv with no positional 'name'. Without this, create_main()
+    # parses the ambient pytest argv, so the outcome depends on how pytest was
+    # invoked (e.g. a './src' arg would be read as the name).
+    monkeypatch.setattr("sys.argv", ["bits-create"])
     with pytest.raises(SystemExit) as excinfo:
         create_main()
 
-    assert excinfo.value.code == 2  # argparse exits with code 2 for missing arguments
+    assert excinfo.value.code == 2  # argparse exits 2 when 'name' is missing
     captured = capsys.readouterr()
-    # Check for either the missing argument error or the unrecognized arguments error
-    assert any(
-        error in captured.err
-        for error in [
-            "error: the following arguments are required: name",
-            "error: unrecognized arguments:",
-        ]
-    )
+    assert "the following arguments are required: name" in captured.err
 
 
 def test_create_main_existing_instrument(

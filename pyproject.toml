@@ -40,6 +40,9 @@ dependencies = [
     "bluesky-widgets",
     "bluesky",
     "caproto",
+    # Pinned: databroker 2.x is a tiled-based rewrite that drops the v1 _drivers/.temp()/.v1/.v2
+    # APIs used in catalog_init.py & run_engine_init.py. Tiled support comes from
+    # bluesky-tiled-plugins/tiled (separate deps), so no databroker bump is needed for tiled.
     "databroker==1.2.5",
     "guarneri>=0.4.0",
     "ipython",
@@ -53,12 +56,10 @@ dependencies = [
     "pysumreg",
     "qtpy",
     "tiled[all]",
-    "tomli-w",
-    "tomli",
 ]
 
 [project.optional-dependencies]
-dev = ["build", "isort", "mypy", "pre-commit", "pytest", "pytest-mock", "ruff"]
+dev = ["build", "pre-commit", "pytest", "pytest-cov", "pytest-mock", "pytest-qt", "ruff", "tomli-w"]
 
 # doc: conda install conda-forge::pandoc
 doc = [
@@ -75,8 +76,6 @@ doc = [
     "sphinx-tabs",
     "sphinx",
     "graphviz",
-    "dot",
-    "tomli-w",
 ]
 
 all = ["apsbits[dev,doc]"]
@@ -86,57 +85,16 @@ all = ["apsbits[dev,doc]"]
 "Bug Tracker" = "https://github.com/BCDA-APS/BITS/issues"
 
 
-[tool.black]
-line-length = 115
-target-version = ['py311']
-include = '\.pyi?$'
-exclude = '''
-
-(
-  /(
-      \.eggs         # exclude a few common directories in the
-    | \.git          # root of the project
-    | \.hg
-    | \.mypy_cache
-    | \.tox
-    | \.venv
-    | \.pytest_cache
-    | _build
-    | build
-    | dist
-    | docs
-  )/
-)
-'''
-
-
-[tool.flake8]
-max-line-length = 115
-extend-ignore = [
-    "E203", # See https://github.com/PyCQA/pycodestyle/issues/373
-    "E402", # module level import not at top of file (for cansas.py)
-    "E501",
-    "F401", # imported but unused
-    "F405", # symbol may be undefined, or defined from star imports
-    "F722", # allow Annotated[typ, some_func("some string")]
-    "F811", # support typing.overload decorator
-    "W503",
-    "W504",
-]
-
-[tool.isort]
-force_single_line = true
-# multi_line_output = 1
-line_length = 88
-include_trailing_comma = true
-
 [tool.pytest.ini_options]
 # https://docs.pytest.org/en/stable/customize.html
-addopts = ["--import-mode=importlib", "-x"]
+addopts = ["--import-mode=importlib", "--strict-markers"]
 junit_family = "xunit1"
 filterwarnings = [
     "ignore::DeprecationWarning",
     "ignore::PendingDeprecationWarning",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
 ]
 
 [tool.ruff]
@@ -233,18 +191,8 @@ package-dir = {"apsbits" = "src/apsbits"}
 "*" = ["*.yml", "*.sh"]
 
 [tool.setuptools_scm]
-write_to = "src/apsbits/_version.py"
+version_file = "src/apsbits/_version.py"
 
 [project.scripts]
-create-bits = "apsbits.api.create_new_instrument:main" ## keeping this one for back compatibility
-#new section of entrypoints for the api.
 bits-create = "apsbits.api.create_new_instrument:main"
 bits-delete = "apsbits.api.delete_instrument:main"
-bits-run = "apsbits.api.run_instrument:main"
-# bits-device-create
-# bits-device-remove
-# bits-device-check
-# bits-plan-create
-# bits-plan-remove
-# bits-plan-check
-#

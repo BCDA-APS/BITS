@@ -114,6 +114,7 @@ def main() -> None:
     if not instrument_dir.exists():
         msg = f"Error: Instrument '{args.name}' does not exist."
         print(msg, file=sys.stderr)
+        sys.exit(1)
 
     if not qserver_dir.exists():
         msg = f"Error: Qserver script for instrument '{args.name}' does not exist."

@@ -182,8 +182,6 @@ def motors(
     if prefix is None:
         raise ValueError("Must define a string value for 'prefix'.")
 
-    kwargs["names"] = names or "m{}"
-    kwargs["prefix"] = prefix
     kwargs.update(
         {
             "prefix": prefix,

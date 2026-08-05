@@ -94,23 +94,15 @@ def init_RE(
     RE.preprocessors.append(sd)
 
     MD_PATH = get_md_path(iconfig)
-    # Save/restore RE.md dictionary in the specified order.
+    # Save/restore RE.md dictionary.
     if MD_PATH is not None:
-        handler_name = "StoredDict"
-        logger.debug(
-            "Selected %r to store 'RE.md' dictionary in %s.",
-            handler_name,
-            MD_PATH,
-        )
+        logger.debug("Storing 'RE.md' dictionary in %s (StoredDict).", MD_PATH)
         try:
-            if handler_name == "PersistentDict":
-                RE.md = bluesky.utils.PersistentDict(MD_PATH)
-            elif handler_name == "StoredDict":
-                RE.md = StoredDict(MD_PATH)
+            RE.md = StoredDict(MD_PATH)
         except Exception as error:
             print(
                 "\n"
-                f"Could not create {handler_name} for RE metadata. Continuing "
+                "Could not create StoredDict for RE metadata. Continuing "
                 f"without saving metadata to disk. {error=}\n"
             )
 

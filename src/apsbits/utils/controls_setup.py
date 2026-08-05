@@ -133,3 +133,9 @@ def set_timeouts(timeouts: dict[str, float]) -> None:
             write_timeout=timeouts.get("PV_WRITE", DEFAULT_TIMEOUT),
             connection_timeout=timeouts.get("PV_CONNECTION", DEFAULT_TIMEOUT),
         )
+    else:
+        logger.warning(
+            "set_timeouts() had no effect: an EpicsSignalBase was already "
+            "instantiated; timeouts must be set before the first EPICS signal "
+            "is created."
+        )

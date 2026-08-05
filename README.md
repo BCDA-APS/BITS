@@ -23,6 +23,14 @@ conda activate "${INSTALL_ENVIRONMENT_NAME}"
 pip install apsbits
 ```
 
+Or with [uv](https://docs.astral.sh/uv/):
+
+```bash
+uv pip install apsbits      # into an active environment
+# ...or, from a clone for development (uses the committed uv.lock):
+uv sync --extra dev
+```
+
 For development please reference our documentation
 
 ## Startup Architecture
@@ -69,7 +77,6 @@ graph LR
     subgraph api["apsbits.api"]
         create_new_instrument
         delete_instrument
-        run_instrument --> instrument_init
     end
 
     apsbits_init["apsbits/__init__"]

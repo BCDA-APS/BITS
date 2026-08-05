@@ -2,7 +2,9 @@
 """
 Create a new instrument from a fixed template.
 
-Copies the template directory and updates pyproject.toml and .templatesyncignore.
+Copies the ``demo_instrument`` package to ``src/<name>/``, creates a
+``scripts/<name>_qs_host.sh`` launcher, and rewrites the queueserver
+``startup_module`` in the copied ``qserver/qs-config.yml``.
 """
 
 __version__ = "1.0.0"
@@ -24,13 +26,16 @@ def create_qserver_script(scripts_dir: Path, name: str) -> None:
         Path(__file__).resolve().parent.parent / "demo_scripts"
     ).resolve()
 
-    for scripts_file in demo_scripts_path.glob("*"):
-        shutil.copy2(scripts_file, scripts_dir)
-
-    # Rename qs_host.sh to include the instrument name
-    os.rename(scripts_dir / "qs_host.sh", scripts_dir / f"{name}_qs_host.sh")
+    source_script = demo_scripts_path / "qs_host.sh"
+    if not source_script.exists():
+        raise FileNotFoundError(f"Template qserver script not found: {source_script}")
 
     new_script_path = scripts_dir / f"{name}_qs_host.sh"
+    if new_script_path.exists():
+        raise FileExistsError(f"Qserver script already exists: {new_script_path}")
+
+    # Copy the template directly to the instrument-named script.
+    shutil.copy2(source_script, new_script_path)
 
     # Read script contents
     with open(new_script_path, "r") as src:
@@ -109,8 +114,8 @@ def main() -> None:
     scripts_dir: Path = main_path / "scripts"
 
     print(
-        f"Creating instrument '{args.name}' from demo_instrument into \
-        '{new_instrument_dir}'."
+        f"Creating instrument '{args.name}' from demo_instrument "
+        f"into '{new_instrument_dir}'."
     )
 
     if not scripts_dir.exists():
@@ -121,24 +126,23 @@ def main() -> None:
         print(f"Error: Destination '{new_instrument_dir}' exists.", file=sys.stderr)
         sys.exit(1)
 
+    qserver_script = scripts_dir / f"{args.name}_qs_host.sh"
+    created_qserver_script = False
     try:
         copy_instrument(new_instrument_dir)
         print(f"Template copied to '{new_instrument_dir}'.")
-    except Exception as exc:
-        print(f"Error copying instrument: {exc}", file=sys.stderr)
-        sys.exit(1)
-    try:
         create_qserver_script(scripts_dir, args.name)
+        created_qserver_script = True
         print(f"Qserver script created in '{scripts_dir}'.")
-    except Exception as exc:
-        print(f"Error creating qserver script: {exc}", file=sys.stderr)
-        sys.exit(1)
-
-    try:
         edit_qserver_folder(qserver_dir, args.name)
         print(f"Qserver config created in '{qserver_dir}'.")
     except Exception as exc:
-        print(f"Error creating qserver config: {exc}", file=sys.stderr)
+        print(f"Error creating instrument: {exc}", file=sys.stderr)
+        # Roll back partial state so the command can be re-run cleanly. Only
+        # remove the qserver script if we created it (not a pre-existing one).
+        shutil.rmtree(new_instrument_dir, ignore_errors=True)
+        if created_qserver_script:
+            qserver_script.unlink(missing_ok=True)
         sys.exit(1)
 
     print(f"Instrument '{args.name}' created.")

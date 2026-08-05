@@ -6,7 +6,10 @@ APS utility helper functions
     ~host_on_aps_subnet
 """
 
+import logging
 import socket
+
+logger = logging.getLogger(__name__)
 
 
 def host_on_aps_subnet():
@@ -20,7 +23,8 @@ def host_on_aps_subnet():
         try:
             sock.connect((TEST_IP, 1))
             ip4 = sock.getsockname()[0]
-        except Exception:
+        except Exception as exc:
+            logger.debug("Could not determine host IP (assuming off subnet): %s", exc)
             ip4 = LOOPBACK_IP4
     return True in [
         ip4.startswith(PUBLIC_IP4_PREFIX),

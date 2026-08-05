@@ -46,9 +46,8 @@ def make_devices(
 
     EXAMPLE::
 
-        RE(make_devices(file="custom_devices.yml"))  #Use custom devices file
-        RE(make_devices(path="custom_device_path",
-                        file="custom_devices.yml")) #Use custom path to find device file
+        make_devices(file="custom_devices.yml")  # devices file on the default path
+        make_devices(path="my_configs", file="custom_devices.yml")  # custom path
 
     PARAMETERS
 
@@ -56,14 +55,14 @@ def make_devices(
         Wait 'pause' seconds (default: 1) for slow objects to connect.
     clear : bool
         Clear 'oregistry' first if True (the default).
-    file : str | pathlib.Path | None
-        Optional path to a custom YAML/TOML file containing device configurations.
-        If provided, this file will be used instead of the default iconfig.yml.
-        If None (default), uses the standard iconfig.yml configuration.
+    file : str
+        Path to a YAML/TOML file describing the devices to create (required).
+    path : str | pathlib.Path | None
+        Directory containing 'file'. If None (default), uses the instrument's
+        standard configs path.
     device_manager:
-        The device manager to use. Options are 'guarneri' (default) or 'happi' (A WIP).
-
-    path: str | pathlib.Path | None
+        Device manager used to build the devices. Expects a
+        guarneri.Instrument instance (the 'happi' manager is a WIP).
     """
     logger.debug("(Re)Loading local control objects.")
     if file is None:
@@ -95,6 +94,11 @@ def make_devices(
                 delattr(main_namespace, dev_name)
 
         device_manager.devices.clear()
+    elif clear:
+        logger.warning(
+            "clear=True ignored: device_manager %r is not a guarneri.Instrument.",
+            device_manager,
+        )
 
     logger.debug("Loading device files: %r", file)
 
@@ -102,6 +106,7 @@ def make_devices(
     device_path = configs_path / file
     if not device_path.exists():
         logger.error("Device file not found: %s", device_path)
+        return
 
     else:
         logger.info("Loading device file: %s", device_path)
@@ -118,11 +123,15 @@ def make_devices(
             except Exception as e:
                 logger.error("Error loading device file %s: %s", device_path, str(e))
                 logger.error("Full exception:", exc_info=True)
+                raise
         elif device_manager == "happi":
             pass
         elif device_manager is None:
             logger.error("No device_manager provided.")
             return
+        else:
+            logger.error("Unrecognized device_manager: %r", device_manager)
+            raise ValueError(f"Unrecognized device_manager: {device_manager!r}")
     if pause > 0:
         logger.debug(
             "Waiting %s seconds for slow objects to connect.",
@@ -168,7 +177,7 @@ async def guarneri_namespace_loader(
 
 def init_instrument(device_manager):
     """Set the global instrument instance"""
-    if device_manager == "guarneri" or None:
+    if device_manager == "guarneri":
         global _instrument
         global oregistry
         _instrument = guarneri.Instrument({})
@@ -183,6 +192,11 @@ def init_instrument(device_manager):
             "guarneri or happi"
         )
         return None, None
+    else:
+        logger.error(
+            "Unknown device_manager %r. Use 'guarneri' or 'happi'.", device_manager
+        )
+        return None, None
 
 
 def with_registry(func: Callable) -> Callable:
@@ -195,7 +209,9 @@ def with_registry(func: Callable) -> Callable:
     def wrapper(*args, oregistry=None, **kwargs):
         if oregistry is None:
             if _instrument is None:
-                raise RuntimeError("Instrument not set. Call set_instrument() first.")
+                raise RuntimeError(
+                    'Instrument not set. Call init_instrument("guarneri") first.'
+                )
             else:
                 oregistry = _instrument.devices
         return func(oregistry, *args, **kwargs)
