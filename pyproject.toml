@@ -43,7 +43,7 @@ dependencies = [
     # Pinned: databroker 2.x is a tiled-based rewrite that drops the v1 _drivers/.temp()/.v1/.v2
     # APIs used in catalog_init.py & run_engine_init.py. Tiled support comes from
     # bluesky-tiled-plugins/tiled (separate deps), so no databroker bump is needed for tiled.
-    "databroker==1.2.5",
+    "databroker==2.0.1",
     "guarneri>=0.4.0",
     "ipython",
     "jupyterlab",
